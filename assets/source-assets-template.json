@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "project": "",
+  "status": "draft",
+  "no_real_assets_reason": "",
+  "items": [
+    {
+      "asset_id": "real-001",
+      "path": "assets/source/example.png",
+      "sha256": "",
+      "source_type": "user-provided",
+      "source": "",
+      "authorization": "",
+      "intended_use": "",
+      "privacy_review": {
+        "contains_personal_information": false,
+        "targets": [],
+        "treatment": "none"
+      }
+    }
+  ],
+  "contact_sheet_path": "review/source-assets-contact-sheet.png",
+  "contact_sheet_sha256": "",
+  "ready_for_user_review": false
+}

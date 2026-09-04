@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "project": "",
+  "title": "",
+  "status": "draft",
+  "ready_for_user_review": false,
+  "logic_review": {
+    "approved": false,
+    "core_claim": "",
+    "global_flow": "",
+    "redundant_segment_ids": [],
+    "tool_sections": []
+  },
+  "segments": [
+    {
+      "scene_id": "s01",
+      "display_text": ""
+    }
+  ]
+}

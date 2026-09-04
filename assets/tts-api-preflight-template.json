@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "status": "pending",
+  "engine_type": "api",
+  "provider": "",
+  "model_id": "",
+  "model_url": "https://",
+  "credential_storage": "environment",
+  "secret_values_persisted": false,
+  "test_request_passed": false,
+  "voice_listing_or_generation_passed": false,
+  "checked_at": "",
+  "notes": ""
+}

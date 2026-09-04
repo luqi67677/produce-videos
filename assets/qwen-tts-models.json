@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.1",
+  "provider": "Alibaba Qwen3-TTS",
+  "runtime": "mlx-audio",
+  "supported_platform": "Apple Silicon / arm64",
+  "minimum_python_version": "3.10",
+  "dependency_install_command": "<兼容的 Python 3.10+> -m pip install -U \"mlx-audio[tts]\" \"huggingface_hub[hf_xet]\"",
+  "recommended": {
+    "model_id": "mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16",
+    "model_url": "https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16",
+    "download_command": "huggingface-cli download mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16 --local-dir <模型目录>",
+    "approx_size_gb": 4.52,
+    "use_for": "Apple Silicon 本地生成、按文字描述设计通用声音",
+    "required_runtime": "mlx-audio",
+    "required_platform": "arm64"
+  },
+  "smaller_option": {
+    "model_id": "mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit",
+    "model_url": "https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit",
+    "download_command": "huggingface-cli download mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit --local-dir <模型目录>",
+    "approx_size_gb": 2.5,
+    "use_for": "本机内存紧张时的量化版本",
+    "required_runtime": "mlx-audio",
+    "required_platform": "arm64"
+  },
+  "upstream_model": {
+    "model_id": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+    "model_url": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+    "note": "这是 Qwen 官方原始模型页；当前 mlx_audio 脚本使用 mlx-community 转换版"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "theme_id": "replace-me",
+  "name": "待填写的全片视觉主题",
+  "status": "selected",
+  "selected_option": "A",
+  "selected_at": "YYYY-MM-DD HH:MM",
+  "supersedes": "",
+  "source_theme": {
+    "catalog": "references/frontend-slides-themes/bold-template-pack/selection-index.json",
+    "selection_index_sha256": "",
+    "slug": "replace-with-selected-frontend-slides-theme",
+    "preview_md": "",
+    "design_md": "",
+    "user_override": false
+  },
+  "content_fit": {
+    "topic": "",
+    "audience": "",
+    "mood": [],
+    "density": "medium",
+    "reason": ""
+  },
+  "palette": {
+    "background": "#F4EEDC",
+    "surface": "#FFFFFF",
+    "text_primary": "#111111",
+    "text_inverse": "#FFFFFF",
+    "accent_primary": "#228B4E",
+    "accent_secondary": "#E85FA2",
+    "highlight": "#FFC928",
+    "muted_line": "#C8C1B2"
+  },
+  "source_palette_original": {},
+  "semantic_roles": {
+    "background": "全片主背景",
+    "surface": "卡片、字幕底和信息容器",
+    "accent_primary": "核心结论、主要数据和关键路径",
+    "accent_secondary": "人物观点、对照项和次级提示",
+    "highlight": "短时强调，不作为大面积背景",
+    "muted_line": "网格、分隔线和未激活状态"
+  },
+  "visual_language": {
+    "keywords": [],
+    "material": "",
+    "border": "",
+    "shadow": "",
+    "chart_style": "",
+    "transition_style": ""
+  },
+  "image_generation": {
+    "palette_prompt": "",
+    "negative_palette_prompt": "",
+    "allowed_real_colors": [
+      "skin tones",
+      "user-supplied character colors",
+      "official logos",
+      "source photos and screenshots"
+    ]
+  },
+  "locked": true,
+  "unlock_reason": ""
+}

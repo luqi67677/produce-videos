@@ -1,0 +1,22 @@
+{
+  "portrait": {
+    "label": "竖屏",
+    "aspectRatio": "3:4",
+    "width": 1080,
+    "height": 1440,
+    "fps": 30,
+    "safeArea": {"left": 64, "right": 64, "top": 144, "bottom": 240},
+    "captionBottom": 240,
+    "platforms": ["douyin", "xiaohongshu", "wechat_channels"]
+  },
+  "landscape": {
+    "label": "横屏",
+    "aspectRatio": "16:9",
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "safeArea": {"left": 120, "right": 120, "top": 90, "bottom": 180},
+    "captionBottom": 180,
+    "platforms": ["douyin"]
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "schema_version": "2.3",
+  "project": "",
+  "format": "portrait",
+  "theme_id": "",
+  "platform": "",
+  "human_presence": "none",
+  "forbidden_terms": [],
+  "privacy_targets": [],
+  "subtitle": {
+    "layer_count": 1,
+    "renderer": "final-timeline-only"
+  },
+  "watermark": {
+    "enabled": false,
+    "asset": "",
+    "position": "bottom-right"
+  },
+  "audio": {
+    "music_db_below_voice": 9,
+    "fade_out_seconds": 4
+  },
+  "narration_binding": {
+    "approved": false,
+    "contract_sha256": "",
+    "locked_duration_seconds": null,
+    "segment_count": null
+  },
+  "revision_scope": {
+    "mode": "initial",
+    "baseline_shot_readiness": "",
+    "baseline_sha256": "",
+    "affected_scene_ids": [],
+    "preserved_scene_ids": [],
+    "feedback_items": [],
+    "preview_artifacts": [],
+    "preview_approval": {
+      "approved": false,
+      "approval_message": "",
+      "approved_at": ""
+    }
+  },
+  "scenes": [
+    {
+      "scene_id": "s01",
+      "duration_seconds": 3.0,
+      "narration": "",
+      "narration_segment_ids": ["s01"],
+      "audience_text": [],
+      "internal_notes": [],
+      "semantic_role": "",
+      "information_contribution": "",
+      "visual_signature": "",
+      "visual_evidence": {
+        "narration_claim": "",
+        "on_screen_evidence": "",
+        "verified": false
+      },
+      "redundant": false,
+      "max_unchanged_seconds": 3.0,
+      "long_hold_reason": "",
+      "primary_asset_ids": ["asset-001"],
+      "assets": [
+        {
+          "asset_id": "asset-001",
+          "source_type": "real",
+          "media_type": "video",
+          "path": "",
+          "purpose": "",
+          "authorization": "",
+          "source_window": {
+            "in_seconds": 0,
+            "out_seconds": 3,
+            "action_evidence": ""
+          }
+        }
+      ],
+      "composition_source": "storyboard",
+      "storyboard_frame_path": "",
+      "storyboard_state_ids": ["start", "change", "end"],
+      "layout_review": {
+        "reviewed_frame_path": "",
+        "alignment_verified": false,
+        "text_overflow_free": false,
+        "orphan_graphics_free": false,
+        "connections_verified": false,
+        "intentional_whitespace": false
+      },
+      "decorative_outer_frame": false,
+      "decorative_outer_frame_reason": "",
+      "focus_target": {
+        "required": false,
+        "label": "none",
+        "marker": "none",
+        "cue_text": "",
+        "start_seconds": 0,
+        "end_seconds": 0,
+        "area_ratio": 0,
+        "target_verified": true
+      },
+      "fallback_visual": {
+        "mode": "none",
+        "path": "",
+        "reason": ""
+      },
+      "privacy_review": {
+        "checked_target_ids": [],
+        "visible_target_ids": [],
+        "handled_target_ids": [],
+        "recording_indicators_checked": false,
+        "non_target_content_clear": false
+      },
+      "background_token": "background",
+      "motion_grammar": "sequential-list",
+      "motion_steps": [
+        {
+          "cue_text": "",
+          "action": "",
+          "persists": true
+        }
+      ],
+      "start_state": "",
+      "change_state": "",
+      "end_state": "",
+      "exit_state": "",
+      "semantic_symbols": [],
+      "visual_coverage_to_end": true,
+      "blank_hold_seconds": 0,
+      "subject_interaction": {
+        "required": false,
+        "target": "",
+        "action": "",
+        "action_signature": "",
+        "anatomy_safe": true,
+        "edge_safe": true
+      },
+      "subtitle_safe": true,
+      "watermark_safe": true,
+      "full_frame_motion": false,
+      "full_frame_motion_reason": "",
+      "reuse_advances_state": false,
+      "reuse_reason": ""
+    }
+  ]
+}

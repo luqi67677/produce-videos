@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.5",
+  "voice_profile": "",
+  "voice_source": "pending-user-choice",
+  "authorization_record": "",
+  "provider": "",
+  "runtime": "",
+  "voice_instruction": "",
+  "voice_selection_path": "",
+  "voice_selection_sha256": "",
+  "language": "Chinese",
+  "model_id": "",
+  "model_url": "",
+  "model_path": "",
+  "audio_path": "",
+  "audio_sha256": "",
+  "duration_seconds": null,
+  "sample_rate": null,
+  "channels": null,
+  "audio_format": "",
+  "pronunciation_map": "assets/tts-pronunciation-map.json",
+  "subtitle_layer_count": 1,
+  "approved_script_path": "master-script.json",
+  "approved_script_sha256": "",
+  "script_lock": {
+    "approved": false,
+    "approved_text_sha256": "",
+    "approved_duration_seconds": null,
+    "segment_count": null,
+    "revision_requires_reapproval": true
+  },
+  "logic_review": {
+    "approved": false,
+    "core_claim": "",
+    "global_flow": "",
+    "redundant_segment_ids": [],
+    "tool_sections": [
+      {
+        "tool_name": "",
+        "segment_ids": [],
+        "identity_and_purpose_first": true,
+        "usage_before_result": true,
+        "duplicate_summary_removed": true
+      }
+    ]
+  },
+  "segments": [
+    {
+      "scene_id": "s01",
+      "display_text": "",
+      "tts_text": "",
+      "start_seconds": null,
+      "end_seconds": null
+    }
+  ]
+}

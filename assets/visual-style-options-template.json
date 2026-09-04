@@ -1,0 +1,132 @@
+{
+  "schema_version": "1.2",
+  "status": "awaiting_user_selection",
+  "video_format": {
+    "id": "",
+    "label": "",
+    "aspect_ratio": "",
+    "width": 0,
+    "height": 0,
+    "fps": 30
+  },
+  "based_on": {
+    "topic": "",
+    "audience": "",
+    "mood": [],
+    "density": "medium",
+    "brand_or_ip_colors": [],
+    "forbidden_colors": []
+  },
+  "theme_catalog": {
+    "source": "references/frontend-slides-themes/bold-template-pack/selection-index.json",
+    "selection_index_sha256": "",
+    "template_count": 0
+  },
+  "representative_content": {
+    "cover_title": "",
+    "scene_id": "",
+    "scene_summary": ""
+  },
+  "catalog_evaluation": [],
+  "options": [
+    {
+      "id": "A",
+      "role": "balanced",
+      "name": "",
+      "theme_slug": "",
+      "source_preview": "",
+      "source_design": "",
+      "reason": "",
+      "risk": "",
+      "content_fit": "",
+      "palette": {},
+      "cover_preview": "style-a-cover.png",
+      "content_preview": "style-a-content.png",
+      "thumbnail_preview": "style-a-thumbnail.png",
+      "quality_review": {
+        "title_exact": false,
+        "chinese_typography_verified": false,
+        "brand_case_preserved": false,
+        "evidence_readable": false,
+        "safe_area_verified": false,
+        "text_overflow_free": false,
+        "layout_balanced": false,
+        "source_visual_large_enough": false,
+        "no_internal_labels": false,
+        "meaningfully_distinct": false
+      }
+    },
+    {
+      "id": "B",
+      "role": "expressive",
+      "name": "",
+      "theme_slug": "",
+      "source_preview": "",
+      "source_design": "",
+      "reason": "",
+      "risk": "",
+      "content_fit": "",
+      "palette": {},
+      "cover_preview": "style-b-cover.png",
+      "content_preview": "style-b-content.png",
+      "thumbnail_preview": "style-b-thumbnail.png",
+      "quality_review": {
+        "title_exact": false,
+        "chinese_typography_verified": false,
+        "brand_case_preserved": false,
+        "evidence_readable": false,
+        "safe_area_verified": false,
+        "text_overflow_free": false,
+        "layout_balanced": false,
+        "source_visual_large_enough": false,
+        "no_internal_labels": false,
+        "meaningfully_distinct": false
+      }
+    },
+    {
+      "id": "C",
+      "role": "unexpected-fit",
+      "name": "",
+      "theme_slug": "",
+      "source_preview": "",
+      "source_design": "",
+      "reason": "",
+      "risk": "",
+      "content_fit": "",
+      "palette": {},
+      "cover_preview": "style-c-cover.png",
+      "content_preview": "style-c-content.png",
+      "thumbnail_preview": "style-c-thumbnail.png",
+      "quality_review": {
+        "title_exact": false,
+        "chinese_typography_verified": false,
+        "brand_case_preserved": false,
+        "evidence_readable": false,
+        "safe_area_verified": false,
+        "text_overflow_free": false,
+        "layout_balanced": false,
+        "source_visual_large_enough": false,
+        "no_internal_labels": false,
+        "meaningfully_distinct": false
+      }
+    }
+  ],
+  "overview_preview": "style-preview-grid.png",
+  "review_delivery": {
+    "primary_artifact": "style-preview-grid.png",
+    "direct_display": false,
+    "html_supplement_only": true,
+    "viewport_checked": false,
+    "fallback_artifacts": [
+      "style-a-thumbnail.png",
+      "style-b-thumbnail.png",
+      "style-c-thumbnail.png"
+    ]
+  },
+  "selected_option": null,
+  "selection_approval": {
+    "approved": false,
+    "message": "",
+    "approved_at": ""
+  }
+}

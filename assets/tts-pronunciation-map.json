@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "rules": [
+    {
+      "id": "video-skill-no-gap",
+      "pattern": "视频\\s+[Ss]kill",
+      "replacement": "视频skill",
+      "reason": "去掉中文词与 Skill 之间会被 TTS 读成停顿的空格"
+    },
+    {
+      "id": "qwen3-tts-chinese-reading",
+      "pattern": "Qwen\\s*3\\s*[-—– ]?\\s*TTS",
+      "replacement": "千问开源TTS",
+      "reason": "旁白使用用户确认的中文读法，不逐字读英文型号"
+    }
+  ]
+}

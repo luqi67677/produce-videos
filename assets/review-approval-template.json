@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.1",
+  "project": "",
+  "stage": "script",
+  "status": "pending",
+  "approved": false,
+  "approved_at": "",
+  "approved_by": "user",
+  "approval_message": "",
+  "review_prompt": "",
+  "approval_context": "",
+  "approval_interpretation": "explicit",
+  "accepted_response_rule": "",
+  "review_delivery": {
+    "primary_path": "master-script.json",
+    "media_type": "text",
+    "directly_presented": false,
+    "fallback_path": ""
+  },
+  "reviewed_files": [
+    {
+      "path": "master-script.json",
+      "sha256": ""
+    }
+  ]
+}

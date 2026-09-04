@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "user_request": "",
+  "gender_presentation": "",
+  "age_impression": "",
+  "tone_keywords": [],
+  "energy_level": "",
+  "pace": "",
+  "use_case": "",
+  "avoid_traits": [],
+  "language": "Chinese",
+  "approved": false,
+  "approval_message": "",
+  "approved_at": ""
+}
