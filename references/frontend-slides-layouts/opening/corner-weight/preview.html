@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corner Weight — opening layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #161616;
+    --lp-fg: #ececea;
+    --lp-fg-muted: #969694;
+    --lp-fg-faint: rgba(255, 255, 255, 0.12);
+    --lp-accent: #8f8f8d;
+    --lp-line: rgba(255, 255, 255, 0.24);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-rise-sm { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.slide.active .lp-kicker { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-title .lp-line:nth-child(1) { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-title .lp-line:nth-child(2) { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+.slide.active .lp-tail { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
+.slide.active .lp-card { animation: lp-rise-sm 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- top-left: title -->
+            <div class="lp-kicker absolute left-[96px] top-[96px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Board Update</div>
+            <h1 class="lp-title absolute left-[96px] top-[150px] m-0 max-w-[1100px] font-display text-[132px] font-extrabold leading-[0.97] tracking-[-0.02em] uppercase">
+                <span class="lp-line block">The long</span>
+                <span class="lp-line block"><em class="not-italic text-lp-accent">game</em></span>
+            </h1>
+            <div class="lp-tail absolute left-[96px] top-[470px] w-[200px] h-px origin-left bg-lp-line" aria-hidden="true"></div>
+
+            <!-- bottom-right: presenter card. Image variant: this card becomes a
+                 560×420 framed photo card with a mono caption below; presenter
+                 moves to a line under the kicker -->
+            <div class="lp-card absolute right-[96px] bottom-[96px] text-right">
+                <div class="w-[48px] h-[6px] mb-[24px] ml-auto origin-right bg-lp-accent"></div>
+                <div class="font-display text-[34px] font-bold text-lp-fg">A. Rahman</div>
+                <div class="mt-[12px] font-mono text-[15px] uppercase tracking-[0.12em] leading-[1.9] text-lp-muted">
+                    Head of Platform<br>
+                    Arka — 08 Jul 2026<br>
+                    01 / 12
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

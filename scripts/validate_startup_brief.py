@@ -23,6 +23,7 @@ AUDIO_SOURCES = {
     "no-spoken-narration",
 }
 TTS_SOURCES = {"tts-api", "local-tts-model", "qwen-open-source"}
+STILL_POLICIES = {"user-assets-only", "allow-generated-stills"}
 PENDING = {"", "pending", "待提供", "待确认", "未选择"}
 
 
@@ -67,6 +68,15 @@ def validate(path: Path, require_approved: bool = False) -> list[str]:
         errors.append("口播内容来源必须选择已有确定稿、AI 撰写、音视频转写或无口播")
     if audio_source not in AUDIO_SOURCES:
         errors.append("最终声音来源必须选择独立口播、视频内提取、TTS API、本地模型、Qwen 或无旁白")
+
+    still_policy = fields.get("静态补图策略", "")
+    if still_policy not in STILL_POLICIES:
+        errors.append("静态补图策略必须选择只用用户/官方素材，或允许生成静态补图")
+    still_authorization = fields.get("静态补图授权", "")
+    if still_policy == "allow-generated-stills" and still_authorization != "approved":
+        errors.append("允许生成静态补图时必须在开工阶段记录 approved")
+    if still_policy == "user-assets-only" and still_authorization != "not-required":
+        errors.append("只用用户/官方素材时，静态补图授权必须为 not-required")
 
     if content_source != "no-spoken-narration" and not is_ready(fields.get("口播输入")):
         errors.append("当前口播内容路线缺少真实稿件、材料或待转写音视频")

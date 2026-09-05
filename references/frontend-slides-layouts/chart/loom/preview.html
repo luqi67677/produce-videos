@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loom — chart layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   Cell depths are five opacity steps of ONE ink (--lp-fg):
+   6 / 15 / 30 / 50 / 78 percent.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f1f0ee;
+    --lp-fg: #1a1a1a;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(26, 26, 26, 0.13);
+    --lp-accent: #7a7a78;
+    --lp-line: rgba(26, 26, 26, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   The loom weaves row by row; the peak ring lands last.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-weave { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes lp-ring { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-brand,
+.slide.active .lp-chrome-rule { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline,
+.slide.active .lp-reading { animation: lp-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-days { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+.slide.active .lp-hrow:nth-of-type(1) { animation: lp-weave 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.40s both; }
+.slide.active .lp-hrow:nth-of-type(2) { animation: lp-weave 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.49s both; }
+.slide.active .lp-hrow:nth-of-type(3) { animation: lp-weave 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.58s both; }
+.slide.active .lp-hrow:nth-of-type(4) { animation: lp-weave 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.67s both; }
+.slide.active .lp-hrow:nth-of-type(5) { animation: lp-weave 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.76s both; }
+.slide.active .lp-hrow:nth-of-type(6) { animation: lp-weave 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.85s both; }
+.slide.active .lp-hrow:nth-of-type(7) { animation: lp-weave 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.94s both; }
+.slide.active .lp-hours { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.1s both; }
+.slide.active .lp-peak { animation: lp-ring 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.2s both; }
+.slide.active .lp-foot-rule,
+.slide.active .lp-foot-left,
+.slide.active .lp-foot-right { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.3s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome (top) -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Alert Rhythm — One Metro, Full Year Averaged</div>
+
+            <!-- OPTIONAL branding/logo slot: wordmark or image logo, ≤40px tall.
+                 Image option: <img src="https://placehold.co/260x80" class="h-[40px] w-auto object-contain">
+                 Remove this element entirely if the deck carries no brand mark. -->
+            <div class="lp-brand absolute right-[96px] top-[66px] h-[40px] flex items-center font-display text-[22px] font-extrabold tracking-[0.08em] uppercase">Cinder</div>
+
+            <div class="lp-chrome-rule absolute left-[96px] right-[96px] top-[118px] h-px bg-lp-line"></div>
+
+            <!-- headline + reading -->
+            <h1 class="lp-headline absolute left-[96px] top-[164px] m-0 max-w-[1400px] font-display text-[60px] font-bold leading-none tracking-[-0.01em]">The week has a shape</h1>
+            <div class="lp-reading absolute left-[96px] top-[242px] font-mono text-[16px] uppercase tracking-[0.14em] text-lp-muted">Confirmed alerts by 2-hour block · darker = more · five depths of one ink</div>
+
+            <!-- day labels -->
+            <div class="lp-days">
+                <div class="absolute right-[1690px] top-[350px] font-mono text-[15px] uppercase tracking-[0.10em] text-lp-muted">Mon</div>
+                <div class="absolute right-[1690px] top-[414px] font-mono text-[15px] uppercase tracking-[0.10em] text-lp-muted">Tue</div>
+                <div class="absolute right-[1690px] top-[478px] font-mono text-[15px] uppercase tracking-[0.10em] text-lp-muted">Wed</div>
+                <div class="absolute right-[1690px] top-[542px] font-mono text-[15px] uppercase tracking-[0.10em] text-lp-muted">Thu</div>
+                <div class="absolute right-[1690px] top-[606px] font-mono text-[15px] uppercase tracking-[0.10em] text-lp-muted">Fri</div>
+                <div class="absolute right-[1690px] top-[670px] font-mono text-[15px] uppercase tracking-[0.10em] text-lp-muted">Sat</div>
+                <div class="absolute right-[1690px] top-[734px] font-mono text-[15px] uppercase tracking-[0.10em] text-lp-muted">Sun</div>
+            </div>
+
+            <!-- matrix: 7 rows × 12 two-hour blocks, cells 108×56, 12px gaps -->
+            <div class="lp-hrow absolute left-[250px] top-[330px] flex gap-[12px]">
+                <div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.78]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div>
+            </div>
+            <div class="lp-hrow absolute left-[250px] top-[394px] flex gap-[12px]">
+                <div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div>
+            </div>
+            <div class="lp-hrow absolute left-[250px] top-[458px] flex gap-[12px]">
+                <div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.78]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.78]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div>
+            </div>
+            <div class="lp-hrow absolute left-[250px] top-[522px] flex gap-[12px]">
+                <div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.78]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div>
+            </div>
+            <div class="lp-hrow absolute left-[250px] top-[586px] flex gap-[12px]">
+                <div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.78]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.78]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div>
+            </div>
+            <div class="lp-hrow absolute left-[250px] top-[650px] flex gap-[12px]">
+                <div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.78]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div>
+            </div>
+            <div class="lp-hrow absolute left-[250px] top-[714px] flex gap-[12px]">
+                <div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.06]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.50]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.30]"></div><div class="w-[108px] h-[56px] bg-lp-fg opacity-[0.15]"></div>
+            </div>
+
+            <!-- peak cell: Friday 18–20 — accent ring + printed value (the one accent element) -->
+            <div class="lp-peak">
+                <div class="absolute left-[1327px] top-[583px] w-[114px] h-[62px] border-[3px] border-lp-accent"></div>
+                <div class="absolute left-[1330px] top-[601px] w-[108px] text-center font-mono text-[18px] font-medium text-lp-bg">212</div>
+            </div>
+
+            <!-- hour marks -->
+            <div class="lp-hours">
+                <div class="absolute left-[250px] top-[794px] font-mono text-[15px] text-lp-muted">00</div>
+                <div class="absolute left-[610px] top-[794px] font-mono text-[15px] text-lp-muted">06</div>
+                <div class="absolute left-[970px] top-[794px] font-mono text-[15px] text-lp-muted">12</div>
+                <div class="absolute left-[1330px] top-[794px] font-mono text-[15px] text-lp-muted">18</div>
+                <div class="absolute right-[242px] top-[794px] font-mono text-[15px] text-lp-muted">24</div>
+            </div>
+
+            <!-- footer -->
+            <div class="lp-foot-rule absolute left-[96px] right-[96px] top-[962px] h-px bg-lp-line"></div>
+            <div class="lp-foot-left absolute left-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">Jul 2025 → Jun 2026 averages — depths binned by quintile</div>
+            <div class="lp-foot-right absolute right-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">12 / 14</div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

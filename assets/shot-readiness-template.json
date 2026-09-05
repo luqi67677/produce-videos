@@ -1,5 +1,5 @@
 {
-  "schema_version": "2.3",
+  "schema_version": "2.4",
   "project": "",
   "format": "portrait",
   "theme_id": "",
@@ -46,6 +46,27 @@
       "duration_seconds": 3.0,
       "narration": "",
       "narration_segment_ids": ["s01"],
+      "roll": {
+        "type": "a-roll",
+        "narrative_role": "",
+        "covers": "",
+        "entry_reason": "主叙事起点",
+        "return_strategy": "not-required"
+      },
+      "visual_source_strategy": {
+        "selected": "user-provided",
+        "source_order_considered": ["user-provided", "official", "verified-keyframe", "generated-still", "code-motion", "text-only"],
+        "gap_reason": "",
+        "generated_still_approved": false,
+        "video_model_used": false
+      },
+      "transition": {
+        "type": "none",
+        "previous_end_state": "not-required",
+        "next_start_state": "",
+        "continuity_anchor": "",
+        "reason": "首镜头"
+      },
       "audience_text": [],
       "internal_notes": [],
       "semantic_role": "",
@@ -78,13 +99,36 @@
       "composition_source": "storyboard",
       "storyboard_frame_path": "",
       "storyboard_state_ids": ["start", "change", "end"],
+      "layout_preset": {
+        "id": "opening/offset-marquee",
+        "adaptation": "portrait-reflow",
+        "selection_reason": ""
+      },
+      "composition_budget": {
+        "focal_points": 1,
+        "support_groups": 2,
+        "decorative_groups": 0,
+        "accent_colors": 1,
+        "material_systems": 1,
+        "occupied_area_ratio": 0.62,
+        "largest_empty_area_ratio": 0.28,
+        "density_exception_reason": "",
+        "intentional_whitespace_reason": ""
+      },
       "layout_review": {
         "reviewed_frame_path": "",
         "alignment_verified": false,
         "text_overflow_free": false,
         "orphan_graphics_free": false,
         "connections_verified": false,
-        "intentional_whitespace": false
+        "intentional_whitespace": false,
+        "single_focal_point": false,
+        "balanced_density": false,
+        "clean_edges": false,
+        "single_material_system": false,
+        "dirty_overlays_free": false,
+        "crop_remnants_free": false,
+        "pause_frames_finished": false
       },
       "decorative_outer_frame": false,
       "decorative_outer_frame_reason": "",

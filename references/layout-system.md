@@ -1,6 +1,14 @@
 # 版式与安全区
 
-版式不是把内容塞进模板。模板只负责提供视觉语言；当前内容的主次、断行、主视觉大小和观看距离必须重新设计。
+版式不是把内容塞进模板。34 套主题只负责视觉语言；88 套 `references/frontend-slides-layouts/` 负责构图骨架。当前内容的主次、断行、主视觉大小和观看距离仍必须重新设计，并把选择写入 `shot-readiness.json.layout_preset`。
+
+## 结构选择
+
+- 先按镜头职责选择 slot：opening、video、image、list、stats、chart、comparison、timeline、process、quote、closing 等。
+- 再读取该布局的 Geometry、Content constraints 和 Failure modes；不能只看名字或预览图。
+- 横屏使用原生 1920×1080 骨架；3:4 竖屏保留层级和比例关系后重新排区，记录 `portrait-reflow`，不能整体缩小。
+- 每个镜头填写 `composition_budget`；详细阈值和脏画面禁令见 `references/visual-cleanliness-system.md`。
+- 结构化分隔线可以用于编辑排版，但不得被画成承托主体的透视地平线或地面。
 
 ## 画幅
 

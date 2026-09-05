@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Side Reel — video layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f2f1ef;
+    --lp-fg: #1b1b1b;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(27, 27, 27, 0.12);
+    --lp-accent: #7d7d7b;
+    --lp-line: rgba(27, 27, 27, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-settle { from { opacity: 0; transform: scale(1.02); } to { opacity: 1; transform: scale(1); } }
+@keyframes lp-glyph-in { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-rise-sm { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-title .lp-line:nth-child(1) { animation: lp-rise 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-title .lp-line:nth-child(2) { animation: lp-rise 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+.slide.active .lp-reading { animation: lp-rise-sm 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
+.slide.active .lp-player { animation: lp-settle 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
+.slide.active .lp-play { animation: lp-glyph-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both; }
+.slide.active .lp-caption { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both; }
+.slide.active .lp-chapter:nth-child(1) { animation: lp-rise-sm 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both; }
+.slide.active .lp-chapter:nth-child(2) { animation: lp-rise-sm 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.77s both; }
+.slide.active .lp-chapter:nth-child(3) { animation: lp-rise-sm 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.89s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Product Demo</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">08 / 14</div>
+
+            <!-- left column -->
+            <h2 class="lp-title absolute left-[96px] top-[170px] m-0 max-w-[544px] font-display text-[72px] font-extrabold leading-[1.02] tracking-[-0.02em] uppercase">
+                <span class="lp-line block">Console,</span>
+                <span class="lp-line block">in <em class="not-italic text-lp-accent">motion</em></span>
+            </h2>
+            <p class="lp-reading absolute left-[96px] top-[350px] m-0 max-w-[500px] font-body text-[20px] leading-[1.55] text-lp-muted">Three minutes of the unified console doing a full site's day — recorded live, no cuts.</p>
+
+            <div class="absolute left-[96px] top-[600px] w-[544px]">
+                <div class="lp-chapter relative flex items-baseline gap-[24px] py-[22px] before:content-[''] before:absolute before:left-0 before:right-0 before:top-0 before:h-px before:bg-lp-line before:origin-left">
+                    <span class="flex-none font-mono text-[15px] font-medium tracking-[0.1em] text-lp-accent">00:00</span>
+                    <span class="font-body text-[19px] text-lp-fg">Cold open — morning provisioning</span>
+                </div>
+                <div class="lp-chapter relative flex items-baseline gap-[24px] py-[22px] before:content-[''] before:absolute before:left-0 before:right-0 before:top-0 before:h-px before:bg-lp-line before:origin-left">
+                    <span class="flex-none font-mono text-[15px] font-medium tracking-[0.1em] text-lp-accent">01:24</span>
+                    <span class="font-body text-[19px] text-lp-fg">Incident drill, end to end</span>
+                </div>
+                <div class="lp-chapter relative flex items-baseline gap-[24px] py-[22px] before:content-[''] before:absolute before:left-0 before:right-0 before:top-0 before:h-px before:bg-lp-line before:origin-left">
+                    <span class="flex-none font-mono text-[15px] font-medium tracking-[0.1em] text-lp-accent">03:05</span>
+                    <span class="font-body text-[19px] text-lp-fg">Audit trail, one click</span>
+                </div>
+            </div>
+
+            <!-- player: poster + play glyph until a real <video>/<iframe> replaces it.
+                 Real decks: replace frame contents with <video controls poster="...">
+                 or an <iframe allowfullscreen> at this geometry.
+                 Poster placeholder: placehold.co/1088x612; gradient = load fallback. -->
+            <div class="lp-player absolute left-[736px] top-[234px] w-[1088px] h-[612px] border border-lp-line overflow-hidden bg-[linear-gradient(150deg,#d6d5d2_0%,#b0afac_100%)]">
+                <img class="absolute inset-0 w-full h-full max-w-none max-h-none object-cover" src="https://placehold.co/1088x612/c8c7c4/76756f" alt="Console demo — poster frame">
+                <div class="lp-play absolute left-1/2 top-1/2 w-[88px] h-[88px] mt-[-44px] ml-[-44px] border-[1.5px] border-[rgba(27,27,27,0.85)] rounded-full bg-[rgba(242,241,239,0.35)] after:content-[''] after:absolute after:left-[35px] after:top-[27px] after:border-l-[28px] after:border-l-[rgba(27,27,27,0.85)] after:border-y-[17px] after:border-y-transparent" aria-hidden="true"></div>
+            </div>
+            <div class="lp-caption absolute left-[736px] top-[870px] font-mono text-[13px] uppercase tracking-[0.14em] text-lp-muted">Unified console v2.4 — recorded Jul 2026</div>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

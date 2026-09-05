@@ -28,6 +28,16 @@ class AgentCompatibilityTests(unittest.TestCase):
         self.assertIn("WorkBuddy", readme)
         self.assertIn("不要假装安装成功", readme)
         self.assertIn("普通 Kimi 聊天网页", readme)
+        self.assertIn("GitHub Releases", readme)
+        self.assertIn("34 套视觉主题和 88 套结构化布局", readme)
+        self.assertIn("scripts/doctor.py", readme)
+        self.assertIn("scripts/resume_project.py", readme)
+
+    def test_skill_declares_v230_and_new_director_contract(self) -> None:
+        content = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("V2.3.0", content)
+        self.assertIn("每个 B-roll 必须填写 `covers`", content)
+        self.assertIn("edit-decision-list.json", content)
 
     def test_workbuddy_package_has_required_schema_and_resources(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

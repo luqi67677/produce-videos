@@ -9,7 +9,7 @@ import zipfile
 from pathlib import Path
 
 
-SKIP_PARTS = {".git", "__pycache__", ".pytest_cache"}
+SKIP_PARTS = {".git", "dist", "examples", "__pycache__", ".pytest_cache"}
 SKIP_NAMES = {".DS_Store"}
 
 

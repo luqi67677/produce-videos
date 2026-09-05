@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aperture — chart layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f2f1ef;
+    --lp-fg: #1b1b1b;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(27, 27, 27, 0.12);
+    --lp-accent: #55554f;
+    --lp-line: rgba(27, 27, 27, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   Ring segments sweep clockwise in order (dasharray grows
+   to each segment's true arc length, --seg/--rest set per
+   circle); each ledger row lands with its segment; the
+   center total arrives after its parts.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-sweep { from { stroke-dasharray: 0 1344.6; } to { stroke-dasharray: var(--seg) var(--rest); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-seg.s1 { animation: lp-sweep 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both; }
+.slide.active .lp-seg.s2 { animation: lp-sweep 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.62s both; }
+.slide.active .lp-seg.s3 { animation: lp-sweep 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.79s both; }
+.slide.active .lp-seg.s4 { animation: lp-sweep 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.96s both; }
+.slide.active .lp-lrow.s1 { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both; }
+.slide.active .lp-lrow.s2 { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.72s both; }
+.slide.active .lp-lrow.s3 { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.89s both; }
+.slide.active .lp-lrow.s4 { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.06s both; }
+.slide.active .lp-center { animation: lp-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.2s both; }
+.slide.active .lp-foot-rule,
+.slide.active .lp-foot-left,
+.slide.active .lp-foot-right { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.7s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- header -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Deployment Mix</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">11 / 18</div>
+            <h2 class="lp-headline absolute left-[96px] top-[118px] m-0 font-display text-[76px] font-extrabold leading-[1.02] tracking-[-0.02em] uppercase">Half the fleet runs <em class="not-italic text-lp-accent">on-prem</em></h2>
+
+            <!-- donut (r:214, C:1344.6; segments 46/27/18/9%, ~6px surface gaps, clockwise from 12 o'clock, descending) -->
+            <svg class="absolute left-[140px] top-[340px] h-[560px] w-[560px]" viewBox="0 0 560 560" fill="none" aria-hidden="true">
+                <circle class="lp-seg s1" style="--seg:612.5;--rest:732.1" cx="280" cy="280" r="214" stroke="var(--lp-accent)" stroke-width="60" stroke-dasharray="612.5 732.1" transform="rotate(-90 280 280)"/>
+                <circle class="lp-seg s2" style="--seg:357.0;--rest:987.6" cx="280" cy="280" r="214" stroke="color-mix(in srgb, var(--lp-fg) 46%, var(--lp-bg))" stroke-width="60" stroke-dasharray="357.0 987.6" transform="rotate(75.6 280 280)"/>
+                <circle class="lp-seg s3" style="--seg:236.0;--rest:1108.6" cx="280" cy="280" r="214" stroke="color-mix(in srgb, var(--lp-fg) 28%, var(--lp-bg))" stroke-width="60" stroke-dasharray="236.0 1108.6" transform="rotate(172.8 280 280)"/>
+                <circle class="lp-seg s4" style="--seg:115.0;--rest:1229.6" cx="280" cy="280" r="214" stroke="color-mix(in srgb, var(--lp-fg) 14%, var(--lp-bg))" stroke-width="60" stroke-dasharray="115.0 1229.6" transform="rotate(237.6 280 280)"/>
+            </svg>
+            <div class="lp-center absolute left-[270px] top-[556px] w-[300px] text-center">
+                <div class="font-display text-[88px] font-extrabold leading-none tracking-[-0.02em]">14.2B</div>
+                <div class="mt-[10px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">frames scored daily</div>
+            </div>
+
+            <!-- share ledger (the legend — swatches match segment fills exactly) -->
+            <div class="absolute left-[900px] right-[96px] top-[370px]">
+                <div class="lp-lrow s1 grid h-[120px] grid-cols-[46px_1fr_160px] items-center border-t border-b border-lp-line">
+                    <div class="h-[22px] w-[22px] bg-lp-accent"></div>
+                    <div>
+                        <div class="font-body text-[24px] text-lp-fg">On-prem edge</div>
+                        <div class="mt-[4px] font-mono text-[15px] tracking-[0.04em] text-lp-muted">6.5B frames</div>
+                    </div>
+                    <div class="text-right font-mono text-[30px] font-medium tracking-[0.02em] text-lp-accent">46%</div>
+                </div>
+                <div class="lp-lrow s2 grid h-[120px] grid-cols-[46px_1fr_160px] items-center border-b border-lp-line">
+                    <div class="h-[22px] w-[22px] bg-[color-mix(in_srgb,var(--lp-fg)_46%,var(--lp-bg))]"></div>
+                    <div>
+                        <div class="font-body text-[24px] text-lp-fg">Private cloud</div>
+                        <div class="mt-[4px] font-mono text-[15px] tracking-[0.04em] text-lp-muted">3.8B frames</div>
+                    </div>
+                    <div class="text-right font-mono text-[30px] tracking-[0.02em] text-lp-fg">27%</div>
+                </div>
+                <div class="lp-lrow s3 grid h-[120px] grid-cols-[46px_1fr_160px] items-center border-b border-lp-line">
+                    <div class="h-[22px] w-[22px] bg-[color-mix(in_srgb,var(--lp-fg)_28%,var(--lp-bg))]"></div>
+                    <div>
+                        <div class="font-body text-[24px] text-lp-fg">Public cloud</div>
+                        <div class="mt-[4px] font-mono text-[15px] tracking-[0.04em] text-lp-muted">2.6B frames</div>
+                    </div>
+                    <div class="text-right font-mono text-[30px] tracking-[0.02em] text-lp-fg">18%</div>
+                </div>
+                <div class="lp-lrow s4 grid h-[120px] grid-cols-[46px_1fr_160px] items-center border-b border-lp-line">
+                    <div class="h-[22px] w-[22px] bg-[color-mix(in_srgb,var(--lp-fg)_14%,var(--lp-bg))]"></div>
+                    <div>
+                        <div class="font-body text-[24px] text-lp-fg">Hybrid burst</div>
+                        <div class="mt-[4px] font-mono text-[15px] tracking-[0.04em] text-lp-muted">1.3B frames</div>
+                    </div>
+                    <div class="text-right font-mono text-[30px] tracking-[0.02em] text-lp-fg">9%</div>
+                </div>
+            </div>
+
+            <!-- footer -->
+            <div class="lp-foot-rule absolute left-[96px] right-[96px] top-[962px] h-px bg-lp-line"></div>
+            <div class="lp-foot-left absolute left-[96px] top-[984px] font-mono text-[14px] uppercase tracking-[0.12em] text-lp-muted">Fleet census — June FY26</div>
+            <div class="lp-foot-right absolute right-[96px] top-[984px] font-mono text-[14px] uppercase tracking-[0.12em] text-lp-muted">Halcyon</div>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

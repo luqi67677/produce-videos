@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas — opening layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f1f0ee;
+    --lp-fg: #1a1a1a;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(26, 26, 26, 0.13);
+    --lp-accent: #7a7a78;
+    --lp-line: rgba(26, 26, 26, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   The sheet is surveyed, then titled.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-riseT { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-riseS { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-pop { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+
+.slide.active .lp-grid { animation: lp-fade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-ref:nth-of-type(1) { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.20s both; }
+.slide.active .lp-ref:nth-of-type(2) { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both; }
+.slide.active .lp-ref:nth-of-type(3) { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both; }
+.slide.active .lp-ref:nth-of-type(4) { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.38s both; }
+.slide.active .lp-cross { animation: lp-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both; }
+.slide.active .lp-cross-tag { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.60s both; }
+.slide.active .lp-title .lp-line:nth-child(1) { animation: lp-riseT 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.70s both; }
+.slide.active .lp-title .lp-line:nth-child(2) { animation: lp-riseT 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.82s both; }
+.slide.active .lp-lead { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.05s both; }
+.slide.active .lp-brand,
+.slide.active .lp-plate-l,
+.slide.active .lp-plate-r { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.2s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- survey grid: verticals every 240px, horizontals every 216px -->
+            <div class="lp-grid absolute inset-0 pointer-events-none" aria-hidden="true">
+                <div class="absolute top-0 bottom-0 left-[240px] w-px bg-lp-faint"></div>
+                <div class="absolute top-0 bottom-0 left-[480px] w-px bg-lp-faint"></div>
+                <div class="absolute top-0 bottom-0 left-[720px] w-px bg-lp-faint"></div>
+                <div class="absolute top-0 bottom-0 left-[960px] w-px bg-lp-faint"></div>
+                <div class="absolute top-0 bottom-0 left-[1200px] w-px bg-lp-faint"></div>
+                <div class="absolute top-0 bottom-0 left-[1440px] w-px bg-lp-faint"></div>
+                <div class="absolute top-0 bottom-0 left-[1680px] w-px bg-lp-faint"></div>
+                <div class="absolute left-0 right-0 top-[216px] h-px bg-lp-faint"></div>
+                <div class="absolute left-0 right-0 top-[432px] h-px bg-lp-faint"></div>
+                <div class="absolute left-0 right-0 top-[648px] h-px bg-lp-faint"></div>
+                <div class="absolute left-0 right-0 top-[864px] h-px bg-lp-faint"></div>
+            </div>
+
+            <!-- corner grid references -->
+            <div class="lp-ref absolute left-[36px] top-[36px] font-mono text-[15px] tracking-[0.12em] text-lp-muted">06°07′S</div>
+            <div class="lp-ref absolute right-[36px] top-[36px] font-mono text-[15px] tracking-[0.12em] text-lp-muted">106°49′E</div>
+            <div class="lp-ref absolute left-[36px] bottom-[36px] font-mono text-[15px] tracking-[0.12em] text-lp-muted">GRID N-4</div>
+            <div class="lp-ref absolute right-[36px] bottom-[36px] font-mono text-[15px] tracking-[0.12em] text-lp-muted">SCALE 1:CITY</div>
+
+            <!-- crosshair + tag: the deck's subject -->
+            <div class="lp-cross" aria-hidden="true">
+                <div class="absolute left-[1152px] top-[329px] w-[56px] h-[2px] bg-lp-accent"></div>
+                <div class="absolute left-[1179px] top-[302px] w-[2px] h-[56px] bg-lp-accent"></div>
+                <div class="absolute left-[1171px] top-[321px] w-[18px] h-[18px] rounded-full border-2 border-lp-accent bg-lp-bg"></div>
+            </div>
+            <div class="lp-cross-tag absolute left-[1228px] top-[320px] font-mono text-[17px] uppercase tracking-[0.14em] text-lp-accent">Sector 7 — Jakarta Utara</div>
+
+            <!-- title block, lower-left -->
+            <h1 class="lp-title absolute left-[96px] top-[512px] m-0 max-w-[1250px] font-display text-[124px] font-extrabold leading-none tracking-[-0.02em]">
+                <span class="lp-line block">Coverage is</span>
+                <span class="lp-line block">a map first</span>
+            </h1>
+            <p class="lp-lead absolute left-[96px] top-[796px] m-0 max-w-[780px] font-body text-[25px] leading-[1.5] text-lp-muted">Where the grid watches today, where it goes next, and what one sector's playbook gives the other eleven.</p>
+
+            <!-- OPTIONAL branding/logo slot (lower-right field): wordmark or image logo, ≤40px tall.
+                 Image option: <img src="https://placehold.co/260x80" class="h-[40px] w-auto object-contain">
+                 Remove this element entirely if the deck carries no brand mark. -->
+            <div class="lp-brand absolute right-[96px] top-[880px] h-[40px] flex items-center font-display text-[22px] font-extrabold tracking-[0.08em] uppercase">Northbeam</div>
+
+            <!-- plate margin -->
+            <div class="lp-plate-l absolute left-[96px] top-[956px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">Metro coverage review — S. Wulandari</div>
+            <div class="lp-plate-r absolute right-[96px] top-[956px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">Plate 01 / 12</div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

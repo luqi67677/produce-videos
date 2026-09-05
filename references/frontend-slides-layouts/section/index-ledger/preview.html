@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Index Ledger — section layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f2f1ef;
+    --lp-fg: #1b1b1b;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(27, 27, 27, 0.12);
+    --lp-accent: #7d7d7b;
+    --lp-line: rgba(27, 27, 27, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   Dim rows arrive at their resting 16% — they never flash to full.
+   =========================================== */
+@keyframes lp-fade-dim { from { opacity: 0; } to { opacity: 0.16; } }
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise-cur { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-draw { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes lp-rise-sm { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-row:nth-child(1) { animation: lp-fade-dim 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+.slide.active .lp-row:nth-child(2) { animation: lp-fade-dim 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
+.slide.active .lp-row:nth-child(3) { animation: lp-rise-cur 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.70s both; }
+.slide.active .lp-row:nth-child(4) { animation: lp-fade-dim 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both; }
+.slide.active .lp-row:nth-child(5) { animation: lp-fade-dim 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both; }
+.slide.active .lp-current-bar { animation: lp-draw 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.95s both; }
+.slide.active .lp-framing { animation: lp-rise-sm 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.1s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium tracking-[0.18em] uppercase text-lp-accent">Part Three</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] tracking-[0.12em] uppercase text-lp-muted">06 / 14</div>
+
+            <!-- index -->
+            <div class="absolute left-[160px] top-[220px]">
+                <div class="lp-row flex items-baseline h-[136px] opacity-[0.16]"><span class="w-[120px] flex-none font-mono text-[26px] tracking-[0.1em]">01</span><span class="font-display text-[96px] font-extrabold leading-[1] tracking-[-0.02em] uppercase">Inertia</span></div>
+                <div class="lp-row flex items-baseline h-[136px] opacity-[0.16]"><span class="w-[120px] flex-none font-mono text-[26px] tracking-[0.1em]">02</span><span class="font-display text-[96px] font-extrabold leading-[1] tracking-[-0.02em] uppercase">Depth</span></div>
+                <div class="lp-row flex items-baseline h-[136px]"><span class="w-[120px] flex-none font-mono text-[26px] tracking-[0.1em] text-lp-accent">03</span><span class="font-display text-[96px] font-extrabold leading-[1] tracking-[-0.02em] uppercase">Execution</span></div>
+                <div class="lp-row flex items-baseline h-[136px] opacity-[0.16]"><span class="w-[120px] flex-none font-mono text-[26px] tracking-[0.1em]">04</span><span class="font-display text-[96px] font-extrabold leading-[1] tracking-[-0.02em] uppercase">Proof</span></div>
+                <div class="lp-row flex items-baseline h-[136px] opacity-[0.16]"><span class="w-[120px] flex-none font-mono text-[26px] tracking-[0.1em]">05</span><span class="font-display text-[96px] font-extrabold leading-[1] tracking-[-0.02em] uppercase">Next</span></div>
+            </div>
+            <div class="lp-current-bar absolute left-[96px] top-[512px] w-[12px] h-[96px] bg-lp-accent origin-top" aria-hidden="true"></div>
+
+            <!-- framing -->
+            <p class="lp-framing absolute left-[160px] top-[964px] m-0 max-w-[800px] font-body text-[22px] leading-[1.5] text-lp-muted">Sixty days of the concentrated roadmap — what actually happened.</p>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

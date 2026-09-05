@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prologue — opening layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,700;0,800;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f1f0ee;
+    --lp-fg: #1a1a1a;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(26, 26, 26, 0.13);
+    --lp-accent: #7a7a78;
+    --lp-line: rgba(26, 26, 26, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   The quotation is read before the book is named.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-riseT { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-riseS { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-brand,
+.slide.active .lp-chrome-rule { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-epigraph { animation: lp-fade 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+.slide.active .lp-attrib { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both; }
+.slide.active .lp-divider { animation: lp-wipe 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both; transform-origin: center; }
+.slide.active .lp-title .lp-line:nth-child(1) { animation: lp-riseT 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.90s both; }
+.slide.active .lp-title .lp-line:nth-child(2) { animation: lp-riseT 0.7s cubic-bezier(0.16, 1, 0.3, 1) 1.02s both; }
+.slide.active .lp-subtitle { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.15s both; }
+.slide.active .lp-foot-rule,
+.slide.active .lp-foot-left,
+.slide.active .lp-foot-right { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.25s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome (top) -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Annual Letter — Series III</div>
+
+            <!-- OPTIONAL branding/logo slot: wordmark or image logo, ≤40px tall.
+                 Image option: <img src="https://placehold.co/260x80" class="h-[40px] w-auto object-contain">
+                 Remove this element entirely if the deck carries no brand mark. -->
+            <div class="lp-brand absolute right-[96px] top-[66px] h-[40px] flex items-center font-display text-[22px] font-extrabold tracking-[0.08em] uppercase">Solstice</div>
+
+            <div class="lp-chrome-rule absolute left-[96px] right-[96px] top-[118px] h-px bg-lp-line"></div>
+
+            <!-- epigraph -->
+            <p class="lp-epigraph absolute left-[410px] top-[236px] m-0 w-[1100px] text-center font-display text-[46px] italic leading-[1.35]">A city that can see itself can begin to govern itself.</p>
+            <div class="lp-attrib absolute left-[410px] top-[356px] w-[1100px] text-center font-mono text-[16px] uppercase tracking-[0.16em] text-lp-muted">— Provincial infrastructure review, 2024</div>
+
+            <!-- divider -->
+            <div class="lp-divider absolute left-[920px] top-[560px] w-[80px] h-[2px] bg-lp-accent"></div>
+
+            <!-- title block -->
+            <h1 class="lp-title absolute left-[96px] top-[660px] m-0 max-w-[1400px] font-display text-[104px] font-extrabold leading-none tracking-[-0.02em]">
+                <span class="lp-line block">The seeing city</span>
+            </h1>
+            <div class="lp-subtitle absolute left-[96px] top-[796px] font-body text-[26px] text-lp-muted">Annual letter to members and ministries — 2026</div>
+
+            <!-- footer -->
+            <div class="lp-foot-rule absolute left-[96px] right-[96px] top-[962px] h-px bg-lp-line"></div>
+            <div class="lp-foot-left absolute left-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">S. Wulandari — Chief Executive</div>
+            <div class="lp-foot-right absolute right-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">01 / 14</div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

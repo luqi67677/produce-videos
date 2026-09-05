@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triptych — image layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f1f0ee;
+    --lp-fg: #1a1a1a;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(26, 26, 26, 0.13);
+    --lp-accent: #7a7a78;
+    --lp-line: rgba(26, 26, 26, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-riseP { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: translateY(0); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-brand { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline { animation: lp-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-panel:nth-of-type(1) { animation: lp-riseP 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.30s both; }
+.slide.active .lp-panel:nth-of-type(2) { animation: lp-riseP 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both; }
+.slide.active .lp-panel:nth-of-type(3) { animation: lp-riseP 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.60s both; }
+.slide.active .lp-panel:nth-of-type(1) .lp-cap { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.90s both; }
+.slide.active .lp-panel:nth-of-type(2) .lp-cap { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.00s both; }
+.slide.active .lp-panel:nth-of-type(3) .lp-cap { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.10s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- header band -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Field Evidence — Deployment Sites</div>
+
+            <!-- OPTIONAL branding/logo slot: wordmark or image logo, ≤40px tall.
+                 Image option: <img src="https://placehold.co/260x80" class="h-[40px] w-auto object-contain">
+                 Remove this element entirely if the deck carries no brand mark. -->
+            <div class="lp-brand absolute right-[96px] top-[66px] h-[40px] flex items-center font-display text-[22px] font-extrabold tracking-[0.08em] uppercase">Northbeam</div>
+
+            <h1 class="lp-headline absolute left-[96px] top-[128px] m-0 max-w-[1500px] font-display text-[60px] font-bold leading-none tracking-[-0.01em]">One system, three cities</h1>
+
+            <!-- panel band: 3 × 632px panels, 12px surface gaps, full bleed to bottom.
+                 Images are optional placeholders — swap src for real photos or keep the token fill. -->
+            <div class="lp-panel absolute left-0 top-[260px] w-[632px] h-[820px] bg-lp-faint">
+                <img class="absolute inset-0 w-full h-full max-w-none max-h-none object-cover" src="https://placehold.co/632x820/3a3a38/8a8a88" alt="Intersection camera node, Bandung">
+                <div class="lp-cap absolute left-[24px] bottom-[24px] bg-lp-bg px-[16px] py-[10px] font-mono text-[14px] uppercase tracking-[0.14em]">Fig 01 — Intersection node, Bandung</div>
+            </div>
+            <div class="lp-panel absolute left-[644px] top-[260px] w-[632px] h-[820px] bg-lp-faint">
+                <img class="absolute inset-0 w-full h-full max-w-none max-h-none object-cover" src="https://placehold.co/632x820/2e2e2c/7e7e7c" alt="Metro control room, Jakarta">
+                <div class="lp-cap absolute left-[24px] bottom-[24px] bg-lp-bg px-[16px] py-[10px] font-mono text-[14px] uppercase tracking-[0.14em] text-lp-accent">Fig 02 — Control room, Jakarta</div>
+            </div>
+            <div class="lp-panel absolute left-[1288px] top-[260px] w-[632px] h-[820px] bg-lp-faint">
+                <img class="absolute inset-0 w-full h-full max-w-none max-h-none object-cover" src="https://placehold.co/632x820/454543/959593" alt="Edge compute rack, Surabaya">
+                <div class="lp-cap absolute left-[24px] bottom-[24px] bg-lp-bg px-[16px] py-[10px] font-mono text-[14px] uppercase tracking-[0.14em]">Fig 03 — Edge rack, Surabaya</div>
+            </div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

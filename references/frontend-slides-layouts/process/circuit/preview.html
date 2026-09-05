@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circuit — process layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f1f0ee;
+    --lp-fg: #1a1a1a;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(26, 26, 26, 0.13);
+    --lp-accent: #7a7a78;
+    --lp-line: rgba(26, 26, 26, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   The loop draws clockwise: top → right → bottom → left.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-riseS { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-wipeX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes lp-wipeY { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes lp-pop { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-brand,
+.slide.active .lp-chrome-rule { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-center { animation: lp-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-edge-top    { animation: lp-wipeX 0.28s linear 0.30s both; transform-origin: left; }
+.slide.active .lp-edge-right  { animation: lp-wipeY 0.28s linear 0.58s both; transform-origin: top; }
+.slide.active .lp-edge-bottom { animation: lp-wipeX 0.28s linear 0.86s both; transform-origin: right; }
+.slide.active .lp-edge-left   { animation: lp-wipeY 0.28s linear 1.14s both; transform-origin: bottom; }
+.slide.active .lp-node-02 { animation: lp-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.58s both; }
+.slide.active .lp-node-03 { animation: lp-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.86s both; }
+.slide.active .lp-node-04 { animation: lp-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1) 1.14s both; }
+.slide.active .lp-node-01 { animation: lp-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1) 1.42s both; }
+.slide.active .lp-st-01 { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both; }
+.slide.active .lp-st-02 { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.83s both; }
+.slide.active .lp-st-03 { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.11s both; }
+.slide.active .lp-st-04 { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.39s both; }
+.slide.active .lp-tick { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.45s both; }
+.slide.active .lp-foot-rule,
+.slide.active .lp-foot-left,
+.slide.active .lp-foot-right { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.45s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome (top) -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Operations — How Alerts Close the Loop</div>
+
+            <!-- OPTIONAL branding/logo slot: wordmark or image logo, ≤40px tall.
+                 Image option: <img src="https://placehold.co/260x80" class="h-[40px] w-auto object-contain">
+                 Remove this element entirely if the deck carries no brand mark. -->
+            <div class="lp-brand absolute right-[96px] top-[66px] h-[40px] flex items-center font-display text-[22px] font-extrabold tracking-[0.08em] uppercase">Auric</div>
+
+            <div class="lp-chrome-rule absolute left-[96px] right-[96px] top-[118px] h-px bg-lp-line"></div>
+
+            <!-- the loop: rectangle x:420→1500, y:330→800 -->
+            <div class="lp-edge-top absolute left-[420px] top-[330px] w-[1080px] h-px bg-lp-line"></div>
+            <div class="lp-edge-right absolute left-[1500px] top-[330px] w-px h-[470px] bg-lp-line"></div>
+            <div class="lp-edge-bottom absolute left-[420px] top-[800px] w-[1080px] h-px bg-lp-line"></div>
+            <div class="lp-edge-left absolute left-[420px] top-[330px] w-px h-[470px] bg-lp-line"></div>
+
+            <!-- corner nodes (01 top-left is the accent entry point) -->
+            <div class="lp-node-01 absolute left-[411px] top-[321px] w-[18px] h-[18px] bg-lp-accent"></div>
+            <div class="lp-node-02 absolute left-[1493px] top-[323px] w-[14px] h-[14px] bg-lp-fg"></div>
+            <div class="lp-node-03 absolute left-[1493px] top-[793px] w-[14px] h-[14px] bg-lp-fg"></div>
+            <div class="lp-node-04 absolute left-[413px] top-[793px] w-[14px] h-[14px] bg-lp-fg"></div>
+
+            <!-- direction ticks, clockwise -->
+            <div class="lp-tick absolute left-[950px] top-[318px] font-mono text-[20px] leading-none text-lp-muted">▸</div>
+            <div class="lp-tick absolute left-[1490px] top-[553px] font-mono text-[20px] leading-none text-lp-muted">▾</div>
+            <div class="lp-tick absolute left-[950px] top-[788px] font-mono text-[20px] leading-none text-lp-muted">◂</div>
+            <div class="lp-tick absolute left-[410px] top-[553px] font-mono text-[20px] leading-none text-lp-muted">▴</div>
+
+            <!-- center title -->
+            <div class="lp-center absolute left-[560px] top-[529px] w-[800px] text-center font-display text-[72px] font-bold leading-none tracking-[-0.01em]">The detection loop</div>
+
+            <!-- station labels, clockwise from top-left -->
+            <div class="lp-st-01 absolute left-[420px] top-[232px]">
+                <div class="font-mono text-[18px] text-lp-accent">01 <span class="ml-[10px] font-display text-[36px] font-bold text-lp-fg align-middle">Detect</span></div>
+                <div class="mt-[6px] font-body text-[20px] text-lp-muted">Cameras flag anomalies at the edge</div>
+            </div>
+            <div class="lp-st-02 absolute right-[420px] top-[232px] text-right">
+                <div class="font-mono text-[18px] text-lp-accent">02 <span class="ml-[10px] font-display text-[36px] font-bold text-lp-fg align-middle">Verify</span></div>
+                <div class="mt-[6px] font-body text-[20px] text-lp-muted">Operators confirm within thirty seconds</div>
+            </div>
+            <div class="lp-st-03 absolute right-[420px] top-[836px] text-right">
+                <div class="font-mono text-[18px] text-lp-accent">03 <span class="ml-[10px] font-display text-[36px] font-bold text-lp-fg align-middle">Dispatch</span></div>
+                <div class="mt-[6px] font-body text-[20px] text-lp-muted">Nearest responder receives the packet</div>
+            </div>
+            <div class="lp-st-04 absolute left-[420px] top-[836px]">
+                <div class="font-mono text-[18px] text-lp-accent">04 <span class="ml-[10px] font-display text-[36px] font-bold text-lp-fg align-middle">Learn</span></div>
+                <div class="mt-[6px] font-body text-[20px] text-lp-muted">Outcomes retrain the model weekly</div>
+            </div>
+
+            <!-- footer -->
+            <div class="lp-foot-rule absolute left-[96px] right-[96px] top-[962px] h-px bg-lp-line"></div>
+            <div class="lp-foot-left absolute left-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">Cadence: continuous — model refresh every Friday</div>
+            <div class="lp-foot-right absolute right-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">11 / 12</div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

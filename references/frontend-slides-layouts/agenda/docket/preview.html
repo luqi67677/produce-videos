@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docket — agenda layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f1f0ee;
+    --lp-fg: #1a1a1a;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(26, 26, 26, 0.13);
+    --lp-accent: #7a7a78;
+    --lp-line: rgba(26, 26, 26, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-riseS { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-brand,
+.slide.active .lp-chrome-rule { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline { animation: lp-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-row:nth-of-type(1) .lp-rrule { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.30s both; transform-origin: left; }
+.slide.active .lp-row:nth-of-type(2) .lp-rrule { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both; transform-origin: left; }
+.slide.active .lp-row:nth-of-type(3) .lp-rrule { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.60s both; transform-origin: left; }
+.slide.active .lp-row:nth-of-type(4) .lp-rrule { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both; transform-origin: left; }
+.slide.active .lp-row:nth-of-type(5) .lp-rrule { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.90s both; transform-origin: left; }
+.slide.active .lp-row:nth-of-type(1) .lp-time { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.30s both; }
+.slide.active .lp-row:nth-of-type(2) .lp-time { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both; }
+.slide.active .lp-row:nth-of-type(3) .lp-time { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.60s both; }
+.slide.active .lp-row:nth-of-type(4) .lp-time { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both; }
+.slide.active .lp-row:nth-of-type(5) .lp-time { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.90s both; }
+.slide.active .lp-row:nth-of-type(1) .lp-body { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.40s both; }
+.slide.active .lp-row:nth-of-type(2) .lp-body { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both; }
+.slide.active .lp-row:nth-of-type(3) .lp-body { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.70s both; }
+.slide.active .lp-row:nth-of-type(4) .lp-body { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.85s both; }
+.slide.active .lp-row:nth-of-type(5) .lp-body { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.00s both; }
+.slide.active .lp-foot-rule,
+.slide.active .lp-foot-left,
+.slide.active .lp-foot-right { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.2s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome (top) -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Working Session — Metro Rollout Review</div>
+
+            <!-- OPTIONAL branding/logo slot: wordmark or image logo, ≤40px tall.
+                 Image option: <img src="https://placehold.co/260x80" class="h-[40px] w-auto object-contain">
+                 Remove this element entirely if the deck carries no brand mark. -->
+            <div class="lp-brand absolute right-[96px] top-[66px] h-[40px] flex items-center font-display text-[22px] font-extrabold tracking-[0.08em] uppercase">Cinder</div>
+
+            <div class="lp-chrome-rule absolute left-[96px] right-[96px] top-[118px] h-px bg-lp-line"></div>
+
+            <!-- headline -->
+            <h1 class="lp-headline absolute left-[96px] top-[164px] m-0 max-w-[1400px] font-display text-[64px] font-bold leading-none tracking-[-0.01em]">The next ninety minutes</h1>
+
+            <!-- docket rows: 124px pitch, each closed by a hairline -->
+            <div class="lp-row absolute left-[96px] right-[96px] top-[300px] h-[124px]">
+                <div class="lp-time absolute left-0 top-[46px] font-mono text-[24px] tracking-[0.06em] text-lp-muted">09:00</div>
+                <div class="lp-body">
+                    <div class="absolute left-[244px] top-[42px] max-w-[1000px] font-display text-[36px] font-bold leading-none">Arrival &amp; systems check</div>
+                    <div class="absolute right-0 top-[52px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">Ops team</div>
+                </div>
+                <div class="lp-rrule absolute left-0 right-0 bottom-0 h-px bg-lp-line"></div>
+            </div>
+            <div class="lp-row absolute left-[96px] right-[96px] top-[424px] h-[124px]">
+                <div class="lp-time absolute left-0 top-[46px] font-mono text-[24px] tracking-[0.06em] text-lp-muted">09:15</div>
+                <div class="lp-body">
+                    <div class="absolute left-[244px] top-[42px] max-w-[1000px] font-display text-[36px] font-bold leading-none">The case for federation</div>
+                    <div class="absolute right-0 top-[52px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">S. Wulandari</div>
+                </div>
+                <div class="lp-rrule absolute left-0 right-0 bottom-0 h-px bg-lp-line"></div>
+            </div>
+            <div class="lp-row absolute left-[96px] right-[96px] top-[548px] h-[124px]">
+                <div class="lp-time absolute left-0 top-[46px] font-mono text-[24px] tracking-[0.06em] text-lp-accent">09:45</div>
+                <div class="lp-body">
+                    <div class="absolute left-[214px] top-[52px] w-[10px] h-[10px] bg-lp-accent"></div>
+                    <div class="absolute left-[244px] top-[42px] max-w-[1000px] font-display text-[36px] font-bold leading-none">Live control-room walkthrough</div>
+                    <div class="absolute right-0 top-[52px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">B. Prakoso</div>
+                </div>
+                <div class="lp-rrule absolute left-0 right-0 bottom-0 h-px bg-lp-line"></div>
+            </div>
+            <div class="lp-row absolute left-[96px] right-[96px] top-[672px] h-[124px]">
+                <div class="lp-time absolute left-0 top-[46px] font-mono text-[24px] tracking-[0.06em] text-lp-muted">10:20</div>
+                <div class="lp-body">
+                    <div class="absolute left-[244px] top-[42px] max-w-[1000px] font-display text-[36px] font-bold leading-none">Procurement &amp; data residency</div>
+                    <div class="absolute right-0 top-[52px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">M. Chen</div>
+                </div>
+                <div class="lp-rrule absolute left-0 right-0 bottom-0 h-px bg-lp-line"></div>
+            </div>
+            <div class="lp-row absolute left-[96px] right-[96px] top-[796px] h-[124px]">
+                <div class="lp-time absolute left-0 top-[46px] font-mono text-[24px] tracking-[0.06em] text-lp-muted">10:45</div>
+                <div class="lp-body">
+                    <div class="absolute left-[244px] top-[42px] max-w-[1000px] font-display text-[36px] font-bold leading-none">Open floor</div>
+                    <div class="absolute right-0 top-[52px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">All hands</div>
+                </div>
+                <div class="lp-rrule absolute left-0 right-0 bottom-0 h-px bg-lp-line"></div>
+            </div>
+
+            <!-- footer -->
+            <div class="lp-foot-rule absolute left-[96px] right-[96px] top-[962px] h-px bg-lp-line"></div>
+            <div class="lp-foot-left absolute left-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">Command center annex, Jakarta — 09 Jul 2026</div>
+            <div class="lp-foot-right absolute right-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">02 / 14</div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

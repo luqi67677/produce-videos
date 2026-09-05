@@ -91,13 +91,13 @@ def validate(path: Path, require_locked: bool) -> list[str]:
             errors.append("缺少 image_generation.palette_prompt")
         if not image_generation.get("negative_palette_prompt"):
             errors.append("缺少 image_generation.negative_palette_prompt")
-        if data.get("schema_version") == "1.1":
+        if data.get("schema_version") in {"1.1", "1.2"}:
             if not image_generation.get("depth_prompt"):
                 errors.append("缺少 image_generation.depth_prompt")
             if not image_generation.get("negative_composition_prompt"):
                 errors.append("缺少 image_generation.negative_composition_prompt")
 
-    if data.get("schema_version") == "1.1":
+    if data.get("schema_version") in {"1.1", "1.2"}:
         visual_language = data.get("visual_language")
         if not isinstance(visual_language, dict) or visual_language.get("shadow") != "none":
             errors.append("visual_language.shadow 必须为 none")
@@ -118,6 +118,16 @@ def validate(path: Path, require_locked: bool) -> list[str]:
             for key in ("raw_full_page_as_decoration", "stacked_background_effects", "heavy_subtitle_bar"):
                 if cleanliness.get(key) is not False:
                     errors.append(f"cleanliness_contract.{key} 必须为 false")
+            if data.get("schema_version") == "1.2":
+                for key in (
+                    "global_grime_or_color_cast",
+                    "noise_or_dust_texture",
+                    "random_particles_or_flares",
+                    "generic_ai_cliche_decor",
+                    "unassigned_blank_area",
+                ):
+                    if cleanliness.get(key) is not False:
+                        errors.append(f"cleanliness_contract.{key} 必须为 false")
             if cleanliness.get("rim_light_mode") not in {"subtle-soft", "none-when-not-applicable"}:
                 errors.append("cleanliness_contract.rim_light_mode 必须为 subtle-soft 或 none-when-not-applicable")
             if cleanliness.get("exception_policy") != "only_when_user_explicitly_requires_real_spatial_context":

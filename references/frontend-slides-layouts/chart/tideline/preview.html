@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tideline — chart layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f2f1ef;
+    --lp-fg: #1b1b1b;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(27, 27, 27, 0.12);
+    --lp-accent: #55554f;
+    --lp-line: rgba(27, 27, 27, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   The line draws left→right (pathLength-normalized dash),
+   the fill wells up beneath it, the endpoint lands last.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes lp-pop { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+
+.lp-trend-line { stroke-dasharray: 1; }
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-baseline { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+.slide.active .lp-trend-line { animation: lp-draw 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both; }
+.slide.active .lp-trend-fill { animation: lp-fade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both; }
+.slide.active .lp-start-label,
+.slide.active .lp-time-ticks { animation: lp-fade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.2s both; }
+.slide.active .lp-end-dot { animation: lp-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.7s both; }
+.slide.active .lp-end-value { animation: lp-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.75s both; }
+.slide.active .lp-reading,
+.slide.active .lp-foot-left,
+.slide.active .lp-foot-right { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 2.0s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- header -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Fleet Telemetry</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">09 / 18</div>
+            <h2 class="lp-headline absolute left-[96px] top-[118px] m-0 font-display text-[76px] font-extrabold leading-[1.02] tracking-[-0.02em] uppercase">The edge fleet grew <em class="not-italic text-lp-accent">4.4×</em></h2>
+            <p class="lp-reading absolute right-[96px] top-[128px] m-0 w-[360px] font-body text-[18px] leading-[1.55] text-lp-muted">Every camera that came online stayed online — two winters of procurement freezes barely dented the curve.</p>
+
+            <!-- area chart (zero baseline at y:960; 24 monthly points, max 10,000 → 520px; straight segments, TRUE VALUES) -->
+            <svg class="absolute left-0 top-[440px] h-[520px] w-[1920px]" viewBox="0 0 1920 520" fill="none" preserveAspectRatio="none" aria-hidden="true">
+                <path class="lp-trend-fill" d="M0,407 L79,398 L159,401 L238,389 L317,378 L397,381 L476,367 L555,350 L635,355 L714,332 L793,313 L873,298 L952,304 L1031,280 L1111,257 L1190,266 L1269,235 L1349,202 L1428,188 L1507,163 L1587,133 L1666,93 L1745,58 L1824,19 L1824,520 L0,520 Z" fill="var(--lp-fg-faint)"/>
+                <path class="lp-trend-line" d="M0,407 L79,398 L159,401 L238,389 L317,378 L397,381 L476,367 L555,350 L635,355 L714,332 L793,313 L873,298 L952,304 L1031,280 L1111,257 L1190,266 L1269,235 L1349,202 L1428,188 L1507,163 L1587,133 L1666,93 L1745,58 L1824,19" stroke="var(--lp-fg)" stroke-width="3" pathLength="1"/>
+            </svg>
+
+            <!-- start label, endpoint dot + value -->
+            <div class="lp-start-label absolute left-[96px] top-[810px] font-mono text-[15px] tracking-[0.04em] text-lp-muted">2,180 · JUN '24</div>
+            <div class="lp-end-dot absolute left-[1817px] top-[452px] h-[14px] w-[14px] rounded-full bg-lp-accent"></div>
+            <div class="lp-end-value absolute right-[110px] top-[350px] text-right">
+                <div class="font-display text-[44px] font-extrabold leading-none tracking-[-0.01em] text-lp-accent">9,640</div>
+                <div class="mt-[6px] font-mono text-[13px] uppercase tracking-[0.08em] text-lp-muted">May '26</div>
+            </div>
+
+            <!-- baseline + time ticks (at true data x-positions) -->
+            <div class="lp-baseline absolute inset-x-0 top-[959px] h-px bg-lp-line"></div>
+            <div class="lp-time-ticks">
+                <div class="absolute left-[476px] top-[978px] -translate-x-1/2 font-mono text-[13px] uppercase tracking-[0.08em] text-lp-muted">Dec '24</div>
+                <div class="absolute left-[952px] top-[978px] -translate-x-1/2 font-mono text-[13px] uppercase tracking-[0.08em] text-lp-muted">Jun '25</div>
+                <div class="absolute left-[1428px] top-[978px] -translate-x-1/2 font-mono text-[13px] uppercase tracking-[0.08em] text-lp-muted">Dec '25</div>
+            </div>
+
+            <!-- footer -->
+            <div class="lp-foot-left absolute left-[96px] top-[1020px] font-mono text-[14px] uppercase tracking-[0.12em] text-lp-muted">Active edge deployments — monthly</div>
+            <div class="lp-foot-right absolute right-[96px] top-[1020px] font-mono text-[14px] uppercase tracking-[0.12em] text-lp-muted">Solstice</div>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

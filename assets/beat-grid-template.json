@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "source": {
+    "path": "",
+    "sha256": ""
+  },
+  "method": "manual-bpm",
+  "confidence": "declared",
+  "bpm": 120,
+  "offset_seconds": 0,
+  "duration_seconds": 30,
+  "beats": [],
+  "downbeats": []
+}

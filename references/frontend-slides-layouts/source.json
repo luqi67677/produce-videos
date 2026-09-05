@@ -1,0 +1,14 @@
+{
+  "name": "frontend-slides layout presets",
+  "upstream": "https://github.com/dreamid27/frontend-slides",
+  "commit": "20dead484a56ddef4c738e1504035f331a3f262d",
+  "imported_at": "2026-09-06",
+  "license": "MIT",
+  "layout_count": 88,
+  "included": [
+    "layout-presets/README.md",
+    "88 layout.md specifications",
+    "88 preview.html demonstrations"
+  ],
+  "local_changes": "Copied under references/frontend-slides-layouts and used as style-neutral structural references. Demo email addresses were replaced with CONTACT before public release; Produce Videos adds portrait adaptation, clean-frame limits, and video-specific review gates."
+}

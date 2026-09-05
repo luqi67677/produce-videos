@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nightfall — closing layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Nightfall runs on the INVERTED surface: the .lp block swaps
+   bg/fg. Dual-surface systems map this to their alternate surface.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #1a1a1a;
+    --lp-fg: #f1f0ee;
+    --lp-fg-muted: #9b9b98;
+    --lp-fg-faint: rgba(241, 240, 238, 0.13);
+    --lp-accent: #a8a8a4;
+    --lp-line: rgba(241, 240, 238, 0.24);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Lights down, then the residue.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-riseT { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-riseS { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-brand { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-statement { animation: lp-riseT 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+.slide.active .lp-band-rule-1 { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both; transform-origin: center; }
+.slide.active .lp-band-rule-2 { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both; transform-origin: center; }
+.slide.active .lp-fig:nth-of-type(1) { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.80s both; }
+.slide.active .lp-fig:nth-of-type(2) { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.92s both; }
+.slide.active .lp-fig:nth-of-type(3) { animation: lp-riseS 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.04s both; }
+.slide.active .lp-contact { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.3s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome (top) -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Metro Coverage Review — Close</div>
+
+            <!-- OPTIONAL branding/logo slot: light/mono wordmark or logo, ≤40px tall.
+                 Image option: <img src="https://placehold.co/260x80" class="h-[40px] w-auto object-contain">
+                 Remove this element entirely if the deck carries no brand mark. -->
+            <div class="lp-brand absolute right-[96px] top-[66px] h-[40px] flex items-center font-display text-[22px] font-extrabold tracking-[0.08em] uppercase">Northbeam</div>
+
+            <!-- the statement -->
+            <h1 class="lp-statement absolute left-[310px] top-[316px] m-0 w-[1300px] text-center font-display text-[92px] font-extrabold leading-[1.05] tracking-[-0.02em]">The grid is no longer the experiment.</h1>
+
+            <!-- the residue: three figures the deck already proved -->
+            <div class="lp-band-rule-1 absolute left-[310px] top-[600px] w-[1300px] h-px bg-lp-line"></div>
+            <div class="lp-band-rule-2 absolute left-[310px] top-[790px] w-[1300px] h-px bg-lp-line"></div>
+
+            <div class="lp-fig absolute left-[310px] top-[646px] w-[433px] text-center">
+                <div class="font-mono text-[54px] font-medium leading-none">6,500</div>
+                <div class="mt-[14px] font-mono text-[15px] uppercase tracking-[0.14em] text-lp-muted">Cameras live</div>
+            </div>
+            <div class="lp-fig absolute left-[743px] top-[646px] w-[433px] text-center">
+                <div class="font-mono text-[54px] font-medium leading-none text-lp-accent">12 cities</div>
+                <div class="mt-[14px] font-mono text-[15px] uppercase tracking-[0.14em] text-lp-muted">One federation</div>
+            </div>
+            <div class="lp-fig absolute left-[1176px] top-[646px] w-[433px] text-center">
+                <div class="font-mono text-[54px] font-medium leading-none">99.95%</div>
+                <div class="mt-[14px] font-mono text-[15px] uppercase tracking-[0.14em] text-lp-muted">Fleet uptime</div>
+            </div>
+
+            <!-- contact -->
+            <div class="lp-contact absolute left-[310px] top-[900px] w-[1300px] text-center font-mono text-[16px] uppercase tracking-[0.14em] text-lp-muted">CONTACT — 09 Jul 2026</div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

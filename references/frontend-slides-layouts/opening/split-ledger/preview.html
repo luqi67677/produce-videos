@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Split Ledger — opening layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f1f0ee;
+    --lp-fg: #1a1a1a;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(26, 26, 26, 0.13);
+    --lp-accent: #8a8a88;
+    --lp-line: rgba(26, 26, 26, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-fade-dim { from { opacity: 0; } to { opacity: 0.7; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-drop { from { opacity: 0; transform: translateX(-50%) translateY(-40px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.slide.active .lp-panel { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-seam-numeral { animation: lp-drop 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+.slide.active .lp-title .lp-line:nth-child(1) { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both; }
+.slide.active .lp-title .lp-line:nth-child(2) { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.57s both; }
+.slide.active .lp-title .lp-line:nth-child(3) { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.69s both; }
+.slide.active .lp-lead { animation: lp-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.85s both; }
+.slide.active .lp-panel-kicker,
+.slide.active .lp-foot-rule,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.0s both; }
+.slide.active .lp-panel-meta { animation: lp-fade-dim 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.0s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- inverted panel (skin point: dual-surface systems use their alt surface) -->
+            <div class="lp-panel absolute left-0 top-0 z-0 w-[720px] h-[1080px] origin-left bg-lp-fg text-lp-bg">
+                <div class="lp-panel-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Product Strategy</div>
+                <div class="lp-panel-meta absolute left-[96px] bottom-[72px] font-mono text-[15px] uppercase tracking-[0.12em] leading-[2.2] text-lp-bg opacity-70">
+                    Offsite Briefing<br>
+                    08 Jul 2026<br>
+                    Auric
+                </div>
+            </div>
+
+            <!-- seam numeral (must straddle x:720) -->
+            <div class="lp-seam-numeral absolute left-[720px] top-[96px] z-[2] pointer-events-none -translate-x-1/2 font-display text-[300px] font-extrabold leading-[1] text-lp-accent" aria-hidden="true">01</div>
+
+            <!-- right field (top 380px suits this 3-line title; use top 450px for a 2-line title) -->
+            <div class="absolute left-[816px] top-[380px] z-[1] max-w-[1000px]">
+                <h1 class="lp-title m-0 font-display text-[150px] font-extrabold leading-[0.95] tracking-[-0.02em] uppercase">
+                    <span class="lp-line block">Signal</span>
+                    <span class="lp-line block">over</span>
+                    <span class="lp-line block"><em class="not-italic text-lp-accent">noise</em></span>
+                </h1>
+                <p class="lp-lead mt-[36px] mb-0 max-w-[560px] font-body text-[22px] leading-[1.55] text-lp-muted">Three decisions that will compound for the next five years — and what we stop doing to make room for them.</p>
+            </div>
+
+            <!-- footer (right field only) -->
+            <div class="lp-foot-rule absolute left-[816px] right-[96px] top-[962px] h-px bg-lp-line"></div>
+            <div class="lp-counter absolute right-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">01 / 12</div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

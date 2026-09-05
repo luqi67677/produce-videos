@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "project": "",
+  "format": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30
+  },
+  "audio_spine": {
+    "path": "",
+    "sha256": "",
+    "preserve_duration": true,
+    "cut_boundary_fade_ms": 30
+  },
+  "picture_track": [
+    {
+      "clip_id": "c01",
+      "scene_id": "s01",
+      "asset_id": "asset-001",
+      "source_path": "",
+      "source_in_seconds": 0,
+      "timeline_start_seconds": 0,
+      "duration_seconds": 3,
+      "roll_type": "a-roll",
+      "covers": "",
+      "cut_locked": false
+    }
+  ],
+  "transitions": [
+    {
+      "at_seconds": 3,
+      "type": "hard-cut",
+      "reason": ""
+    }
+  ]
+}

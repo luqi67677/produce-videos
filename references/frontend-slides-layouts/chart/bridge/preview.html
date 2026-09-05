@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bridge — chart layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   NOTE: step bars use the light line-ink so start (dark), steps
+   (light), and the accent end bar stay distinguishable in grayscale.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f1f0ee;
+    --lp-fg: #1a1a1a;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(26, 26, 26, 0.13);
+    --lp-accent: #7a7a78;
+    --lp-line: rgba(26, 26, 26, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   The bridge builds left to right; the end bar is the arrival beat.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes lp-growUp { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-brand,
+.slide.active .lp-chrome-rule { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline,
+.slide.active .lp-reading { animation: lp-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-baseline { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; transform-origin: left; }
+.slide.active .lp-bar-start { animation: lp-growUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.50s both; transform-origin: bottom; }
+.slide.active .lp-lbl-start { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both; }
+.slide.active .lp-conn-1 { animation: lp-wipe 0.25s linear 0.75s both; transform-origin: left; }
+.slide.active .lp-bar-s1 { animation: lp-growUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.90s both; transform-origin: bottom; }
+.slide.active .lp-lbl-s1 { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.00s both; }
+.slide.active .lp-conn-2 { animation: lp-wipe 0.25s linear 1.03s both; transform-origin: left; }
+.slide.active .lp-bar-s2 { animation: lp-growUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.18s both; transform-origin: bottom; }
+.slide.active .lp-lbl-s2 { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.28s both; }
+.slide.active .lp-conn-3 { animation: lp-wipe 0.25s linear 1.31s both; transform-origin: left; }
+.slide.active .lp-bar-s3 { animation: lp-growUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.46s both; transform-origin: top; }
+.slide.active .lp-lbl-s3 { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.56s both; }
+.slide.active .lp-conn-4 { animation: lp-wipe 0.25s linear 1.50s both; transform-origin: left; }
+.slide.active .lp-bar-end { animation: lp-growUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.60s both; transform-origin: bottom; }
+.slide.active .lp-lbl-end { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.85s both; }
+.slide.active .lp-collbl,
+.slide.active .lp-foot-rule,
+.slide.active .lp-foot-left,
+.slide.active .lp-foot-right { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.9s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome (top) -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Fleet Growth — FY26 Closeout</div>
+
+            <!-- OPTIONAL branding/logo slot: wordmark or image logo, ≤40px tall.
+                 Image option: <img src="https://placehold.co/260x80" class="h-[40px] w-auto object-contain">
+                 Remove this element entirely if the deck carries no brand mark. -->
+            <div class="lp-brand absolute right-[96px] top-[66px] h-[40px] flex items-center font-display text-[22px] font-extrabold tracking-[0.08em] uppercase">Arka</div>
+
+            <div class="lp-chrome-rule absolute left-[96px] right-[96px] top-[118px] h-px bg-lp-line"></div>
+
+            <!-- headline + reading -->
+            <h1 class="lp-headline absolute left-[96px] top-[164px] m-0 max-w-[1400px] font-display text-[60px] font-bold leading-none tracking-[-0.01em]">How the fleet reached 6,500</h1>
+            <div class="lp-reading absolute left-[96px] top-[242px] font-mono text-[16px] uppercase tracking-[0.14em] text-lp-muted">Camera count, FY25 → FY26 · the steps sum exactly</div>
+
+            <!-- baseline (0) -->
+            <div class="lp-baseline absolute left-[96px] right-[96px] top-[820px] h-px bg-lp-line"></div>
+
+            <!-- start bar: 4,200 grounded -->
+            <div class="lp-bar-start absolute left-[96px] top-[540px] w-[200px] h-[280px] bg-lp-fg"></div>
+            <div class="lp-lbl-start absolute left-[96px] top-[504px] w-[200px] text-center font-mono text-[20px]">4,200</div>
+
+            <!-- connector 1 at level 4,200 -->
+            <div class="lp-conn-1 absolute left-[296px] top-[540px] w-[182px] border-t border-dashed border-lp-line"></div>
+
+            <!-- step 1: +1,800 floating (4,200 → 6,000) -->
+            <div class="lp-bar-s1 absolute left-[478px] top-[420px] w-[200px] h-[120px] bg-lp-line"></div>
+            <div class="lp-lbl-s1 absolute left-[478px] top-[384px] w-[200px] text-center font-mono text-[20px] text-lp-muted">+1,800</div>
+
+            <!-- connector 2 at level 6,000 -->
+            <div class="lp-conn-2 absolute left-[678px] top-[420px] w-[182px] border-t border-dashed border-lp-line"></div>
+
+            <!-- step 2: +900 floating (6,000 → 6,900) -->
+            <div class="lp-bar-s2 absolute left-[860px] top-[360px] w-[200px] h-[60px] bg-lp-line"></div>
+            <div class="lp-lbl-s2 absolute left-[860px] top-[324px] w-[200px] text-center font-mono text-[20px] text-lp-muted">+900</div>
+
+            <!-- connector 3 at level 6,900 -->
+            <div class="lp-conn-3 absolute left-[1060px] top-[360px] w-[182px] border-t border-dashed border-lp-line"></div>
+
+            <!-- step 3: −400 hanging (6,900 → 6,500), outlined -->
+            <div class="lp-bar-s3 absolute left-[1242px] top-[360px] w-[200px] h-[27px] border-2 border-lp-muted"></div>
+            <div class="lp-lbl-s3 absolute left-[1242px] top-[399px] w-[200px] text-center font-mono text-[20px] text-lp-muted">−400</div>
+
+            <!-- connector 4 at level 6,500 -->
+            <div class="lp-conn-4 absolute left-[1442px] top-[387px] w-[182px] border-t border-dashed border-lp-line"></div>
+
+            <!-- end bar: 6,500 grounded, the accent -->
+            <div class="lp-bar-end absolute left-[1624px] top-[387px] w-[200px] h-[433px] bg-lp-accent"></div>
+            <div class="lp-lbl-end absolute left-[1624px] top-[351px] w-[200px] text-center font-mono text-[20px] font-medium text-lp-accent">6,500</div>
+
+            <!-- column labels -->
+            <div class="lp-collbl absolute left-[96px] top-[848px] w-[200px] text-center font-mono text-[15px] uppercase tracking-[0.10em] text-lp-muted">FY25 base</div>
+            <div class="lp-collbl absolute left-[478px] top-[848px] w-[200px] text-center font-mono text-[15px] uppercase tracking-[0.10em] text-lp-muted">New sites</div>
+            <div class="lp-collbl absolute left-[860px] top-[848px] w-[200px] text-center font-mono text-[15px] uppercase tracking-[0.10em] text-lp-muted">Densify</div>
+            <div class="lp-collbl absolute left-[1242px] top-[848px] w-[200px] text-center font-mono text-[15px] uppercase tracking-[0.10em] text-lp-muted">Retired</div>
+            <div class="lp-collbl absolute left-[1624px] top-[848px] w-[200px] text-center font-mono text-[15px] uppercase tracking-[0.10em] text-lp-muted">FY26 total</div>
+
+            <!-- footer -->
+            <div class="lp-foot-rule absolute left-[96px] right-[96px] top-[962px] h-px bg-lp-line"></div>
+            <div class="lp-foot-left absolute left-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">Asset registry, audited 30 Jun 2026 — 4,200 + 1,800 + 900 − 400 = 6,500</div>
+            <div class="lp-foot-right absolute right-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">10 / 12</div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

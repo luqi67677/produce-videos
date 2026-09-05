@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caliper — chart layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f1f0ee;
+    --lp-fg: #1a1a1a;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(26, 26, 26, 0.13);
+    --lp-accent: #7a7a78;
+    --lp-line: rgba(26, 26, 26, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Each row measures itself: then-marker, connector wipe, now-marker.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-growY { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes lp-pop { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-brand,
+.slide.active .lp-chrome-rule { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline,
+.slide.active .lp-reading { animation: lp-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-pole { animation: lp-growY 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; transform-origin: top; }
+.slide.active .lp-crow:nth-of-type(1) .lp-then { animation: lp-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.50s both; }
+.slide.active .lp-crow:nth-of-type(2) .lp-then { animation: lp-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.68s both; }
+.slide.active .lp-crow:nth-of-type(3) .lp-then { animation: lp-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.86s both; }
+.slide.active .lp-crow:nth-of-type(4) .lp-then { animation: lp-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) 1.04s both; }
+.slide.active .lp-crow:nth-of-type(1) .lp-conn { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.60s both; transform-origin: right; }
+.slide.active .lp-crow:nth-of-type(2) .lp-conn { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.78s both; transform-origin: right; }
+.slide.active .lp-crow:nth-of-type(3) .lp-conn { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.96s both; transform-origin: right; }
+.slide.active .lp-crow:nth-of-type(4) .lp-conn { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.14s both; transform-origin: right; }
+.slide.active .lp-crow:nth-of-type(1) .lp-now { animation: lp-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.95s both; }
+.slide.active .lp-crow:nth-of-type(2) .lp-now { animation: lp-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) 1.13s both; }
+.slide.active .lp-crow:nth-of-type(3) .lp-now { animation: lp-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) 1.31s both; }
+.slide.active .lp-crow:nth-of-type(4) .lp-now { animation: lp-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) 1.49s both; }
+.slide.active .lp-crow:nth-of-type(1) .lp-cat,
+.slide.active .lp-crow:nth-of-type(1) .lp-val { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.70s both; }
+.slide.active .lp-crow:nth-of-type(2) .lp-cat,
+.slide.active .lp-crow:nth-of-type(2) .lp-val { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.88s both; }
+.slide.active .lp-crow:nth-of-type(3) .lp-cat,
+.slide.active .lp-crow:nth-of-type(3) .lp-val { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.06s both; }
+.slide.active .lp-crow:nth-of-type(4) .lp-cat,
+.slide.active .lp-crow:nth-of-type(4) .lp-val { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.24s both; }
+.slide.active .lp-ptag,
+.slide.active .lp-pole-label,
+.slide.active .lp-foot-rule,
+.slide.active .lp-foot-left,
+.slide.active .lp-foot-right { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.35s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome (top) -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Outcomes — Four Metro Deployments</div>
+
+            <!-- OPTIONAL branding/logo slot: wordmark or image logo, ≤40px tall.
+                 Image option: <img src="https://placehold.co/260x80" class="h-[40px] w-auto object-contain">
+                 Remove this element entirely if the deck carries no brand mark. -->
+            <div class="lp-brand absolute right-[96px] top-[66px] h-[40px] flex items-center font-display text-[22px] font-extrabold tracking-[0.08em] uppercase">Solstice</div>
+
+            <div class="lp-chrome-rule absolute left-[96px] right-[96px] top-[118px] h-px bg-lp-line"></div>
+
+            <!-- headline + reading -->
+            <h1 class="lp-headline absolute left-[96px] top-[164px] m-0 max-w-[1400px] font-display text-[60px] font-bold leading-none tracking-[-0.01em]">Response time, then and now</h1>
+            <div class="lp-reading absolute left-[96px] top-[242px] font-mono text-[16px] uppercase tracking-[0.14em] text-lp-muted">Median minutes, alert → responder on scene · scale zeroed at the pole</div>
+
+            <!-- zero pole -->
+            <div class="lp-pole absolute left-[560px] top-[320px] w-px h-[536px] bg-lp-line"></div>
+            <div class="lp-pole-label absolute left-[520px] top-[872px] w-[80px] text-center font-mono text-[15px] uppercase tracking-[0.08em] text-lp-muted">0 min</div>
+
+            <!-- period tags: first row only — open = then, filled = now -->
+            <div class="lp-ptag absolute left-[830px] top-[300px] w-[60px] text-center font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">2026</div>
+            <div class="lp-ptag absolute left-[1230px] top-[300px] w-[60px] text-center font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">2024</div>
+
+            <!-- rows: scale 50px per minute from x:560 -->
+            <!-- Jakarta: 14 -> 6 -->
+            <div class="lp-crow">
+                <div class="lp-cat absolute right-[1400px] top-[356px] font-display text-[28px] font-bold leading-none">Jakarta</div>
+                <div class="lp-conn absolute left-[860px] top-[371px] w-[400px] h-[3px] bg-lp-line"></div>
+                <div class="lp-now absolute left-[852px] top-[364px] w-[16px] h-[16px] bg-lp-fg"></div>
+                <div class="lp-then absolute left-[1252px] top-[364px] w-[16px] h-[16px] border-2 border-lp-muted"></div>
+                <div class="lp-val absolute left-[790px] top-[362px] w-[48px] text-right font-mono text-[19px]">6</div>
+                <div class="lp-val absolute left-[1284px] top-[362px] font-mono text-[19px] text-lp-muted">14</div>
+            </div>
+            <!-- Bandung: 18 -> 7 -->
+            <div class="lp-crow">
+                <div class="lp-cat absolute right-[1400px] top-[484px] font-display text-[28px] font-bold leading-none">Bandung</div>
+                <div class="lp-conn absolute left-[910px] top-[499px] w-[550px] h-[3px] bg-lp-line"></div>
+                <div class="lp-now absolute left-[902px] top-[492px] w-[16px] h-[16px] bg-lp-fg"></div>
+                <div class="lp-then absolute left-[1452px] top-[492px] w-[16px] h-[16px] border-2 border-lp-muted"></div>
+                <div class="lp-val absolute left-[840px] top-[490px] w-[48px] text-right font-mono text-[19px]">7</div>
+                <div class="lp-val absolute left-[1484px] top-[490px] font-mono text-[19px] text-lp-muted">18</div>
+            </div>
+            <!-- Surabaya: 11 -> 6 -->
+            <div class="lp-crow">
+                <div class="lp-cat absolute right-[1400px] top-[612px] font-display text-[28px] font-bold leading-none">Surabaya</div>
+                <div class="lp-conn absolute left-[860px] top-[627px] w-[250px] h-[3px] bg-lp-line"></div>
+                <div class="lp-now absolute left-[852px] top-[620px] w-[16px] h-[16px] bg-lp-fg"></div>
+                <div class="lp-then absolute left-[1102px] top-[620px] w-[16px] h-[16px] border-2 border-lp-muted"></div>
+                <div class="lp-val absolute left-[790px] top-[618px] w-[48px] text-right font-mono text-[19px]">6</div>
+                <div class="lp-val absolute left-[1134px] top-[618px] font-mono text-[19px] text-lp-muted">11</div>
+            </div>
+            <!-- Medan: 22 -> 9 — the biggest mover, the one accent element -->
+            <div class="lp-crow">
+                <div class="lp-cat absolute right-[1400px] top-[740px] font-display text-[28px] font-bold leading-none text-lp-accent">Medan</div>
+                <div class="lp-conn absolute left-[1010px] top-[755px] w-[650px] h-[3px] bg-lp-accent"></div>
+                <div class="lp-now absolute left-[1002px] top-[748px] w-[16px] h-[16px] bg-lp-accent"></div>
+                <div class="lp-then absolute left-[1652px] top-[748px] w-[16px] h-[16px] border-2 border-lp-accent"></div>
+                <div class="lp-val absolute left-[940px] top-[746px] w-[48px] text-right font-mono text-[19px] text-lp-accent">9</div>
+                <div class="lp-val absolute left-[1684px] top-[746px] font-mono text-[19px] text-lp-accent">22</div>
+            </div>
+
+            <!-- footer -->
+            <div class="lp-foot-rule absolute left-[96px] right-[96px] top-[962px] h-px bg-lp-line"></div>
+            <div class="lp-foot-left absolute left-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">Dispatch logs, Jan 2024 vs Jun 2026 — same incident classes</div>
+            <div class="lp-foot-right absolute right-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">09 / 12</div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

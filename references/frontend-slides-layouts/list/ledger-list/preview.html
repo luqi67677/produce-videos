@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger List — list layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f2f1ef;
+    --lp-fg: #1b1b1b;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(27, 27, 27, 0.12);
+    --lp-accent: #7d7d7b;
+    --lp-line: rgba(27, 27, 27, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   =========================================== */
+.lp-row::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    background: var(--lp-line);
+    transform-origin: left center;
+}
+
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-rise-row { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-row:nth-child(1)::before { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.40s both; }
+.slide.active .lp-row:nth-child(2)::before { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.52s both; }
+.slide.active .lp-row:nth-child(3)::before { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.64s both; }
+.slide.active .lp-row:nth-child(4)::before { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.76s both; }
+.slide.active .lp-row:nth-child(1) > * { animation: lp-rise-row 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.40s both; }
+.slide.active .lp-row:nth-child(2) > * { animation: lp-rise-row 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.52s both; }
+.slide.active .lp-row:nth-child(3) > * { animation: lp-rise-row 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.64s both; }
+.slide.active .lp-row:nth-child(4) > * { animation: lp-rise-row 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.76s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- header -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Roadmap</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">07 / 14</div>
+            <h2 class="lp-headline absolute left-[96px] top-[118px] m-0 max-w-[1200px] font-display text-[84px] font-extrabold leading-[1.02] tracking-[-0.02em] uppercase">What ships <em class="not-italic text-lp-accent">next</em></h2>
+
+            <!-- ledger rows -->
+            <div class="absolute left-[96px] right-[96px] top-[360px]">
+                <div class="lp-row relative grid grid-cols-[120px_1fr_640px] items-start py-[34px]">
+                    <div class="font-mono text-[20px] font-medium tracking-[0.1em] text-lp-accent pt-[8px]">01</div>
+                    <div class="font-display text-[44px] font-bold leading-[1.1] text-lp-fg">Edge inference</div>
+                    <div class="font-body text-[20px] leading-[1.55] text-lp-muted pt-[4px]">Move detection models onto customer hardware, cutting round-trip latency for the busiest sites.</div>
+                </div>
+                <div class="lp-row relative grid grid-cols-[120px_1fr_640px] items-start py-[34px]">
+                    <div class="font-mono text-[20px] font-medium tracking-[0.1em] text-lp-accent pt-[8px]">02</div>
+                    <div class="font-display text-[44px] font-bold leading-[1.1] text-lp-fg">Unified console</div>
+                    <div class="font-body text-[20px] leading-[1.55] text-lp-muted pt-[4px]">One operations surface for every deployment — provisioning, monitoring, and audit in a single view.</div>
+                </div>
+                <div class="lp-row relative grid grid-cols-[120px_1fr_640px] items-start py-[34px]">
+                    <div class="font-mono text-[20px] font-medium tracking-[0.1em] text-lp-accent pt-[8px]">03</div>
+                    <div class="font-display text-[44px] font-bold leading-[1.1] text-lp-fg">Latency budgets</div>
+                    <div class="font-body text-[20px] leading-[1.55] text-lp-muted pt-[4px]">Publish per-endpoint budgets and hold every release to them in CI, not in postmortems.</div>
+                </div>
+                <div class="lp-row relative grid grid-cols-[120px_1fr_640px] items-start py-[34px]">
+                    <div class="font-mono text-[20px] font-medium tracking-[0.1em] text-lp-accent pt-[8px]">04</div>
+                    <div class="font-display text-[44px] font-bold leading-[1.1] text-lp-fg">Partner APIs</div>
+                    <div class="font-body text-[20px] leading-[1.55] text-lp-muted pt-[4px]">A stable public contract so integrators build on us without waiting on us.</div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

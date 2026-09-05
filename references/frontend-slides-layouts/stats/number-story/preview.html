@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Number Story — stats layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #151515;
+    --lp-fg: #ececea;
+    --lp-fg-muted: #969694;
+    --lp-fg-faint: rgba(255, 255, 255, 0.12);
+    --lp-accent: #b4b4b2;
+    --lp-line: rgba(255, 255, 255, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   Figures arrive camouflaged at word color, then step
+   out of the prose in reading order.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-fig-in {
+    from { color: var(--lp-fg); transform: scale(0.92); }
+    to   { color: var(--lp-accent); transform: scale(1); }
+}
+
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-sentence { animation: lp-fade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+.slide.active .lp-sentence .fig:nth-of-type(1) { animation: lp-fig-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.85s both; }
+.slide.active .lp-sentence .fig:nth-of-type(2) { animation: lp-fig-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.03s both; }
+.slide.active .lp-sentence .fig:nth-of-type(3) { animation: lp-fig-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.21s both; }
+.slide.active .lp-source { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">The Quarter</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">13 / 14</div>
+
+            <!-- the sentence (words in fg at 600; figures step up to 1.22em / 800 / accent; figures animate inline, never the block) -->
+            <p class="lp-sentence absolute left-[96px] top-[50%] translate-y-[-52%] m-0 max-w-[1650px] font-display text-[88px] font-semibold leading-[1.3] tracking-[-0.01em] text-lp-fg">We shipped <span class="fig inline-block text-[1.22em] font-extrabold tracking-[-0.02em] text-lp-accent">214</span> releases in <span class="fig inline-block text-[1.22em] font-extrabold tracking-[-0.02em] text-lp-accent">92</span> days — with <span class="fig inline-block text-[1.22em] font-extrabold tracking-[-0.02em] text-lp-accent">0</span> rollbacks.</p>
+
+            <!-- source line -->
+            <div class="lp-source absolute left-[96px] top-[940px] font-mono text-[14px] uppercase tracking-[0.16em] text-lp-muted">All figures: platform telemetry, Q2 FY26</div>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

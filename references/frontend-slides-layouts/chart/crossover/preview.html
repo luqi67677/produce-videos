@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crossover — chart layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f2f1ef;
+    --lp-fg: #1b1b1b;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(27, 27, 27, 0.12);
+    --lp-accent: #55554f;
+    --lp-line: rgba(27, 27, 27, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   Poles drop first, muted slopes draw pole-to-pole, and
+   the accent line crosses the field last — the crossing
+   is the finale.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-growy { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes lp-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes lp-pop { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+
+.lp-slope { stroke-dasharray: 1; }
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-pole { animation: lp-growy 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+.slide.active .lp-pole-cap { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
+.slide.active .lp-l.r1 { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.60s both; }
+.slide.active .lp-l.r2 { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.68s both; }
+.slide.active .lp-l.r3 { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.76s both; }
+.slide.active .lp-l.r4 { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.84s both; }
+.slide.active .lp-slope.r1 { animation: lp-draw 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.90s both; }
+.slide.active .lp-slope.r3 { animation: lp-draw 0.7s cubic-bezier(0.16, 1, 0.3, 1) 1.00s both; }
+.slide.active .lp-slope.r4 { animation: lp-draw 0.7s cubic-bezier(0.16, 1, 0.3, 1) 1.10s both; }
+.slide.active .lp-slope.r2 { animation: lp-draw 0.9s cubic-bezier(0.16, 1, 0.3, 1) 1.50s both; }
+.slide.active .lp-r.r1 { animation: lp-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.60s both; }
+.slide.active .lp-r.r3 { animation: lp-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.70s both; }
+.slide.active .lp-r.r4 { animation: lp-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.80s both; }
+.slide.active .lp-r.r2 { animation: lp-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) 2.30s both; }
+.slide.active .lp-reading,
+.slide.active .lp-foot-rule,
+.slide.active .lp-foot-left,
+.slide.active .lp-foot-right { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 2.5s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- header -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Revenue Mix</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">12 / 18</div>
+
+            <!-- left narration column -->
+            <h2 class="lp-headline absolute left-[96px] top-[150px] m-0 w-[380px] font-display text-[56px] font-extrabold leading-[1.05] tracking-[-0.02em] uppercase">The mix tilts to the <em class="not-italic text-lp-accent">edge</em></h2>
+            <p class="lp-reading absolute left-[96px] top-[430px] m-0 w-[360px] font-body text-[18px] leading-[1.55] text-lp-muted">Two fiscal years ago the hosted API carried the company. Edge suite licences now book the largest share — and every point it gained was retained, not discounted.</p>
+
+            <!-- poles -->
+            <div class="lp-pole absolute left-[760px] top-[280px] h-[620px] w-px origin-top bg-lp-line"></div>
+            <div class="lp-pole absolute left-[1560px] top-[280px] h-[620px] w-px origin-top bg-lp-line"></div>
+            <div class="lp-pole-cap absolute left-[700px] top-[916px] w-[120px] text-center font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">FY24</div>
+            <div class="lp-pole-cap absolute left-[1500px] top-[916px] w-[120px] text-center font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">FY26</div>
+
+            <!-- slopes (shared linear scale: 0% → y880, 50% → y300; share of revenue, TRUE VALUES) -->
+            <svg class="absolute left-[760px] top-[280px] h-[620px] w-[800px]" viewBox="0 0 800 620" fill="none" preserveAspectRatio="none" aria-hidden="true">
+                <line class="lp-slope r1" x1="0" y1="90"  x2="800" y2="240" stroke="color-mix(in srgb, var(--lp-fg-muted) 60%, transparent)" stroke-width="2.5" pathLength="1"/>
+                <line class="lp-slope r3" x1="0" y1="380" x2="800" y2="403" stroke="color-mix(in srgb, var(--lp-fg-muted) 60%, transparent)" stroke-width="2.5" pathLength="1"/>
+                <line class="lp-slope r4" x1="0" y1="426" x2="800" y2="438" stroke="color-mix(in srgb, var(--lp-fg-muted) 60%, transparent)" stroke-width="2.5" pathLength="1"/>
+                <line class="lp-slope r2" x1="0" y1="345" x2="800" y2="159" stroke="var(--lp-accent)" stroke-width="4" pathLength="1"/>
+            </svg>
+
+            <!-- left labels + start dots (centered on true y positions) -->
+            <div class="lp-l r1 absolute left-[496px] top-[358px] w-[240px] text-right font-body text-[20px] text-lp-fg">Vision API <span class="font-mono">· 44%</span></div>
+            <div class="lp-l r1 absolute left-[754px] top-[364px] h-[12px] w-[12px] rounded-full bg-[color-mix(in_srgb,var(--lp-fg-muted)_60%,transparent)]"></div>
+            <div class="lp-l r2 absolute left-[496px] top-[612px] w-[240px] text-right font-body text-[20px] font-medium text-lp-accent">Edge suite <span class="font-mono">· 22%</span></div>
+            <div class="lp-l r2 absolute left-[752px] top-[617px] h-[16px] w-[16px] rounded-full bg-lp-accent"></div>
+            <div class="lp-l r3 absolute left-[496px] top-[648px] w-[240px] text-right font-body text-[20px] text-lp-fg">Console <span class="font-mono">· 19%</span></div>
+            <div class="lp-l r3 absolute left-[754px] top-[654px] h-[12px] w-[12px] rounded-full bg-[color-mix(in_srgb,var(--lp-fg-muted)_60%,transparent)]"></div>
+            <div class="lp-l r4 absolute left-[496px] top-[694px] w-[240px] text-right font-body text-[20px] text-lp-fg">Services <span class="font-mono">· 15%</span></div>
+            <div class="lp-l r4 absolute left-[754px] top-[700px] h-[12px] w-[12px] rounded-full bg-[color-mix(in_srgb,var(--lp-fg-muted)_60%,transparent)]"></div>
+
+            <!-- right labels + end dots -->
+            <div class="lp-r r1 absolute left-[1554px] top-[514px] h-[12px] w-[12px] rounded-full bg-[color-mix(in_srgb,var(--lp-fg-muted)_60%,transparent)]"></div>
+            <div class="lp-r r1 absolute left-[1584px] top-[506px] font-mono text-[24px] text-lp-fg">31%</div>
+            <div class="lp-r r2 absolute left-[1552px] top-[431px] h-[16px] w-[16px] rounded-full bg-lp-accent"></div>
+            <div class="lp-r r2 absolute left-[1584px] top-[419px]">
+                <div class="font-mono text-[30px] font-medium leading-none text-lp-accent">38%</div>
+                <div class="mt-[6px] font-mono text-[14px] tracking-[0.06em] text-lp-accent">+16 pts</div>
+            </div>
+            <div class="lp-r r3 absolute left-[1554px] top-[677px] h-[12px] w-[12px] rounded-full bg-[color-mix(in_srgb,var(--lp-fg-muted)_60%,transparent)]"></div>
+            <div class="lp-r r3 absolute left-[1584px] top-[669px] font-mono text-[24px] text-lp-fg">17%</div>
+            <div class="lp-r r4 absolute left-[1554px] top-[712px] h-[12px] w-[12px] rounded-full bg-[color-mix(in_srgb,var(--lp-fg-muted)_60%,transparent)]"></div>
+            <div class="lp-r r4 absolute left-[1584px] top-[704px] font-mono text-[24px] text-lp-fg">14%</div>
+
+            <!-- footer -->
+            <div class="lp-foot-rule absolute left-[96px] right-[96px] top-[962px] h-px bg-lp-line"></div>
+            <div class="lp-foot-left absolute left-[96px] top-[984px] font-mono text-[14px] uppercase tracking-[0.12em] text-lp-muted">Share of net revenue — FY24 vs FY26</div>
+            <div class="lp-foot-right absolute right-[96px] top-[984px] font-mono text-[14px] uppercase tracking-[0.12em] text-lp-muted">Vantage</div>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

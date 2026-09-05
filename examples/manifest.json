@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "public_release_authorized": true,
+  "reviewed_at": "2026-09-06",
+  "assets": [
+    {
+      "path": "examples/videos/obsidian-ai-brain.mp4",
+      "sha256": "57e418e0b84072a3530eee49431fc434680c5f5f37d782faf46e040d8d3652aa",
+      "media_type": "video",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "examples/videos/video-skill-v1.mp4",
+      "sha256": "3801351abc78f7f98a2243494ab0de6e85e98b381dd0e7f85965e08d9aa13174",
+      "media_type": "video",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "examples/videos/icp-filing-explainer.mp4",
+      "sha256": "90d1d6593cabeaf91ac1bd5bc06979533f329a319a9a299fc240807a87b50652",
+      "media_type": "video",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "examples/thumbnails/obsidian-ai-brain.jpg",
+      "sha256": "805ab6ce1b30e046bd9bf8d891ec6d74fa6582faa200fa2d2499225392e55e1c",
+      "media_type": "image"
+    },
+    {
+      "path": "examples/thumbnails/video-skill-v1.jpg",
+      "sha256": "61d0a749b543bd74336058e7350db70ca7e9ab461222f9466d22c06dd2db81ca",
+      "media_type": "image"
+    },
+    {
+      "path": "examples/thumbnails/icp-filing-explainer.jpg",
+      "sha256": "0c7c0db9bc76d7a306050cfabd19fc8a051550b896f5e05aee4ad5500df52ebd",
+      "media_type": "image"
+    }
+  ]
+}

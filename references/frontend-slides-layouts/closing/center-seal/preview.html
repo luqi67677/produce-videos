@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Center Seal — closing layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #151515;
+    --lp-fg: #ececea;
+    --lp-fg-muted: #969694;
+    --lp-fg-faint: rgba(255, 255, 255, 0.13);
+    --lp-accent: #8f8f8d;
+    --lp-line: rgba(255, 255, 255, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-seal-in { from { opacity: 0; transform: translateX(-50%) scale(0.7); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-rise-sm { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-pop { from { transform: scale(0); } to { transform: scale(1); } }
+
+.slide.active .lp-seal { animation: lp-seal-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-seal-monogram { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
+.slide.active .lp-statement { animation: lp-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+.slide.active .lp-statement .lp-beat { animation: lp-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.95s both; }
+.slide.active .lp-coda { animation: lp-rise-sm 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both; }
+.slide.active .lp-contact-line { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.95s both; }
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.1s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- corner chrome -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">In Closing</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">12 / 12</div>
+
+            <!-- ring seal (skin point: system's emblem, ≤150px, same center);
+                 negative right margin on the monogram recenters tracked text -->
+            <div class="lp-seal absolute left-1/2 top-[280px] -translate-x-1/2 w-[140px] h-[140px] rounded-full border border-lp-accent flex items-center justify-center" aria-hidden="true">
+                <span class="lp-seal-monogram font-mono text-[20px] uppercase tracking-[0.3em] mr-[-0.3em] text-lp-accent">NF</span>
+            </div>
+
+            <!-- statement -->
+            <h1 class="lp-statement absolute left-[96px] right-[96px] top-[490px] m-0 text-center font-display text-[176px] font-extrabold leading-[0.98] tracking-[-0.02em] uppercase">Onward<span class="lp-beat inline-block text-lp-accent">.</span></h1>
+            <!-- coda: margin centering — a transform here would be
+                 overridden by the entrance animation's translateY -->
+            <p class="lp-coda absolute left-0 right-0 top-[720px] w-[720px] mt-0 mb-0 mx-auto text-center font-body text-[24px] leading-[1.55] text-lp-muted">Ten years in, the mission has not moved an inch — only our reach has. Thank you for carrying it.</p>
+
+            <!-- contact line -->
+            <div class="lp-contact-line absolute left-0 right-0 top-[900px] text-center font-mono text-[16px] tracking-[0.08em] text-lp-muted">CONTACT<span class="mx-[20px] text-lp-accent">·</span>kestrel.io<span class="mx-[20px] text-lp-accent">·</span>@kestrel</div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

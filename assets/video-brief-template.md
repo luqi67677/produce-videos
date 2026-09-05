@@ -23,7 +23,9 @@
 - 口播输入：待提供 / 本轮用户消息 / 已确认稿路径 / 素材路径 / 待转写音视频路径 / not-required
 - 用户真实素材清单：`source-assets.json`
 - 用户真实素材确认：待确认 / 已批准 / 用户确认无真实素材
-- 生成素材边界：只补真实素材无法表达的缺口
+- 静态补图策略：pending / user-assets-only / allow-generated-stills
+- 静态补图授权：pending / not-required / approved
+- 生成素材边界：只补真实素材无法表达的缺口；不调用视频生成模型；不伪造证据
 - 最终声音来源代码：pending / recorded-audio / extract-from-video / tts-api / local-tts-model / qwen-open-source / no-spoken-narration
 - 声音输入：待提供 / 独立口播音频路径 / 含目标人声的视频路径 / not-required
 - TTS 资源状态：pending / not-required / api-configured / local-model-known / qwen-download-approved
@@ -71,6 +73,8 @@
 > 口播内容来源和最终声音来源必须分别回答。用户有口播稿，不等于已有声音；用户有视频内人声，也不等于需要 TTS。
 
 > 缺项必须合并成一次开工问题。已有确定稿、AI 撰写、音视频转写、独立口播、视频内提取、TTS API、本地模型和 Qwen 下载不能拆成后续多轮重复询问。只有依赖安装、模型下载、授权疑点等高风险动作单独取得确认。
+
+> 开工时同时确认是否允许在真实/官方素材不足时生成静态插画、信息图或物体图。选 `allow-generated-stills` 后可按镜头缺口自动补图，不再逐镜询问；仍不得调用视频生成模型，也不得用生成图冒充真实证据。
 
 > `pending-user-choice` 只能出现在草稿，正式旁白契约必须在生成或接入音频前改成明确来源。
 

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screening Room — video layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #121212;
+    --lp-fg: #ececea;
+    --lp-fg-muted: #979795;
+    --lp-fg-faint: rgba(255, 255, 255, 0.12);
+    --lp-accent: #929290;
+    --lp-line: rgba(255, 255, 255, 0.24);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-settle { from { opacity: 0; transform: scale(1.02); } to { opacity: 1; transform: scale(1); } }
+@keyframes lp-glyph-in { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+@keyframes lp-rise-sm { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-player { animation: lp-settle 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+.slide.active .lp-play { animation: lp-glyph-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both; }
+.slide.active .lp-film-title,
+.slide.active .lp-film-meta { animation: lp-rise-sm 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Screening</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">07 / 14</div>
+
+            <!-- player: poster + play glyph until a real <video>/<iframe> replaces it.
+                 Real decks: replace the frame's contents with
+                   <video controls preload="metadata" poster="..."> (local file), or
+                   <iframe src="https://www.youtube.com/embed/ID" allowfullscreen>
+                 at this exact geometry. Poster placeholder: placehold.co/1280x720.
+                 The gradient beneath is the poster's load-failure fallback. -->
+            <div class="lp-player absolute left-[320px] top-[150px] w-[1280px] h-[720px] border border-lp-line overflow-hidden bg-[linear-gradient(150deg,#262626_0%,#181818_100%)]">
+                <img class="absolute inset-0 w-full h-full max-w-none max-h-none object-cover" src="https://placehold.co/1280x720/222222/6a6a68" alt="The rollout film — poster frame">
+                <!-- play glyph (demo affordance; native controls replace it live) -->
+                <div class="lp-play absolute left-1/2 top-1/2 w-[96px] h-[96px] mt-[-48px] ml-[-48px] border-[1.5px] border-[rgba(236,236,234,0.9)] rounded-full bg-[rgba(18,18,18,0.35)] after:content-[''] after:absolute after:left-[38px] after:top-[30px] after:border-l-[30px] after:border-l-[rgba(236,236,234,0.9)] after:border-y-[18px] after:border-y-transparent" aria-hidden="true"></div>
+            </div>
+
+            <!-- program line -->
+            <div class="lp-film-title absolute left-[320px] top-[904px] font-display text-[40px] font-bold text-lp-fg">The Rollout Film</div>
+            <div class="lp-film-meta absolute right-[320px] top-[916px] font-mono text-[15px] uppercase tracking-[0.14em] text-lp-muted">04:32 — Sound On</div>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

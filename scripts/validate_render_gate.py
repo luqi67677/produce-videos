@@ -15,6 +15,7 @@ from validate_narration_contract import validate as validate_narration_contract
 from validate_review_approval import approval_path
 from validate_review_approval import validate as validate_approval
 from validate_shot_readiness import validate as validate_shot_readiness
+from validate_layout_catalog import validate as validate_layout_catalog
 from validate_source_assets import review_files as source_asset_review_files
 from validate_source_assets import validate as validate_source_assets
 from validate_style_options import validate as validate_style_options
@@ -139,6 +140,9 @@ def main() -> int:
     catalog = skill_root / "references/frontend-slides-themes/bold-template-pack/selection-index.json"
     for error in validate_theme_catalog(catalog):
         errors.append(f"theme-catalog: {error}")
+    layout_catalog = skill_root / "references/frontend-slides-layouts"
+    for error in validate_layout_catalog(layout_catalog):
+        errors.append(f"layout-catalog: {error}")
 
     theme = load_object(project / "video-style-theme.json")
     selected_option = theme.get("selected_option")

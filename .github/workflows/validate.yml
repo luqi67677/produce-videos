@@ -1,0 +1,32 @@
+name: Validate Skill
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Validate 34 visual themes
+        run: python3 scripts/validate_theme_catalog.py references/frontend-slides-themes/bold-template-pack/selection-index.json
+      - name: Validate 88 layout presets
+        run: python3 scripts/validate_layout_catalog.py
+      - name: Scan public release boundary
+        run: python3 scripts/scan_release.py
+      - name: Build downloadable installers
+        run: python3 scripts/package_release.py --output-dir dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: produce-videos-installers
+          path: dist/
+          retention-days: 14

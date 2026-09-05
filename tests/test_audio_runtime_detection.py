@@ -15,6 +15,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 from audio_runtime import absolute_path  # noqa: E402
 from discover_audio_models import discover, load_qwen_models  # noqa: E402
+from doctor import module_available  # noqa: E402
 
 
 class AudioRuntimeDetectionTests(unittest.TestCase):
@@ -97,6 +98,14 @@ class AudioRuntimeDetectionTests(unittest.TestCase):
             os.symlink(sys.executable, link)
 
             self.assertEqual(absolute_path(link), link)
+
+    def test_stt_probe_uses_selected_python_runtime(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            runtime = Path(temp_dir) / "python"
+            runtime.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            runtime.chmod(runtime.stat().st_mode | stat.S_IXUSR)
+
+            self.assertTrue(module_available(str(runtime), "mlx_whisper"))
 
     def test_prepare_qwen_dry_run_explains_install_and_authorization(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

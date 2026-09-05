@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Split Curtain — closing layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f1f0ee;
+    --lp-fg: #1a1a1a;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(26, 26, 26, 0.13);
+    --lp-accent: #8a8a88;
+    --lp-line: rgba(26, 26, 26, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(56px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-rise-band { from { opacity: 0; transform: translateY(80px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-rise-sm { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-statement .lp-line:nth-child(1) { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-statement .lp-line:nth-child(2) { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+.slide.active .lp-sub { animation: lp-rise-sm 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
+.slide.active .lp-band { animation: lp-rise-band 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both; }
+.slide.active .lp-stitch { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both; }
+.slide.active .lp-cell:nth-child(1) { animation: lp-rise-sm 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.85s both; }
+.slide.active .lp-cell:nth-child(2) { animation: lp-rise-sm 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.95s both; }
+.slide.active .lp-cell:nth-child(3) { animation: lp-rise-sm 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.05s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome -->
+            <div class="lp-kicker absolute left-[96px] top-[96px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Before You Go</div>
+            <div class="lp-counter absolute right-[96px] top-[96px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">12 / 12</div>
+
+            <!-- statement -->
+            <div class="absolute left-[96px] top-[230px] max-w-[1500px]">
+                <h1 class="lp-statement m-0 font-display text-[168px] font-extrabold leading-[0.95] tracking-[-0.02em] uppercase">
+                    <span class="lp-line block">Build it</span>
+                    <span class="lp-line block"><em class="not-italic text-lp-accent">with us.</em></span>
+                </h1>
+                <p class="lp-sub mt-[32px] mb-0 max-w-[720px] font-body text-[24px] leading-[1.5] text-lp-muted">The roadmap is public — pick a lane and claim it this week.</p>
+            </div>
+
+            <!-- accent stitch on the seam -->
+            <div class="lp-stitch absolute left-[96px] top-[676px] z-[2] w-[160px] h-[8px] origin-left bg-lp-accent" aria-hidden="true"></div>
+
+            <!-- curtain band (skin point: dual-surface systems use their alt surface) -->
+            <div class="lp-band absolute left-0 right-0 top-[680px] z-[1] h-[400px] bg-lp-fg text-lp-bg">
+                <!-- grid top edge lands at y:820 on stage -->
+                <div class="absolute left-[96px] right-[96px] top-[140px] grid grid-cols-3">
+                    <div class="lp-cell">
+                        <div class="mb-[12px] font-mono text-[13px] uppercase tracking-[0.16em] text-lp-bg opacity-60">Email</div>
+                        <div class="font-body text-[24px] text-lp-bg">CONTACT</div>
+                    </div>
+                    <div class="lp-cell pl-[48px] border-l border-[color-mix(in_srgb,var(--lp-bg)_25%,transparent)]">
+                        <div class="mb-[12px] font-mono text-[13px] uppercase tracking-[0.16em] text-lp-bg opacity-60">Docs</div>
+                        <div class="font-body text-[24px] text-lp-bg">kestrel.io/roadmap</div>
+                    </div>
+                    <div class="lp-cell pl-[48px] border-l border-[color-mix(in_srgb,var(--lp-bg)_25%,transparent)]">
+                        <div class="mb-[12px] font-mono text-[13px] uppercase tracking-[0.16em] text-lp-bg opacity-60">Channel</div>
+                        <div class="font-body text-[24px] text-lp-bg">#platform-roadmap</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

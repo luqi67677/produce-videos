@@ -13,7 +13,7 @@ from validate_video_theme import validate  # noqa: E402
 
 def valid_theme() -> dict:
     return {
-        "schema_version": "1.1",
+        "schema_version": "1.2",
         "theme_id": "clean-test",
         "name": "干净测试主题",
         "status": "selected",
@@ -44,6 +44,11 @@ def valid_theme() -> dict:
             "raw_full_page_as_decoration": False,
             "stacked_background_effects": False,
             "heavy_subtitle_bar": False,
+            "global_grime_or_color_cast": False,
+            "noise_or_dust_texture": False,
+            "random_particles_or_flares": False,
+            "generic_ai_cliche_decor": False,
+            "unassigned_blank_area": False,
             "exception_policy": "only_when_user_explicitly_requires_real_spatial_context",
         },
         "image_generation": {
@@ -85,6 +90,14 @@ class VideoThemeCleanlinessTests(unittest.TestCase):
         data["cleanliness_contract"]["rim_light_mode"] = "neon-halo"
         errors = self.validate_data(data)
         self.assertTrue(any("rim_light_mode" in error for error in errors))
+
+    def test_dirty_overlay_flags_fail(self):
+        data = valid_theme()
+        data["cleanliness_contract"]["global_grime_or_color_cast"] = True
+        data["cleanliness_contract"]["random_particles_or_flares"] = True
+        errors = self.validate_data(data)
+        self.assertTrue(any("global_grime_or_color_cast" in error for error in errors))
+        self.assertTrue(any("random_particles_or_flares" in error for error in errors))
 
 
 if __name__ == "__main__":

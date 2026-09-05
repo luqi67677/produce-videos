@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rule Columns — list layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #171717;
+    --lp-fg: #ebebe9;
+    --lp-fg-muted: #979795;
+    --lp-fg-faint: rgba(255, 255, 255, 0.12);
+    --lp-accent: #929290;
+    --lp-line: rgba(255, 255, 255, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-rise-sm { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-col:nth-child(1) .lp-tick { animation: lp-wipe 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.40s both; }
+.slide.active .lp-col:nth-child(1) .lp-col-num { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.50s both; }
+.slide.active .lp-col:nth-child(1) .lp-col-title,
+.slide.active .lp-col:nth-child(1) .lp-col-body { animation: lp-rise-sm 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both; }
+.slide.active .lp-col:nth-child(2) .lp-tick { animation: lp-wipe 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both; }
+.slide.active .lp-col:nth-child(2) .lp-col-num { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both; }
+.slide.active .lp-col:nth-child(2) .lp-col-title,
+.slide.active .lp-col:nth-child(2) .lp-col-body { animation: lp-rise-sm 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.70s both; }
+.slide.active .lp-col:nth-child(3) .lp-tick { animation: lp-wipe 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.70s both; }
+.slide.active .lp-col:nth-child(3) .lp-col-num { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.80s both; }
+.slide.active .lp-col:nth-child(3) .lp-col-title,
+.slide.active .lp-col:nth-child(3) .lp-col-body { animation: lp-rise-sm 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.85s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- header -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Operating Rhythm</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">08 / 14</div>
+            <h2 class="lp-headline absolute left-[96px] top-[118px] m-0 max-w-[1200px] font-display text-[84px] font-extrabold leading-[1.02] tracking-[-0.02em] uppercase">How we run <em class="not-italic text-lp-accent">it</em></h2>
+
+            <!-- columns
+                 Image variant: 512×200 bands above each tick (placehold.co/512x200),
+                 all three or none; content shifts down 232px. -->
+            <div class="absolute left-[96px] right-[96px] top-[380px] grid grid-cols-3 gap-[96px]">
+                <div class="lp-col">
+                    <div class="lp-tick w-[48px] h-[4px] bg-lp-accent origin-left"></div>
+                    <div class="lp-col-num mt-[20px] font-mono text-[18px] font-medium tracking-[0.12em] text-lp-muted">01</div>
+                    <h3 class="lp-col-title mt-[28px] mx-0 mb-0 font-display text-[36px] font-bold leading-[1.15] text-lp-fg">Plan weekly</h3>
+                    <p class="lp-col-body mt-[18px] mx-0 mb-0 font-body text-[19px] leading-[1.6] text-lp-muted">Monday sets the week's three commitments. Anything that doesn't serve them waits — the plan is short so the week isn't.</p>
+                </div>
+                <div class="lp-col">
+                    <div class="lp-tick w-[48px] h-[4px] bg-lp-accent origin-left"></div>
+                    <div class="lp-col-num mt-[20px] font-mono text-[18px] font-medium tracking-[0.12em] text-lp-muted">02</div>
+                    <h3 class="lp-col-title mt-[28px] mx-0 mb-0 font-display text-[36px] font-bold leading-[1.15] text-lp-fg">Ship daily</h3>
+                    <p class="lp-col-body mt-[18px] mx-0 mb-0 font-body text-[19px] leading-[1.6] text-lp-muted">Production sees every workday. Small releases keep risk small, reviews honest, and the demo always ready.</p>
+                </div>
+                <div class="lp-col">
+                    <div class="lp-tick w-[48px] h-[4px] bg-lp-accent origin-left"></div>
+                    <div class="lp-col-num mt-[20px] font-mono text-[18px] font-medium tracking-[0.12em] text-lp-muted">03</div>
+                    <h3 class="lp-col-title mt-[28px] mx-0 mb-0 font-display text-[36px] font-bold leading-[1.15] text-lp-fg">Audit always</h3>
+                    <p class="lp-col-body mt-[18px] mx-0 mb-0 font-body text-[19px] leading-[1.6] text-lp-muted">Every change carries its evidence. The trail is written at ship time, not reconstructed at review time.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

@@ -10,6 +10,7 @@
 - 旁白与时间轴读取 `narration-contract.json`。
 - 正式旁白还必须读取 `audio_path`、`audio_sha256`、实际时长和分段 manifest；渲染前运行 `validate_narration_contract.py --require-timestamps --require-audio`。
 - 镜头与素材读取 `shot-readiness.json`。
+- 已有音视频的剪辑边界、A/B-roll、素材入点、时间线位置、转场和 `covers` 读取 `edit-decision-list.json`。节拍吸附、渲染与 FCPXML 导出必须消费同一个 EDL。
 - 新项目审批状态统一读取 `approval-ledger.json`，旧项目兼容独立 approval JSON；Qwen 声音另读取 `voice-selection.json` 内的用户批准记录。
 
 组件不得自行新增主色、画幅、音色或水印规则。
@@ -33,6 +34,8 @@
 - 风险样片或完整低清预览的渲染入口第一行运行 `validate_render_gate.py --mode sample --narration-contract <实际契约>`；正式母版运行 `--mode full`。传入路径必须与渲染器随后读取的契约是同一个绝对文件，门禁失败必须退出。
 - 既有成片修改时，渲染器先读取 `shot-readiness.json.revision_scope`，只生成受影响镜头预览；`preview_approval.approved=true` 且保留镜头与基线一致后才可进入全片渲染。
 - 不允许渲染器在门禁之后临时生成一套没有进入分镜审批的覆盖层或镜头定义。分镜帧、修改预览、风险样片和完整低清预览必须先落盘，并由审批账本的对应阶段记录 SHA-256。
+- B-roll 只覆盖画面，不改变旁白连续性和整片时长。每个 B-roll 必须消费 EDL/镜头契约中的 `covers`；没有该字段不得进入渲染。
+- 转场默认硬切；match cut 和 graphic bridge 必须读取前后状态与连续性锚点。随机缩放、甩镜、故障、光效擦除和无理由 dissolve 不得作为默认过渡。
 - 项目存在 `narration-contract-v2.json` 等版本文件时，不得让渲染器读取新版、门禁却隐式校验旧的 `narration-contract.json`。最终 `video_preflight.py` 也必须绑定同一契约。
 - 口播声称素材已经保存、同步或进入平台草稿箱时，画面必须消费能证明动作完成的真实状态；设置页或预览页只证明“可以操作”，不能证明“已经完成”。
 - 多步骤流程回顾默认保留全部节点，当前节点按口播依次进入强调态，连接线或进度指示同步推进，避免整页一次性出现后长时间静止。
@@ -58,8 +61,27 @@
 - 视频默认使用 H.264 High Profile、yuv420p、30fps，并把 MP4 `moov` 原子前置以便快速开始播放；
 - 音频默认使用 AAC、48 kHz、双声道、192 kbps 或更高；
 - 保留项目源文件、审批记录、成片和质检报告；
+- Remotion 项目同时保留源码、锁文件、素材清单和一条可复现渲染命令；用户要求继续编辑时，从同一 EDL 运行 `scripts/export_fcpxml.py` 导出 FCPXML，并列出扁平化 plate。
 - 保留模型发现、模型预检、声音选择、三套真实样张及逐项质量复核；
 - 不把用户内容或私人资产写回开源 Skill。
+
+## 本地剪辑工具
+
+```bash
+# 先用 doctor 找到可用的 Python/STT；必要时指定兼容解释器
+python3 scripts/doctor.py
+python3 scripts/transcribe_media.py input.mp4 \
+  --runtime-python /path/to/compatible-python \
+  --backend mlx-whisper --model /path/to/local-whisper-model --language zh
+
+# 有 BGM 时建立节拍网格，再在不切词、不改变总时长的前提下吸附 EDL
+python3 scripts/build_beat_grid.py bgm.wav --bpm 120 --output beat-grid.json
+python3 scripts/snap_edl_to_beats.py edit-decision-list.json beat-grid.json \
+  --transcript input.transcript.json --output edit-decision-list.beat.json
+
+# 从同一 EDL 导出可继续编辑的时间线
+python3 scripts/export_fcpxml.py edit-decision-list.json --output timeline.fcpxml
+```
 
 ## 版本化
 

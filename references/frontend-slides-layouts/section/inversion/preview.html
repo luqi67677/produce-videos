@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inversion — section layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   NOTE: on this slide the tokens map to the deck's ALTERNATE
+   surface pair — the flip is the divider. Demo shows dark-on-light
+   deck flipped to light-on-dark.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #141414;
+    --lp-fg: #ececea;
+    --lp-fg-muted: #969694;
+    --lp-fg-faint: rgba(255, 255, 255, 0.12);
+    --lp-accent: #929290;
+    --lp-line: rgba(255, 255, 255, 0.28);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   Title is transform-centered, so its lines animate (spans), not the
+   block — animating the block's transform would break centering.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-fade-dim { from { opacity: 0; } to { opacity: 0.35; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(52px); } to { opacity: 1; transform: translateY(0); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-tag { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-title .lp-line { display: block; }
+.slide.active .lp-title .lp-line:nth-child(1) { animation: lp-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
+.slide.active .lp-title .lp-line:nth-child(2) { animation: lp-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.37s both; }
+.slide.active .lp-seg:nth-child(1) { animation: lp-fade 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.80s both; }
+.slide.active .lp-seg:nth-child(2) { animation: lp-fade 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.86s both; }
+.slide.active .lp-seg:nth-child(3) { animation: lp-fade 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.92s both; }
+.slide.active .lp-seg:nth-child(4) { animation: lp-fade-dim 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.98s both; }
+.slide.active .lp-seg:nth-child(5) { animation: lp-fade-dim 0.3s cubic-bezier(0.16, 1, 0.3, 1) 1.04s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- kicker + tag -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium tracking-[0.18em] uppercase text-lp-accent">Part Three</div>
+            <div class="lp-tag absolute left-[96px] top-[120px] py-[14px] px-[22px] border border-lp-accent font-mono text-[20px] font-medium tracking-[0.1em] text-lp-accent">03</div>
+
+            <!-- title -->
+            <h1 class="lp-title absolute left-[96px] top-1/2 -translate-y-1/2 m-0 max-w-[1500px] font-display text-[156px] font-extrabold leading-[0.96] tracking-[-0.02em] uppercase">
+                <span class="lp-line block">Execution,</span>
+                <span class="lp-line block">day by <em class="not-italic text-lp-accent">day</em></span>
+            </h1>
+
+            <!-- progress segments: done · done · current · future · future -->
+            <div class="absolute right-[96px] top-[960px] flex gap-[16px]" aria-label="Part 3 of 5">
+                <span class="lp-seg w-[48px] h-[4px] bg-lp-muted"></span>
+                <span class="lp-seg w-[48px] h-[4px] bg-lp-muted"></span>
+                <span class="lp-seg w-[48px] h-[4px] bg-lp-accent"></span>
+                <span class="lp-seg w-[48px] h-[4px] bg-lp-muted opacity-[0.35]"></span>
+                <span class="lp-seg w-[48px] h-[4px] bg-lp-muted opacity-[0.35]"></span>
+            </div>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

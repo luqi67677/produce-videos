@@ -24,6 +24,11 @@ ABSENCE_WORDS = {"没有", "无", "排除", "不采用", "不存在", "absence",
 VALID_PRIVACY_TREATMENTS = {"crop", "opaque-mask"}
 VALID_REVISION_MODES = {"initial", "revision"}
 VALID_PREVIEW_KINDS = {"native-frame", "contact-sheet", "motion-sample"}
+VALID_ROLL_TYPES = {"a-roll", "b-roll", "hybrid", "graphic-led"}
+VALID_VISUAL_SOURCES = {"user-provided", "official", "verified-keyframe", "generated-still", "code-motion", "text-only"}
+VISUAL_SOURCE_ORDER = ["user-provided", "official", "verified-keyframe", "generated-still", "code-motion", "text-only"]
+VALID_TRANSITIONS = {"none", "hard-cut", "match-cut", "insert-cut", "graphic-bridge"}
+VALID_LAYOUT_ADAPTATIONS = {"native-landscape", "portrait-reflow", "custom-verified"}
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$", re.IGNORECASE)
 
 
@@ -54,6 +59,80 @@ def resolve_path(contract_path: Path, value: Any) -> Path | None:
 
 def canonical_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def validate_scene_design(scene: dict[str, Any], label: str) -> list[str]:
+    errors: list[str] = []
+    roll = scene.get("roll")
+    if not isinstance(roll, dict) or roll.get("type") not in VALID_ROLL_TYPES:
+        errors.append(f"{label}.roll.type 必须为 a-roll、b-roll、hybrid 或 graphic-led")
+    else:
+        for field in ("narrative_role", "entry_reason", "return_strategy"):
+            if not nonempty_text(roll.get(field)):
+                errors.append(f"{label}.roll 缺少 {field}")
+        if roll.get("type") in {"b-roll", "hybrid"} and not nonempty_text(roll.get("covers")):
+            errors.append(f"{label} 的 B-roll 必须写明正在解释的口播 covers")
+
+    strategy = scene.get("visual_source_strategy")
+    if not isinstance(strategy, dict) or strategy.get("selected") not in VALID_VISUAL_SOURCES:
+        errors.append(f"{label}.visual_source_strategy.selected 无效")
+    else:
+        if strategy.get("source_order_considered") != VISUAL_SOURCE_ORDER:
+            errors.append(f"{label} 必须按真实、官方、关键帧、静态补图、代码动画、纯文字顺序考虑素材")
+        if strategy.get("video_model_used") is not False:
+            errors.append(f"{label} 禁止由本 Skill 调用视频生成模型")
+        if strategy.get("selected") in {"generated-still", "code-motion", "text-only"} and not nonempty_text(strategy.get("gap_reason")):
+            errors.append(f"{label} 使用补充视觉时必须写明真实素材缺口")
+        if strategy.get("selected") == "generated-still" and strategy.get("generated_still_approved") is not True:
+            errors.append(f"{label} 生成静态补图尚未获得开工授权")
+
+    transition = scene.get("transition")
+    if not isinstance(transition, dict) or transition.get("type") not in VALID_TRANSITIONS:
+        errors.append(f"{label}.transition.type 无效")
+    else:
+        for field in ("previous_end_state", "next_start_state", "continuity_anchor", "reason"):
+            if not nonempty_text(transition.get(field)):
+                errors.append(f"{label}.transition 缺少 {field}")
+
+    preset = scene.get("layout_preset")
+    if not isinstance(preset, dict):
+        errors.append(f"{label}.layout_preset 必须为对象")
+    else:
+        preset_id = str(preset.get("id", "")).strip()
+        preset_path = Path(__file__).resolve().parents[1] / "references/frontend-slides-layouts" / preset_id / "layout.md"
+        if not preset_id or ".." in Path(preset_id).parts or not preset_path.is_file():
+            errors.append(f"{label}.layout_preset.id 不在 88 套布局目录中")
+        if preset.get("adaptation") not in VALID_LAYOUT_ADAPTATIONS:
+            errors.append(f"{label}.layout_preset.adaptation 无效")
+        if not nonempty_text(preset.get("selection_reason")):
+            errors.append(f"{label}.layout_preset 缺少 selection_reason")
+
+    budget = scene.get("composition_budget")
+    if not isinstance(budget, dict):
+        errors.append(f"{label}.composition_budget 必须为对象")
+    else:
+        numeric_limits = {
+            "focal_points": (1, 1),
+            "support_groups": (0, 4),
+            "decorative_groups": (0, 1),
+            "accent_colors": (0, 2),
+            "material_systems": (1, 1),
+        }
+        for field, (minimum, maximum) in numeric_limits.items():
+            value = budget.get(field)
+            if not isinstance(value, int) or isinstance(value, bool) or not minimum <= value <= maximum:
+                errors.append(f"{label}.composition_budget.{field} 必须在 {minimum}—{maximum} 之间")
+        occupied = budget.get("occupied_area_ratio")
+        if not isinstance(occupied, (int, float)) or isinstance(occupied, bool) or not 0 < occupied <= 1:
+            errors.append(f"{label}.composition_budget.occupied_area_ratio 必须在 0—1 之间")
+        elif not 0.38 <= occupied <= 0.8 and not nonempty_text(budget.get("density_exception_reason")):
+            errors.append(f"{label} 的画面占用率异常，必须解释为何不会过空或过挤")
+        empty = budget.get("largest_empty_area_ratio")
+        if not isinstance(empty, (int, float)) or isinstance(empty, bool) or not 0 <= empty < 1:
+            errors.append(f"{label}.composition_budget.largest_empty_area_ratio 必须在 0—1 之间")
+        elif empty > 0.42 and not nonempty_text(budget.get("intentional_whitespace_reason")):
+            errors.append(f"{label} 存在大面积空白，但没有说明其构图职责")
+    return errors
 
 
 def validate(path: Path, narration_contract_path: Path | None = None) -> list[str]:
@@ -199,6 +278,9 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
             seen_scene_ids.add(scene_id)
             scene_records[scene_id] = scene
         label = scene_id or label
+
+        if data.get("schema_version") == "2.4":
+            errors.extend(validate_scene_design(scene, label))
 
         duration = scene.get("duration_seconds")
         if not isinstance(duration, (int, float)) or duration <= 0:
@@ -377,6 +459,18 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
             ):
                 if layout_review.get(field) is not True:
                     errors.append(f"{label}.layout_review.{field} 尚未通过")
+            if data.get("schema_version") == "2.4":
+                for field in (
+                    "single_focal_point",
+                    "balanced_density",
+                    "clean_edges",
+                    "single_material_system",
+                    "dirty_overlays_free",
+                    "crop_remnants_free",
+                    "pause_frames_finished",
+                ):
+                    if layout_review.get(field) is not True:
+                        errors.append(f"{label}.layout_review.{field} 尚未通过")
         if scene.get("decorative_outer_frame") is not False:
             if scene.get("decorative_outer_frame") is not True:
                 errors.append(f"{label}.decorative_outer_frame 必须为布尔值")

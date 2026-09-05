@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staircase — list layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f2f1ef;
+    --lp-fg: #1b1b1b;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(27, 27, 27, 0.12);
+    --lp-accent: #7d7d7b;
+    --lp-line: rgba(27, 27, 27, 0.25);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-rise-sm { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-draw { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-step.s1 { animation: lp-rise-sm 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.40s both; }
+.slide.active .lp-step.s2 { animation: lp-rise-sm 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.58s both; }
+.slide.active .lp-step.s3 { animation: lp-rise-sm 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.76s both; }
+.slide.active .lp-step.s4 { animation: lp-rise-sm 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.94s both; }
+.slide.active .lp-step.s1 .lp-riser { animation: lp-draw 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.70s both; }
+.slide.active .lp-step.s2 .lp-riser { animation: lp-draw 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.88s both; }
+.slide.active .lp-step.s3 .lp-riser { animation: lp-draw 0.3s cubic-bezier(0.16, 1, 0.3, 1) 1.06s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- header -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Rollout Plan</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">09 / 14</div>
+            <h2 class="lp-headline absolute left-[96px] top-[118px] m-0 font-display text-[84px] font-extrabold leading-[1.02] tracking-[-0.02em] uppercase">Rollout, in <em class="not-italic text-lp-accent">order</em></h2>
+
+            <!-- steps — each lower and further right than the last
+                 Image variant: 200×112 thumbs left of each numeral
+                 (placehold.co/400x224 at 2×), all or none, max 3 steps. -->
+            <div class="lp-step s1 absolute left-[96px] top-[340px]">
+                <div class="flex items-baseline gap-[24px]"><span class="font-mono text-[20px] font-medium tracking-[0.1em] text-lp-accent flex-none">01</span><span class="font-display text-[40px] font-bold leading-[1.1] text-lp-fg">Pilot site</span></div>
+                <p class="mt-[10px] mr-0 mb-0 ml-[66px] max-w-[560px] font-body text-[19px] leading-[1.5] text-lp-muted">One harbor, full instrumentation, weekly review with the operator.</p>
+                <div class="lp-riser absolute left-[8px] top-[64px] w-px h-[56px] bg-lp-line origin-top" aria-hidden="true"></div>
+            </div>
+            <div class="lp-step s2 absolute left-[316px] top-[500px]">
+                <div class="flex items-baseline gap-[24px]"><span class="font-mono text-[20px] font-medium tracking-[0.1em] text-lp-accent flex-none">02</span><span class="font-display text-[40px] font-bold leading-[1.1] text-lp-fg">Corridor of five</span></div>
+                <p class="mt-[10px] mr-0 mb-0 ml-[66px] max-w-[560px] font-body text-[19px] leading-[1.5] text-lp-muted">The playbook hardens across five sites on one supply route.</p>
+                <div class="lp-riser absolute left-[8px] top-[64px] w-px h-[56px] bg-lp-line origin-top" aria-hidden="true"></div>
+            </div>
+            <div class="lp-step s3 absolute left-[536px] top-[660px]">
+                <div class="flex items-baseline gap-[24px]"><span class="font-mono text-[20px] font-medium tracking-[0.1em] text-lp-accent flex-none">03</span><span class="font-display text-[40px] font-bold leading-[1.1] text-lp-fg">Regional fleet</span></div>
+                <p class="mt-[10px] mr-0 mb-0 ml-[66px] max-w-[560px] font-body text-[19px] leading-[1.5] text-lp-muted">Twenty sites, remote-first operations, local spares on shelf.</p>
+                <div class="lp-riser absolute left-[8px] top-[64px] w-px h-[56px] bg-lp-line origin-top" aria-hidden="true"></div>
+            </div>
+            <div class="lp-step s4 absolute left-[756px] top-[820px]">
+                <div class="flex items-baseline gap-[24px]"><span class="font-mono text-[20px] font-medium tracking-[0.1em] text-lp-accent flex-none">04</span><span class="font-display text-[40px] font-bold leading-[1.1] text-lp-fg">Everything else</span></div>
+                <p class="mt-[10px] mr-0 mb-0 ml-[66px] max-w-[560px] font-body text-[19px] leading-[1.5] text-lp-muted">Self-serve onboarding takes over.</p>
+            </div>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wings — chart layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; /* Tailwind CDN injects later; a stray `relative` utility must not win */
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+img, video, canvas, svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f1f0ee;
+    --lp-fg: #1a1a1a;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(26, 26, 26, 0.13);
+    --lp-accent: #7a7a78;
+    --lp-line: rgba(26, 26, 26, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Both wings of each row open outward from the spine together.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-brand,
+.slide.active .lp-chrome-rule { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline,
+.slide.active .lp-reading { animation: lp-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-ghead,
+.slide.active .lp-cats { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+.slide.active .lp-wrow:nth-of-type(1) .lp-bar-l { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.50s both; transform-origin: right; }
+.slide.active .lp-wrow:nth-of-type(1) .lp-bar-r { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.50s both; transform-origin: left; }
+.slide.active .lp-wrow:nth-of-type(2) .lp-bar-l { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.64s both; transform-origin: right; }
+.slide.active .lp-wrow:nth-of-type(2) .lp-bar-r { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.64s both; transform-origin: left; }
+.slide.active .lp-wrow:nth-of-type(3) .lp-bar-l { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.78s both; transform-origin: right; }
+.slide.active .lp-wrow:nth-of-type(3) .lp-bar-r { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.78s both; transform-origin: left; }
+.slide.active .lp-wrow:nth-of-type(4) .lp-bar-l { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.92s both; transform-origin: right; }
+.slide.active .lp-wrow:nth-of-type(4) .lp-bar-r { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.92s both; transform-origin: left; }
+.slide.active .lp-wrow:nth-of-type(5) .lp-bar-l { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.06s both; transform-origin: right; }
+.slide.active .lp-wrow:nth-of-type(5) .lp-bar-r { animation: lp-wipe 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.06s both; transform-origin: left; }
+.slide.active .lp-wrow:nth-of-type(1) .lp-val { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both; }
+.slide.active .lp-wrow:nth-of-type(2) .lp-val { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.89s both; }
+.slide.active .lp-wrow:nth-of-type(3) .lp-val { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.03s both; }
+.slide.active .lp-wrow:nth-of-type(4) .lp-val { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.17s both; }
+.slide.active .lp-wrow:nth-of-type(5) .lp-val { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.31s both; }
+.slide.active .lp-foot-rule,
+.slide.active .lp-foot-left,
+.slide.active .lp-foot-right { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.4s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome (top) -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Alert Mix — Day Shift vs Night Shift</div>
+
+            <!-- OPTIONAL branding/logo slot: wordmark or image logo, ≤40px tall.
+                 Image option: <img src="https://placehold.co/260x80" class="h-[40px] w-auto object-contain">
+                 Remove this element entirely if the deck carries no brand mark. -->
+            <div class="lp-brand absolute right-[96px] top-[66px] h-[40px] flex items-center font-display text-[22px] font-extrabold tracking-[0.08em] uppercase">Fathom</div>
+
+            <div class="lp-chrome-rule absolute left-[96px] right-[96px] top-[118px] h-px bg-lp-line"></div>
+
+            <!-- headline + reading -->
+            <h1 class="lp-headline absolute left-[96px] top-[164px] m-0 max-w-[1400px] font-display text-[60px] font-bold leading-none tracking-[-0.01em]">Two different cities after dark</h1>
+            <div class="lp-reading absolute left-[96px] top-[242px] font-mono text-[16px] uppercase tracking-[0.14em] text-lp-muted">Alerts per 1,000 streams, 90-day average · one mirrored scale, both wings</div>
+
+            <!-- group headers -->
+            <div class="lp-ghead">
+                <div class="absolute right-[1100px] top-[308px] font-display text-[28px] font-bold leading-none">Day shift</div>
+                <div class="absolute left-[1100px] top-[308px] font-display text-[28px] font-bold leading-none">Night shift</div>
+            </div>
+
+            <!-- rows: 2px per unit; left bars end at x:820, right bars start at x:1100 -->
+            <!-- Traffic incident: 342 / 121 -->
+            <div class="lp-wrow">
+                <div class="lp-bar-l absolute left-[136px] top-[352px] w-[684px] h-[40px] bg-lp-fg opacity-30"></div>
+                <div class="lp-bar-r absolute left-[1100px] top-[352px] w-[242px] h-[40px] bg-lp-fg opacity-30"></div>
+                <div class="lp-val absolute left-[40px] top-[362px] w-[80px] text-right font-mono text-[18px] text-lp-muted">342</div>
+                <div class="lp-val absolute left-[1358px] top-[362px] font-mono text-[18px] text-lp-muted">121</div>
+            </div>
+            <!-- Crowd density: 187 / 64 -->
+            <div class="lp-wrow">
+                <div class="lp-bar-l absolute left-[446px] top-[472px] w-[374px] h-[40px] bg-lp-fg opacity-30"></div>
+                <div class="lp-bar-r absolute left-[1100px] top-[472px] w-[128px] h-[40px] bg-lp-fg opacity-30"></div>
+                <div class="lp-val absolute left-[350px] top-[482px] w-[80px] text-right font-mono text-[18px] text-lp-muted">187</div>
+                <div class="lp-val absolute left-[1244px] top-[482px] font-mono text-[18px] text-lp-muted">64</div>
+            </div>
+            <!-- Perimeter breach: 45 / 210 — the divergence, accent -->
+            <div class="lp-wrow">
+                <div class="lp-bar-l absolute left-[730px] top-[592px] w-[90px] h-[40px] bg-lp-accent"></div>
+                <div class="lp-bar-r absolute left-[1100px] top-[592px] w-[420px] h-[40px] bg-lp-accent"></div>
+                <div class="lp-val absolute left-[634px] top-[602px] w-[80px] text-right font-mono text-[18px] font-medium text-lp-accent">45</div>
+                <div class="lp-val absolute left-[1536px] top-[602px] font-mono text-[18px] font-medium text-lp-accent">210</div>
+            </div>
+            <!-- Flood sensor: 76 / 82 -->
+            <div class="lp-wrow">
+                <div class="lp-bar-l absolute left-[668px] top-[712px] w-[152px] h-[40px] bg-lp-fg opacity-30"></div>
+                <div class="lp-bar-r absolute left-[1100px] top-[712px] w-[164px] h-[40px] bg-lp-fg opacity-30"></div>
+                <div class="lp-val absolute left-[572px] top-[722px] w-[80px] text-right font-mono text-[18px] text-lp-muted">76</div>
+                <div class="lp-val absolute left-[1280px] top-[722px] font-mono text-[18px] text-lp-muted">82</div>
+            </div>
+            <!-- Camera tamper: 21 / 96 -->
+            <div class="lp-wrow">
+                <div class="lp-bar-l absolute left-[778px] top-[832px] w-[42px] h-[40px] bg-lp-fg opacity-30"></div>
+                <div class="lp-bar-r absolute left-[1100px] top-[832px] w-[192px] h-[40px] bg-lp-fg opacity-30"></div>
+                <div class="lp-val absolute left-[682px] top-[842px] w-[80px] text-right font-mono text-[18px] text-lp-muted">21</div>
+                <div class="lp-val absolute left-[1308px] top-[842px] font-mono text-[18px] text-lp-muted">96</div>
+            </div>
+
+            <!-- center gutter category labels -->
+            <div class="lp-cats">
+                <div class="absolute left-[820px] top-[360px] w-[280px] text-center font-display text-[24px] font-bold leading-[1.05]">Traffic incident</div>
+                <div class="absolute left-[820px] top-[480px] w-[280px] text-center font-display text-[24px] font-bold leading-[1.05]">Crowd density</div>
+                <div class="absolute left-[820px] top-[600px] w-[280px] text-center font-display text-[24px] font-bold leading-[1.05] text-lp-accent">Perimeter breach</div>
+                <div class="absolute left-[820px] top-[720px] w-[280px] text-center font-display text-[24px] font-bold leading-[1.05]">Flood sensor</div>
+                <div class="absolute left-[820px] top-[840px] w-[280px] text-center font-display text-[24px] font-bold leading-[1.05]">Camera tamper</div>
+            </div>
+
+            <!-- footer -->
+            <div class="lp-foot-rule absolute left-[96px] right-[96px] top-[962px] h-px bg-lp-line"></div>
+            <div class="lp-foot-left absolute left-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">Control-room logs, Apr–Jun 2026 — shifts 06:00–18:00 / 18:00–06:00</div>
+            <div class="lp-foot-right absolute right-[96px] top-[984px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">10 / 12</div>
+        </section>
+    </div>
+</div>
+<script>
+// Uniform fixed-stage scaler: scale the 1920×1080 stage to fit the viewport.
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        var x = (window.innerWidth - 1920 * s) / 2;
+        var y = (window.innerHeight - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

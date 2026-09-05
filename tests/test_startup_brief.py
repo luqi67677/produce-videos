@@ -23,6 +23,8 @@ def write_brief(root: Path, **values: str) -> Path:
         "最终声音来源代码": "recorded-audio",
         "声音输入": "/project/narration.wav",
         "TTS 资源状态": "not-required",
+        "静态补图策略": "user-assets-only",
+        "静态补图授权": "not-required",
         "TTS 供应方与模型": "not-required",
         "TTS API 凭证位置": "not-required",
         "本地模型线索": "not-required",

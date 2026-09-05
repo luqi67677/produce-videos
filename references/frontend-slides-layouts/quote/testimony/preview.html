@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testimony — quote layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #f2f1ef;
+    --lp-fg: #1b1b1b;
+    --lp-fg-muted: #6f6f6d;
+    --lp-fg-faint: rgba(27, 27, 27, 0.12);
+    --lp-accent: #7d7d7b;
+    --lp-line: rgba(27, 27, 27, 0.22);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   =========================================== */
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-drop { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-rise-sm { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes lp-settle { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: scale(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-glyph { animation: lp-drop 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-quote { animation: lp-rise-sm 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+.slide.active .lp-portrait { animation: lp-settle 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both; }
+.slide.active .lp-portrait-caption { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both; }
+.slide.active .lp-attr-rule { animation: lp-wipe 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.85s both; }
+.slide.active .lp-attr-name,
+.slide.active .lp-attr-role { animation: lp-rise-sm 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.95s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- chrome -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Customer Voice</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">08 / 14</div>
+
+            <!-- quote glyph + quote (max-width widens to 1360px without the portrait) -->
+            <div class="lp-glyph absolute left-[88px] top-[120px] font-display text-[200px] font-bold leading-[0.7] text-lp-accent pointer-events-none" aria-hidden="true">&ldquo;</div>
+            <blockquote class="lp-quote absolute left-[96px] top-[330px] m-0 max-w-[1180px] font-display text-[64px] font-semibold leading-[1.22] tracking-[-0.01em] text-lp-fg">We stopped noticing the platform this year. For infrastructure, <em class="not-italic text-lp-accent">that is the highest compliment</em> we know how to give.</blockquote>
+
+            <!-- portrait plate (optional) —
+                 Recommended: https://placehold.co/360x360 — fixed frame + object-cover
+                 absorbs any dimensions; gradient beneath is the load fallback.
+                 Delete this block for the no-image variant (quote widens to 1360px). -->
+            <div class="lp-portrait absolute left-[1464px] top-[330px] w-[360px] h-[360px] border border-lp-line overflow-hidden bg-[linear-gradient(150deg,#d3d2cf_0%,#a8a7a4_100%)]">
+                <img class="absolute inset-0 w-full h-full max-w-none max-h-none object-cover" src="https://placehold.co/360x360/c2c1be/6f6f6d" alt="Portrait of D. Putri">
+            </div>
+            <div class="lp-portrait-caption absolute left-[1464px] top-[710px] w-[360px] font-mono text-[13px] uppercase tracking-[0.14em] text-lp-muted">Harborworks Ops Center</div>
+
+            <!-- attribution -->
+            <div class="absolute left-[96px] top-[860px]">
+                <div class="lp-attr-rule w-[48px] h-[4px] mb-[24px] origin-left bg-lp-accent"></div>
+                <span class="lp-attr-name font-display text-[28px] font-bold text-lp-fg">D. Putri</span>
+                <span class="lp-attr-role ml-[20px] font-mono text-[14px] uppercase tracking-[0.14em] text-lp-muted">VP Operations, Harborworks</span>
+            </div>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>

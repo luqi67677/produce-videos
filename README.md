@@ -21,12 +21,13 @@ An open-source video production skill for AI agents. It turns scripts and source
 
 - 整理或撰写完整口播；
 - 核对真实素材、授权和隐私信息；
-- 从 34 套视觉模板中匹配三种真实候选；
+- 从 34 套视觉主题中匹配三种真实候选，再按镜头语义从 88 套布局骨架中选结构；
 - 复用录音、视频人声、TTS API 或本地模型完成配音；
-- 拆分镜头，设计画面、动画、字幕和切换时间；
+- 用 A-roll 建立叙事主轴，用 B-roll 补证据、操作演示、静态插画和代码动画；
+- 拆分镜头，设计画面、动画、字幕、切换时间和节拍卡点；
 - 生成静态分镜、完整低清预览和独立封面；
 - 检查时长、编码、音轨、响度、黑帧、画幅和旁白绑定；
-- 导出可播放的正式视频和一张独立 3:4 封面。
+- 导出可播放的正式视频、独立 3:4 封面，以及需要时可继续编辑的 FCPXML 时间线。
 
 适合产品介绍、功能演示、教程、知识讲解、品牌宣传、作品展示和已有视频的定点修改。
 
@@ -40,7 +41,7 @@ An open-source video production skill for AI agents. It turns scripts and source
 
 ### 2. 一次确认开工信息
 
-Agent 会整理平台、画幅、时长、目标观众、口播内容来源、最终声音来源、现有 API 或本地模型，以及想要的声音方向。已经说明的信息不会重复询问。
+Agent 会整理平台、画幅、时长、目标观众、口播内容来源、最终声音来源、现有 API 或本地模型、声音方向，以及真实素材不足时是否允许生成静态补图。已经说明的信息不会重复询问。
 
 ### 3. 确认口播、真实素材和视觉方向
 
@@ -61,7 +62,7 @@ Agent 先给出完整口播和真实素材联系表。没有指定视觉方向�
 
 ### 5. 确认完整分镜
 
-素材和声音确定后，Agent 会拆分镜头，说明每段口播对应什么画面、素材怎样进入、画面怎么动、字幕放在哪里、什么时候切换。你会看到完整静态分镜，而不只是文字方案。
+素材和声音确定后，Agent 会标记每段是 A-roll、B-roll、混合画面还是纯图形主轴，并从 88 套布局中选择合适骨架。每个 B-roll 都要说明它正在解释哪句话；每个转场都要说明前后状态如何连接。你会看到完整静态分镜，而不只是文字方案。
 
 ### 6. 查看整片预览并导出
 
@@ -70,6 +71,8 @@ Agent 先给出完整口播和真实素材联系表。没有指定视觉方向�
 短片且信息完整时，通常只需要 4 次确认。普通项目约为 4 至 5 次。隐私、素材授权、依赖安装和模型下载会单独确认。
 
 ## 安装
+
+可以直接从 [GitHub Releases](https://github.com/luqi67677/produce-videos/releases/latest) 下载：通用 Agent 使用 `produce-videos.skill` 或 `produce-videos.zip`，WorkBuddy 使用 `produce-videos-workbuddy.zip`。给 Agent 的完整安装契约见 [INSTALL_FOR_AGENTS.md](INSTALL_FOR_AGENTS.md)。
 
 ### 最简单的方式：把这段话复制给 AI
 
@@ -167,6 +170,14 @@ Kimi Code CLI 可以这样说：
 使用 produce-videos 帮我做一条视频。我现在只有这些资料，还没有想清楚结构、风格和声音。请先一次问清楚需要的信息，再开始制作。
 ```
 
+继续昨天或上次中断的项目时：
+
+```bash
+python3 scripts/resume_project.py /path/to/video-project
+```
+
+它只读取现有审批账本和已审批文件哈希，告诉 Agent 已完成到哪里、哪些文件审批后发生了变化、下一步是什么，不创建第二套项目状态。
+
 ## 一次完整演示应该录什么
 
 如果要向别人演示这套 Skill，可以按下面的顺序录屏。每一段都对应用户真正会经历的步骤。
@@ -197,9 +208,9 @@ Skill 会优先使用用户已经拥有的音频能力。选择 TTS 时，会先
 
 安装 Skill 本身不会下载 TTS 模型。只有用户在视频任务中选择 Qwen 路线并明确授权后，Agent 才能安装依赖或执行下载。
 
-## 34 套视觉模板
+## 34 套视觉主题 + 88 套布局
 
-仓库包含 34 套通用视觉模板的设计说明和选择索引。用户没有指定视觉系统时，Skill 会先检查模板目录完整性，再根据内容、受众、情绪、信息密度和发布平台评估全部模板，从中推荐三套不同候选。
+仓库包含 34 套视觉主题和 88 套结构化布局。主题决定颜色、字体、材质和动效语气；布局决定标题、截图、人物、图表和辅助信息放在哪里。用户没有指定视觉系统时，Skill 会评估全部 34 套主题并推荐三套真实候选；主题锁定后，每个镜头再按语义选择布局，避免临场乱摆元素。
 
 三套候选必须使用相同标题、相同代表内容、相同主视觉和目标画幅，并直接展示：
 
@@ -209,6 +220,18 @@ Skill 会优先使用用户已经拥有的音频能力。选择 TTS 时，会先
 - 能完整看到三套候选的总览图。
 
 选中以后，全片的封面、字幕、分镜、动画和成片都会读取同一套视觉主题，不会在后面的制作中自行换风格。
+
+布局还带有硬限制：一个焦点、有限的辅助组与强调色、单一材质、画面占用率和最大空白区。大面积空白必须写清构图职责；脏色、噪点、随机粒子、发光 AI 大脑、漂浮图标、重色字幕条和裁切残留会直接阻止渲染。详细规则见 [视觉干净度系统](references/visual-cleanliness-system.md)。
+
+## A-roll / B-roll 与素材补缺
+
+A-roll 是主叙事画面，B-roll 是在同一声音主轴上切入的证据、操作演示或概念解释。B-roll 不是装饰；如果不能指出它解释的口播，就不应该出现。
+
+素材不足时按这个顺序处理：用户真实素材 → 官方素材 → 已核验关键帧 → 经开工授权生成静态插画/信息图 → 可编辑代码动画 → 保持主画面或纯文字。Skill 不调用视频生成模型，也不使用生成图伪造产品结果、数据和真实背书。详细规则见 [A-roll、B-roll 与镜头桥接](references/roll-and-transition-system.md)。
+
+## 真实案例
+
+仓库提供三个经过授权的压缩预览：Obsidian 软件讲解、不用视频模型的视频 Skill，以及 ICP/网安备案长流程科普。见 [examples/README.md](examples/README.md)。安装包不携带案例视频，避免重复占用空间。
 
 ## 运行要求
 
@@ -226,6 +249,14 @@ Skill 会优先使用用户已经拥有的音频能力。选择 TTS 时，会先
 - Apple Silicon 上的 `mlx-audio` 与 Qwen3-TTS。
 
 缺少关键能力时，Agent 必须说明当前能交付到哪一步，不能把“已经读取仓库”当成“已经安装”，也不能把脚本或分镜当成最终视频。
+
+安装后先运行只读体检：
+
+```bash
+python3 scripts/doctor.py
+```
+
+它会分别报告 Python、FFmpeg、Node/Remotion、中文字体、本地 STT、TTS API 名称和本地 Qwen 模型是否可用；不会安装依赖、下载模型或显示密钥值。
 
 ## 输出规格
 
@@ -245,7 +276,9 @@ produce-videos/
 ├── SKILL.md                  # Agent 执行入口
 ├── agents/openai.yaml        # Codex 界面元数据
 ├── assets/                   # brief、审批、声音、分镜和主题模板
-├── references/               # 按阶段读取的详细制作规则与 34 套视觉模板
+├── references/               # 制作规则、34 套视觉主题与 88 套布局
+├── examples/                 # 三个公开成片案例与哈希清单
+├── dist/                     # Release 安装包
 ├── scripts/                  # 模型发现、校验、质检和打包脚本
 ├── tests/                    # 自动测试
 ├── evals/                    # Skill 行为评估用例
@@ -263,8 +296,9 @@ produce-videos/
 python3 -m unittest discover -s tests -v
 python3 scripts/validate_theme_catalog.py \
   references/frontend-slides-themes/bold-template-pack/selection-index.json
+python3 scripts/validate_layout_catalog.py
 python3 scripts/scan_release.py
-python3 scripts/package_workbuddy.py --output /tmp/produce-videos-workbuddy.zip
+python3 scripts/package_release.py --output-dir dist
 ```
 
 验证至少应确认：
@@ -272,7 +306,7 @@ python3 scripts/package_workbuddy.py --output /tmp/produce-videos-workbuddy.zip
 - 能读取 `SKILL.md`；
 - `scripts`、`references` 和 `assets` 都存在；
 - 自动测试通过；
-- 34 套视觉模板完整；
+- 34 套视觉主题和 88 套布局完整；
 - 开源扫描没有发现个人路径、密钥或未经审核的二进制资产。
 
 自动检查不能替代用户对口播、素材、声音、分镜和最终预览的实际判断，也不能证明视频已经上传、发布或产生真实用户效果。

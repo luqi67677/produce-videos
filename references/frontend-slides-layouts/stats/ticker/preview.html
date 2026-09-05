@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ticker — stats layout demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind (CDN JIT — no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- === TOKEN MAPPING (fixed contract — same in every preset) === -->
+<script>
+tailwind.config = {
+    theme: { extend: {
+        colors: {
+            lp: {
+                bg:     'var(--lp-bg)',
+                fg:     'var(--lp-fg)',
+                muted:  'var(--lp-fg-muted)',
+                faint:  'var(--lp-fg-faint)',
+                accent: 'var(--lp-accent)',
+                line:   'var(--lp-line)',
+            },
+        },
+        fontFamily: {
+            display: 'var(--lp-font-display)',
+            body:    'var(--lp-font-body)',
+            mono:    'var(--lp-font-mono)',
+        },
+    } },
+};
+</script>
+
+<style>
+/* ===========================================
+   1. STAGE MECHANICS (viewport-base.css — raw CSS by design)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage {
+    position: absolute; left: 0; top: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+.slide {
+    position: absolute !important; inset: 0;
+    width: 1920px; height: 1080px;
+    overflow: hidden; display: block;
+    visibility: hidden; opacity: 0; pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   2. TOKEN DEFINITIONS — grayscale demo placeholders.
+   Real decks remap every value to the design system.
+   =========================================== */
+.slide.lp {
+    --lp-bg: #171717;
+    --lp-fg: #ebebe9;
+    --lp-fg-muted: #979795;
+    --lp-fg-faint: rgba(255, 255, 255, 0.12);
+    --lp-accent: #929290;
+    --lp-line: rgba(255, 255, 255, 0.26);
+    --lp-font-display: 'Archivo', sans-serif;
+    --lp-font-body: 'Archivo', sans-serif;
+    --lp-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ===========================================
+   3. CHOREOGRAPHY — keyframes + .slide.active triggers.
+   Classes below are animation hooks only; all visual
+   styling lives in Tailwind utilities on the markup.
+   =========================================== */
+/* Animated pseudo-element — kept as raw CSS because choreography targets it. */
+.lp-cell + .lp-cell::before {
+    content: "";
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 1px; background: var(--lp-line);
+    transform-origin: center top;
+}
+
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lp-rise { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-rise-sm { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lp-wipe { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes lp-draw { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+.slide.active .lp-kicker,
+.slide.active .lp-counter { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0s both; }
+.slide.active .lp-headline { animation: lp-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.slide.active .lp-band-rule { animation: lp-wipe 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
+.slide.active .lp-cell:nth-child(1) .lp-cell-value { animation: lp-rise-sm 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both; }
+.slide.active .lp-cell:nth-child(1) .lp-cell-label { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both; }
+.slide.active .lp-cell:nth-child(2)::before { animation: lp-draw 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.79s both; }
+.slide.active .lp-cell:nth-child(2) .lp-cell-value { animation: lp-rise-sm 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.79s both; }
+.slide.active .lp-cell:nth-child(2) .lp-cell-label { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.89s both; }
+.slide.active .lp-cell:nth-child(3)::before { animation: lp-draw 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.93s both; }
+.slide.active .lp-cell:nth-child(3) .lp-cell-value { animation: lp-rise-sm 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.93s both; }
+.slide.active .lp-cell:nth-child(3) .lp-cell-label { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.03s both; }
+.slide.active .lp-cell:nth-child(4)::before { animation: lp-draw 0.35s cubic-bezier(0.16, 1, 0.3, 1) 1.07s both; }
+.slide.active .lp-cell:nth-child(4) .lp-cell-value { animation: lp-rise-sm 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.07s both; }
+.slide.active .lp-cell:nth-child(4) .lp-cell-label { animation: lp-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.17s both; }
+.slide.active .lp-foot-rule,
+.slide.active .lp-foot-left,
+.slide.active .lp-foot-right { animation: lp-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.2s both; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+    <div class="deck-stage">
+        <section class="slide lp active bg-lp-bg text-lp-fg">
+            <!-- header -->
+            <div class="lp-kicker absolute left-[96px] top-[72px] font-mono text-[15px] font-medium uppercase tracking-[0.18em] text-lp-accent">Operations</div>
+            <div class="lp-counter absolute right-[96px] top-[72px] font-mono text-[15px] uppercase tracking-[0.12em] text-lp-muted">12 / 14</div>
+            <h2 class="lp-headline absolute left-[96px] top-[118px] m-0 max-w-[1200px] font-display text-[84px] font-extrabold leading-[1.02] tracking-[-0.02em] uppercase">The operation, at a <em class="not-italic text-lp-accent">glance</em></h2>
+
+            <!-- ticker band (image variant: a 1200×260 band above the ticker at x:96, y:220 — placehold.co/1200x260) -->
+            <div class="lp-band-rule absolute left-0 right-0 top-[520px] h-px bg-lp-line origin-left" aria-hidden="true"></div>
+            <div class="lp-band-rule absolute left-0 right-0 top-[760px] h-px bg-lp-line origin-right" aria-hidden="true"></div>
+            <div class="absolute left-[96px] right-[96px] top-[520px] h-[240px] grid grid-cols-4">
+                <div class="lp-cell relative pt-[56px]">
+                    <div class="lp-cell-value font-display text-[104px] font-extrabold leading-[0.95] tracking-[-0.02em] text-lp-fg">214</div>
+                    <div class="lp-cell-label mt-[20px] font-mono text-[14px] uppercase tracking-[0.16em] text-lp-muted">Deploys</div>
+                </div>
+                <div class="lp-cell relative pt-[56px] pl-[56px]">
+                    <div class="lp-cell-value font-display text-[104px] font-extrabold leading-[0.95] tracking-[-0.02em] text-lp-fg">38<span class="text-lp-accent">ms</span></div>
+                    <div class="lp-cell-label mt-[20px] font-mono text-[14px] uppercase tracking-[0.16em] text-lp-muted">P99</div>
+                </div>
+                <div class="lp-cell relative pt-[56px] pl-[56px]">
+                    <div class="lp-cell-value font-display text-[104px] font-extrabold leading-[0.95] tracking-[-0.02em] text-lp-fg">99.98<span class="text-lp-accent">%</span></div>
+                    <div class="lp-cell-label mt-[20px] font-mono text-[14px] uppercase tracking-[0.16em] text-lp-muted">Uptime</div>
+                </div>
+                <div class="lp-cell relative pt-[56px] pl-[56px]">
+                    <div class="lp-cell-value font-display text-[104px] font-extrabold leading-[0.95] tracking-[-0.02em] text-lp-fg">12</div>
+                    <div class="lp-cell-label mt-[20px] font-mono text-[14px] uppercase tracking-[0.16em] text-lp-muted">Regions</div>
+                </div>
+            </div>
+
+            <!-- footer -->
+            <div class="lp-foot-rule absolute left-[96px] right-[96px] top-[962px] h-px bg-lp-line"></div>
+            <div class="lp-foot-left absolute left-[96px] top-[984px] font-mono text-[14px] uppercase tracking-[0.12em] text-lp-muted">Platform telemetry — Q2 FY26</div>
+            <div class="lp-foot-right absolute right-[96px] top-[984px] font-mono text-[14px] uppercase tracking-[0.12em] text-lp-muted">Auric</div>
+        </section>
+    </div>
+</div>
+<script>
+(function () {
+    var stage = document.querySelector('.deck-stage');
+    function fit() {
+        var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        stage.style.transform = 'translate(' + (window.innerWidth - 1920 * s) / 2 + 'px,' + (window.innerHeight - 1080 * s) / 2 + 'px) scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+})();
+</script>
+</body>
+</html>
