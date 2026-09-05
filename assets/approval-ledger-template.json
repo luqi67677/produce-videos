@@ -1,0 +1,107 @@
+{
+  "schema_version": "2.0",
+  "project": "",
+  "workflow_mode": "standard",
+  "approvals": {
+    "script": {
+      "review_package": "content-direction",
+      "package_scope": ["script", "source-assets"],
+      "status": "pending",
+      "approved": false,
+      "approved_at": "",
+      "approved_by": "user",
+      "approval_message": "",
+      "review_prompt": "",
+      "approval_context": "",
+      "approval_interpretation": "explicit",
+      "accepted_response_rule": "",
+      "review_delivery": {
+        "primary_path": "master-script.json",
+        "media_type": "text",
+        "directly_presented": false,
+        "fallback_path": ""
+      },
+      "reviewed_files": [{"path": "master-script.json", "sha256": ""}]
+    },
+    "source-assets": {
+      "review_package": "content-direction",
+      "package_scope": ["script", "source-assets"],
+      "status": "pending",
+      "approved": false,
+      "approved_at": "",
+      "approved_by": "user",
+      "approval_message": "",
+      "review_prompt": "",
+      "approval_context": "",
+      "approval_interpretation": "explicit",
+      "accepted_response_rule": "",
+      "review_delivery": {
+        "primary_path": "source-assets-contact-sheet.png",
+        "media_type": "image",
+        "directly_presented": false,
+        "fallback_path": "source-assets.json"
+      },
+      "reviewed_files": []
+    },
+    "assets": {
+      "review_package": "production-blueprint",
+      "package_scope": ["assets", "storyboard"],
+      "status": "pending",
+      "approved": false,
+      "approved_at": "",
+      "approved_by": "user",
+      "approval_message": "",
+      "review_prompt": "",
+      "approval_context": "",
+      "approval_interpretation": "explicit",
+      "accepted_response_rule": "",
+      "review_delivery": {
+        "primary_path": "storyboard/contact-sheet.png",
+        "media_type": "image-gallery",
+        "directly_presented": false,
+        "fallback_path": "asset-manifest.md"
+      },
+      "reviewed_files": []
+    },
+    "storyboard": {
+      "review_package": "production-blueprint",
+      "package_scope": ["assets", "storyboard"],
+      "status": "pending",
+      "approved": false,
+      "approved_at": "",
+      "approved_by": "user",
+      "approval_message": "",
+      "review_prompt": "",
+      "approval_context": "",
+      "approval_interpretation": "explicit",
+      "accepted_response_rule": "",
+      "review_delivery": {
+        "primary_path": "storyboard/contact-sheet.png",
+        "media_type": "image-gallery",
+        "directly_presented": false,
+        "fallback_path": "shot-readiness.json"
+      },
+      "reviewed_files": []
+    },
+    "motion": {
+      "review_package": "final-preview",
+      "package_scope": ["motion"],
+      "status": "pending",
+      "approved": false,
+      "approved_at": "",
+      "approved_by": "user",
+      "approval_message": "",
+      "review_prompt": "",
+      "approval_context": "",
+      "approval_interpretation": "explicit",
+      "accepted_response_rule": "",
+      "review_delivery": {
+        "primary_path": "preview/video-preview.mp4",
+        "media_type": "video",
+        "directly_presented": false,
+        "fallback_path": "preview/contact-sheet.png"
+      },
+      "reviewed_files": []
+    }
+  }
+}

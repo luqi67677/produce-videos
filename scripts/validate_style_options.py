@@ -11,6 +11,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from validate_review_approval import approval_path
 from validate_review_approval import validate as validate_approval
 from validate_source_assets import review_files as source_asset_review_files
 from validate_source_assets import validate as validate_source_assets
@@ -30,6 +31,23 @@ QUALITY_FIELDS = (
     "no_internal_labels",
     "meaningfully_distinct",
 )
+CLEANLINESS_QUALITY_FIELDS = (
+    "clean_visual_system",
+    "single_focal_point",
+    "no_competing_background_effects",
+    "no_ground_or_horizon",
+    "no_cast_or_drop_shadow",
+    "rim_light_separation_appropriate",
+    "no_raw_full_page_as_decorative_card",
+    "subtitle_visual_weight_controlled",
+    "no_crop_residue",
+)
+
+
+def required_quality_fields(schema_version: str) -> tuple[str, ...]:
+    if schema_version == "1.3":
+        return QUALITY_FIELDS + CLEANLINESS_QUALITY_FIELDS
+    return QUALITY_FIELDS
 
 
 def sha256(path: Path) -> str:
@@ -70,19 +88,27 @@ def image_dimensions(path: Path) -> tuple[int, int] | None:
         return None
 
 
-def validate(options_path: Path, catalog_path: Path, require_selected: bool = False) -> list[str]:
+def validate(
+    options_path: Path,
+    catalog_path: Path,
+    require_selected: bool = False,
+    require_source_approval: bool | None = None,
+) -> list[str]:
     errors = [f"主题库：{error}" for error in validate_catalog(catalog_path)]
     source_manifest = options_path.parent / "source-assets.json"
     errors.extend(f"用户真实素材：{error}" for error in validate_source_assets(source_manifest, True))
-    errors.extend(
-        f"用户真实素材审批：{error}"
-        for error in validate_approval(
-            options_path.parent / "source-assets-approval.json",
-            "source-assets",
-            True,
-            source_asset_review_files(source_manifest),
+    if require_source_approval is None:
+        require_source_approval = require_selected
+    if require_source_approval:
+        errors.extend(
+            f"用户真实素材审批：{error}"
+            for error in validate_approval(
+                approval_path(options_path.parent, "source-assets"),
+                "source-assets",
+                True,
+                source_asset_review_files(source_manifest),
+            )
         )
-    )
     try:
         data = json.loads(options_path.read_text(encoding="utf-8"))
         catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
@@ -148,6 +174,7 @@ def validate(options_path: Path, catalog_path: Path, require_selected: bool = Fa
             errors.append("catalog_evaluation 包含目录外模板：" + ", ".join(extra))
     if len(shortlisted) != 3:
         errors.append("catalog_evaluation 必须且只能 shortlist 三套模板")
+    schema_version = str(data.get("schema_version", "")).strip()
     options = data.get("options")
     if not isinstance(options, list) or len(options) != 3:
         return errors + ["必须且只能提供三套主题候选"]
@@ -192,7 +219,7 @@ def validate(options_path: Path, catalog_path: Path, require_selected: bool = Fa
         if not isinstance(review, dict):
             errors.append(f"{label} 缺少 quality_review")
         else:
-            for field in QUALITY_FIELDS:
+            for field in required_quality_fields(schema_version):
                 if review.get(field) is not True:
                     errors.append(f"{label}.quality_review.{field} 未通过")
     if shortlisted != seen_slugs:
@@ -207,7 +234,7 @@ def validate(options_path: Path, catalog_path: Path, require_selected: bool = Fa
             errors.append("overview_preview 无法读取图片尺寸")
         elif dimensions[0] < 810 or dimensions[1] < 360:
             errors.append("overview_preview 尺寸过小，无法完整展示三套候选")
-    if str(data.get("schema_version", "")).strip() == "1.2":
+    if schema_version in {"1.2", "1.3"}:
         delivery = data.get("review_delivery")
         if not isinstance(delivery, dict):
             errors.append("V1.2 候选缺少 review_delivery")
@@ -252,11 +279,17 @@ def main() -> int:
     parser.add_argument("options", type=Path)
     parser.add_argument("--catalog", required=True, type=Path)
     parser.add_argument("--require-selected", action="store_true", help="要求用户已从 A/B/C 中明确选择")
+    parser.add_argument(
+        "--require-source-approval",
+        action="store_true",
+        help="候选展示前通常不需要；锁定主题或渲染时必须验证真实素材已批准",
+    )
     args = parser.parse_args()
     errors = validate(
         args.options.expanduser().resolve(),
         args.catalog.expanduser().resolve(),
         args.require_selected,
+        args.require_source_approval or args.require_selected,
     )
     if errors:
         for error in errors:

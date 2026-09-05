@@ -91,6 +91,37 @@ def validate(path: Path, require_locked: bool) -> list[str]:
             errors.append("缺少 image_generation.palette_prompt")
         if not image_generation.get("negative_palette_prompt"):
             errors.append("缺少 image_generation.negative_palette_prompt")
+        if data.get("schema_version") == "1.1":
+            if not image_generation.get("depth_prompt"):
+                errors.append("缺少 image_generation.depth_prompt")
+            if not image_generation.get("negative_composition_prompt"):
+                errors.append("缺少 image_generation.negative_composition_prompt")
+
+    if data.get("schema_version") == "1.1":
+        visual_language = data.get("visual_language")
+        if not isinstance(visual_language, dict) or visual_language.get("shadow") != "none":
+            errors.append("visual_language.shadow 必须为 none")
+        cleanliness = data.get("cleanliness_contract")
+        if not isinstance(cleanliness, dict):
+            errors.append("缺少 cleanliness_contract")
+        else:
+            for key in (
+                "no_ground_plane",
+                "no_horizon_line",
+                "no_cast_shadow",
+                "no_drop_shadow",
+                "no_floor_reflection",
+                "single_visual_language",
+            ):
+                if cleanliness.get(key) is not True:
+                    errors.append(f"cleanliness_contract.{key} 必须为 true")
+            for key in ("raw_full_page_as_decoration", "stacked_background_effects", "heavy_subtitle_bar"):
+                if cleanliness.get(key) is not False:
+                    errors.append(f"cleanliness_contract.{key} 必须为 false")
+            if cleanliness.get("rim_light_mode") not in {"subtle-soft", "none-when-not-applicable"}:
+                errors.append("cleanliness_contract.rim_light_mode 必须为 subtle-soft 或 none-when-not-applicable")
+            if cleanliness.get("exception_policy") != "only_when_user_explicitly_requires_real_spatial_context":
+                errors.append("cleanliness_contract.exception_policy 只允许用户明确要求真实空间时例外")
     return errors
 
 

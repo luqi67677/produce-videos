@@ -10,7 +10,7 @@
 - 旁白与时间轴读取 `narration-contract.json`。
 - 正式旁白还必须读取 `audio_path`、`audio_sha256`、实际时长和分段 manifest；渲染前运行 `validate_narration_contract.py --require-timestamps --require-audio`。
 - 镜头与素材读取 `shot-readiness.json`。
-- 审批状态读取四份 approval JSON；Qwen 声音另读取 `voice-selection.json` 内的用户批准记录。
+- 新项目审批状态统一读取 `approval-ledger.json`，旧项目兼容独立 approval JSON；Qwen 声音另读取 `voice-selection.json` 内的用户批准记录。
 
 组件不得自行新增主色、画幅、音色或水印规则。
 
@@ -30,13 +30,13 @@
 - 生成中间文件时使用项目目录，不写入 Skill 包。
 - Qwen 旁白按场景分段生成后拼接；最终视频预检使用 `--narration-contract ... --require-narration-binding` 校验源音频绑定。
 - 没有成品旁白时先运行有限范围模型发现。模型下载完成后仍要做最小加载预检和用户选声；“下载成功”不能直接跳到整条旁白生成。
-- 动态样片和全片渲染入口第一行分别运行 `validate_render_gate.py --mode sample --narration-contract <实际契约>` 或 `--mode full --narration-contract <实际契约>`；传入路径必须与渲染器随后读取的契约是同一个绝对文件。门禁失败必须退出，不能继续调用 FFmpeg、Remotion 或浏览器渲染。
+- 风险样片或完整低清预览的渲染入口第一行运行 `validate_render_gate.py --mode sample --narration-contract <实际契约>`；正式母版运行 `--mode full`。传入路径必须与渲染器随后读取的契约是同一个绝对文件，门禁失败必须退出。
 - 既有成片修改时，渲染器先读取 `shot-readiness.json.revision_scope`，只生成受影响镜头预览；`preview_approval.approved=true` 且保留镜头与基线一致后才可进入全片渲染。
-- 不允许渲染器在门禁之后临时生成一套没有进入分镜审批的覆盖层或镜头定义。分镜帧、修改预览和动态样片必须先落盘并由对应 approval 文件记录 SHA-256。
+- 不允许渲染器在门禁之后临时生成一套没有进入分镜审批的覆盖层或镜头定义。分镜帧、修改预览、风险样片和完整低清预览必须先落盘，并由审批账本的对应阶段记录 SHA-256。
 - 项目存在 `narration-contract-v2.json` 等版本文件时，不得让渲染器读取新版、门禁却隐式校验旧的 `narration-contract.json`。最终 `video_preflight.py` 也必须绑定同一契约。
 - 口播声称素材已经保存、同步或进入平台草稿箱时，画面必须消费能证明动作完成的真实状态；设置页或预览页只证明“可以操作”，不能证明“已经完成”。
 - 多步骤流程回顾默认保留全部节点，当前节点按口播依次进入强调态，连接线或进度指示同步推进，避免整页一次性出现后长时间静止。
-- 全片渲染前先输出开场、问题、核心证据、重点结论和结尾关键帧；关键帧与动态样片通过后才运行长时间渲染。
+- 完整低清预览前先输出开场、问题、核心证据、重点结论和结尾关键帧；高风险动作需要时再做 4—8 秒样片。用户批准完整预览后才运行正式母版渲染。
 
 ## 静帧先行
 

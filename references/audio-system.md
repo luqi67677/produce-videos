@@ -2,7 +2,7 @@
 
 ## 音频来源先确认
 
-先直接询问用户属于哪一种情况，不扫描、不下载、不调用任何服务。草稿阶段使用 `pending-user-choice`，正式契约不得保留这个值：
+先复用 `video-brief.md` 中用户已经说明的音频路线；只有缺失时才直接询问属于哪一种情况。不扫描、不下载、不调用任何服务。草稿阶段使用 `pending-user-choice`，正式契约不得保留这个值：
 
 1. 用户已经录好的完整口播：`external`，不调用 TTS，直接校验成品音频。
 2. 用户已有可调用的 TTS API：`other-tts`，先验证 API，再试听选声；只使用用户提供的服务，不擅自替换。
@@ -32,7 +32,7 @@ python3 scripts/discover_audio_models.py \
 
 模型默认只检查 Hugging Face 标准缓存和用户目录下常见的 `Models/models` 文件夹，不遍历整块磁盘、不跟随符号链接。运行环境只有限检查当前 Python、活动虚拟环境、PATH、常见虚拟环境目录和模型目录同级环境。用户知道其他模型目录时，用可重复的 `--search-root` 追加；知道旧项目使用的 Python 或虚拟环境入口时，用可重复的 `--runtime-python` 追加。
 
-- 找到兼容的 Qwen3-TTS MLX 模型：把候选名称、目录和 `runtime_candidates` 展示给用户；优先复用 `recommended_runtime_python`，用户选定模型后运行 `model_preflight.py --runtime-python <兼容 Python> --smoke-test`，不能只凭目录名或默认 Python 的结果放行。
+- 找到唯一兼容的 Qwen3-TTS MLX 模型：记录候选名称、目录和 `runtime_candidates`，直接推荐并使用 `recommended_runtime_python` 运行最小预检；只有存在多个能力、大小或运行成本差异明显的候选时才让用户选择。不能只凭目录名或默认 Python 的结果放行。
 - 只找到其他开源 TTS：说明已发现候选，但当前内置执行器不能证明兼容；让用户提供已验证调用方式、改走 `other-tts`，或选择准备 Qwen。
 - 没找到完整模型：展示下方 Qwen 地址、大小、目标目录和授权问题；未获授权不安装、不下载。
 
@@ -74,7 +74,7 @@ python3 scripts/discover_audio_models.py \
 
 ## 生成试听前先确认用户要什么声音
 
-TTS API 或 VoiceDesign 模型通过预检后，不能直接替用户设计三个声音。先用一条简短问题收集：
+TTS API 或 VoiceDesign 模型通过预检后，不能直接替用户设计三个声音。先复用启动信息中已经收集的声音方向；缺项时才用一条简短问题补齐：
 
 - 性别呈现：男声、女声、儿童声、中性或不限；
 - 年龄感：儿童、少年、青年、成年、成熟或不限；
@@ -83,7 +83,7 @@ TTS API 或 VoiceDesign 模型通过预检后，不能直接替用户设计三�
 - 明确不想要的特征：例如播音腔、幼态、广告腔、机械感、过度煽情；
 - 使用场景：品牌宣传、教程、故事旁白等。
 
-用户可以回答“不限”或“由你判断”，但 Agent 必须先问，不能从视频主题擅自推断。把用户原话和归纳结果写入 `voice-brief.json`，格式见 `assets/voice-brief-template.json`；展示归纳结果并取得明确确认，再运行：
+用户可以回答“不限”或“由你判断”，但 Agent 不能从视频主题擅自补全未回答的核心条件。把用户原话和归纳结果写入 `voice-brief.json`，格式见 `assets/voice-brief-template.json`。用户原话已完整覆盖必填方向时，该原始回复可以直接作为需求批准；只有 Agent 加入了实质性推断时才展示归纳结果并再次确认。然后运行：
 
 ```bash
 python3 scripts/validate_voice_brief.py \

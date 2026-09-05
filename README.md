@@ -1,8 +1,8 @@
 # Produce Videos：视频生成与编辑 Skill
 
-面向 Codex、Claude Code、Hermes 等 AI Agent 的开源视频制作 Skill。它把讲稿、文档、截图、图片、PPT 或录屏整理为可播放的动态视频和独立封面，覆盖内容核验、真实素材、风格选择、配音、镜头素材、静态分镜、动态样片、全片渲染和质量检查。
+面向 Codex、Claude Code、Hermes 等 AI Agent 的开源视频制作 Skill。V2.0.1 按风险把制作过程收敛为少量确认包，同时保留内容、素材、声音、分镜、预览和成片的机器质量门。
 
-An open-source **video production skill for AI agents**. It turns scripts, documents, screenshots, images, slides, and screen recordings into quality-gated videos with explicit user approvals at every expensive production stage.
+An open-source **video production skill for AI agents**. It turns scripts, documents, screenshots, images, slides, and screen recordings into quality-gated videos with risk-based review bundles instead of a rigid approval stop after every internal stage.
 
 ## 它解决什么问题
 
@@ -11,22 +11,18 @@ An open-source **video production skill for AI agents**. It turns scripts, docum
 - 没检查已有模型就要求重新安装，或没问声音偏好就随机生成试听。
 - 静态分镜是一套，最终视频又变成另一套画面。
 - 用户看不到本地预览，却被要求继续确认。
+- 画面叠加脏色、重字幕条、整页截图、地面和投射阴影，技术检查通过但仍不具备分享质量。
 - 输出视频只有文件，没有时长、编码、响度、黑帧和旁白绑定检查。
 
 ## 核心流程
 
-1. 确认 `16:9` 横屏或 `3:4` 竖屏。
-2. 核验事实并让用户确认完整口播。
-3. 盘点、展示并确认用户真实素材。
-4. 校验全部 34 套视觉模板，从完整目录匹配三套真实样张。
-5. 输出一张校准画面，确认版式后才批量制作。
-6. 先确认音频来源，再询问声音需求并生成试听。
-7. 确认整批镜头素材和独立封面草图。
-8. 确认全量静态分镜。
-9. 确认覆盖全部运动语法的动态样片。
-10. 通过渲染门禁后输出完整视频、独立封面和质量报告。
+1. 启动信息：只补齐缺失的画幅、平台、时长、素材和声音方向。
+2. 内容方向包：一次审查完整口播、真实素材联系表和三套风格。
+3. 声音确认包：需要 TTS 时生成三条同文案试听；已有成品口播时跳过。
+4. 成片蓝图包：在全量静态分镜中一起审查素材用法、隐私和构图。
+5. 最终预览包：普通项目直接看完整低清预览，高风险动作才先做 4—8 秒样片；批准后导出母版。
 
-每个确认阶段只提出一个问题。图片、音频和视频必须直接展示；HTML 页面只能作为辅助入口。未确认当前阶段时，不提前批量生成下一阶段。
+短片且信息完整时通常只需 4 次确认；普通项目为 4—5 次。隐私、授权、模型下载或新运动语法会单独展开。五个内部审批阶段仍写入同一个 `approval-ledger.json` 并校验真实文件哈希。
 
 ## 声音与 Qwen3-TTS
 
@@ -43,7 +39,7 @@ An open-source **video production skill for AI agents**. It turns scripts, docum
 
 ## 视觉模板
 
-仓库包含 34 套通用视觉模板的设计说明和选择索引。每次推荐都会先检查目录完整性，再依据内容、受众、情绪、密度和平台评估全部模板，从中选择三套不同候选。
+仓库包含 34 套通用视觉模板的设计说明和选择索引。每次推荐都会先检查目录完整性，再依据内容、受众、情绪、密度和平台评估全部模板，从中选择三套不同候选。全部 34 套保留分数和简短理由，详细解释集中在前三名。
 
 候选必须使用相同标题、相同内容和相同主视觉生成：
 
@@ -60,16 +56,23 @@ An open-source **video production skill for AI agents**. It turns scripts, docum
 - 推荐视频编码：H.264；推荐音频：AAC、48kHz、双声道。
 - 综合响度可接受范围：-19 至 -14 LUFS，目标约 -16.5 LUFS。
 
+## 视觉干净度
+
+- 生成与合成画面默认无地面、无地平线、无投射阴影、无悬浮阴影和地面反射。
+- 主体需要与背景分离时，只使用柔和、低饱和、窄范围的轮廓光；不使用霓虹描边或完整光环。
+- 不叠加多套背景色偏、渐变和材质，不用重色字幕通栏抢主体，不把整页截图缩小塞进卡片。
+- 原尺寸和信息流缩略图都必须通过干净度复核；用户明确要求真实空间时才允许记录例外并重新确认样张。
+
 ## 调用示例
 
 ```text
 使用 $produce-videos，把这份讲稿和产品截图制作成 3:4 竖屏宣传视频。
-每一步先让我确认；优先使用真实素材，缺少的部分再生成。
+按风险合并确认；优先使用真实素材，缺少的部分再生成。
 ```
 
 ```text
 使用 $produce-videos，把这段录屏制作成 16:9 教程视频。
-先检查隐私信息和口播，再做完整静态分镜和动态样片。
+先检查隐私信息和口播，再做完整静态分镜；新运动语法才先做短样片。
 ```
 
 ## 安装
@@ -122,7 +125,7 @@ python3 scripts/validate_theme_catalog.py \
 python3 scripts/scan_release.py
 ```
 
-自动检查不能替代用户对口播、素材、声音、分镜、动态样片和最终成片的实际确认，也不能证明视频已上传、发布或产生真实用户效果。
+自动检查不能替代用户对确认包和最终预览的实际判断，也不能证明视频已上传、发布或产生真实用户效果。
 
 ## 许可证
 

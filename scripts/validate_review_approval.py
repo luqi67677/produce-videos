@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""校验口播、真实素材、镜头素材、静态分镜和动态样片批准状态。"""
+"""校验独立审批文件或 V2 审批账本中的阶段批准状态。"""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 VALID_STAGES = {"script", "source-assets", "assets", "storyboard", "motion"}
+VALID_WORKFLOW_MODES = {"fast", "standard", "high-risk"}
 VALID_MEDIA_TYPES = {"text", "image", "image-gallery", "audio", "audio-gallery", "video"}
 NON_APPROVAL_REPLIES = {"嗯", "看看", "再说", "先这样", "不确定"}
 
@@ -22,23 +23,73 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def approval_path(project_root: Path, stage: str) -> Path:
+    """新项目优先使用单一审批账本，旧项目继续读取独立审批文件。"""
+    ledger = project_root / "approval-ledger.json"
+    return ledger if ledger.is_file() else project_root / f"{stage}-approval.json"
+
+
+def load_approval(path: Path, required_stage: str | None) -> tuple[dict, str, list[str]]:
+    try:
+        root = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}, "", [f"审查批准文件不存在：{path}"]
+    except json.JSONDecodeError as exc:
+        return {}, "", [f"审查批准 JSON 无法解析：{exc}"]
+    if not isinstance(root, dict):
+        return {}, "", ["审查批准 JSON 必须为对象"]
+
+    schema_version = str(root.get("schema_version", "")).strip()
+    if schema_version != "2.0":
+        return root, schema_version, []
+    if root.get("workflow_mode") not in VALID_WORKFLOW_MODES:
+        return {}, schema_version, ["V2 审批账本 workflow_mode 必须为 fast、standard 或 high-risk"]
+    if not required_stage:
+        return {}, schema_version, ["读取 V2 审批账本时必须指定 --require-stage"]
+    approvals = root.get("approvals")
+    if not isinstance(approvals, dict):
+        return {}, schema_version, ["V2 审批账本缺少 approvals"]
+    approval = approvals.get(required_stage)
+    if not isinstance(approval, dict):
+        return {}, schema_version, [f"V2 审批账本缺少 {required_stage} 阶段记录"]
+    package = str(approval.get("review_package", "")).strip()
+    package_scope = approval.get("package_scope")
+    consistency_errors: list[str] = []
+    if package and isinstance(package_scope, list):
+        for sibling_stage in package_scope:
+            if sibling_stage not in VALID_STAGES:
+                consistency_errors.append(f"V2 确认包包含无效阶段：{sibling_stage}")
+                continue
+            sibling = approvals.get(sibling_stage)
+            if not isinstance(sibling, dict):
+                consistency_errors.append(f"V2 确认包 {package} 缺少 {sibling_stage} 阶段记录")
+                continue
+            if sibling.get("review_package") != package:
+                consistency_errors.append(f"V2 确认包 {package} 的阶段名称不一致：{sibling_stage}")
+            if bool(sibling.get("approved")) != bool(approval.get("approved")):
+                consistency_errors.append(f"V2 确认包 {package} 不能只批准部分阶段")
+            if approval.get("approved") is True:
+                for field in ("approval_message", "approved_at", "review_prompt"):
+                    if sibling.get(field) != approval.get(field):
+                        consistency_errors.append(f"V2 确认包 {package} 的 {field} 必须在各阶段一致")
+    data = dict(approval)
+    data.setdefault("stage", required_stage)
+    return data, schema_version, consistency_errors
+
+
 def validate(
     path: Path,
     required_stage: str | None,
     require_approved: bool,
     required_reviewed_files: list[Path] | None = None,
 ) -> list[str]:
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError:
-        return [f"审查批准文件不存在：{path}"]
-    except json.JSONDecodeError as exc:
-        return [f"审查批准 JSON 无法解析：{exc}"]
+    data, schema_version, load_errors = load_approval(path, required_stage)
+    if load_errors:
+        return load_errors
 
     errors: list[str] = []
-    schema_version = str(data.get("schema_version", "")).strip()
-    if schema_version not in {"1.0", "1.1"}:
-        errors.append("schema_version 必须为 1.0 或 1.1")
+    if schema_version not in {"1.0", "1.1", "2.0"}:
+        errors.append("schema_version 必须为 1.0、1.1 或 2.0")
     stage = data.get("stage")
     if stage not in VALID_STAGES:
         errors.append("stage 必须为 script、source-assets、assets、storyboard 或 motion")
@@ -93,10 +144,10 @@ def validate(
         if required_path not in reviewed_paths:
             errors.append(f"审批未覆盖本阶段实际使用文件：{required_path}")
 
-    if schema_version == "1.1":
+    if schema_version in {"1.1", "2.0"}:
         for field in ("review_prompt", "approval_context", "accepted_response_rule"):
             if not str(data.get(field, "")).strip():
-                errors.append(f"V1.1 审批缺少 {field}")
+                errors.append(f"V1.1/V2 审批缺少 {field}")
         interpretation = data.get("approval_interpretation")
         if interpretation not in {"explicit", "contextual-stage-response"}:
             errors.append("approval_interpretation 必须为 explicit 或 contextual-stage-response")
@@ -105,7 +156,7 @@ def validate(
             errors.append("这条短回复不能唯一证明用户批准当前阶段")
         delivery = data.get("review_delivery")
         if not isinstance(delivery, dict):
-            errors.append("V1.1 审批缺少 review_delivery")
+            errors.append("V1.1/V2 审批缺少 review_delivery")
         else:
             media_type = delivery.get("media_type")
             if media_type not in VALID_MEDIA_TYPES:
@@ -123,6 +174,12 @@ def validate(
                 fallback_path = (project_root / fallback_value).resolve() if fallback_value else None
                 if fallback_path is None or fallback_path not in reviewed_paths:
                     errors.append("motion 审批必须把联系表兜底写入 reviewed_files")
+    if schema_version == "2.0":
+        if not str(data.get("review_package", "")).strip():
+            errors.append("V2 阶段记录缺少 review_package")
+        package_scope = data.get("package_scope")
+        if not isinstance(package_scope, list) or stage not in package_scope:
+            errors.append("V2 阶段记录的 package_scope 必须包含当前 stage")
     return errors
 
 

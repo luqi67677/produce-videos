@@ -43,6 +43,7 @@ def resolve_path(source_path: Path, value: Any) -> Path | None:
 
 
 def validate_contract_binding(contract_path: Path, contract: dict[str, Any], require_approval: bool = True) -> list[str]:
+    from validate_review_approval import approval_path
     from validate_review_approval import validate as validate_approval
 
     errors: list[str] = []
@@ -57,7 +58,7 @@ def validate_contract_binding(contract_path: Path, contract: dict[str, Any], req
     if require_approval:
         errors.extend(
             f"口播审批：{error}"
-            for error in validate_approval(project / "script-approval.json", "script", True, [master_path])
+            for error in validate_approval(approval_path(project, "script"), "script", True, [master_path])
         )
     try:
         master = json.loads(master_path.read_text(encoding="utf-8"))

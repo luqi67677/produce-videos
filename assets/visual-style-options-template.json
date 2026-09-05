@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "status": "awaiting_user_selection",
   "video_format": {
     "id": "",
@@ -53,7 +53,16 @@
         "layout_balanced": false,
         "source_visual_large_enough": false,
         "no_internal_labels": false,
-        "meaningfully_distinct": false
+        "meaningfully_distinct": false,
+        "clean_visual_system": false,
+        "single_focal_point": false,
+        "no_competing_background_effects": false,
+        "no_ground_or_horizon": false,
+        "no_cast_or_drop_shadow": false,
+        "rim_light_separation_appropriate": false,
+        "no_raw_full_page_as_decorative_card": false,
+        "subtitle_visual_weight_controlled": false,
+        "no_crop_residue": false
       }
     },
     {
@@ -80,7 +89,16 @@
         "layout_balanced": false,
         "source_visual_large_enough": false,
         "no_internal_labels": false,
-        "meaningfully_distinct": false
+        "meaningfully_distinct": false,
+        "clean_visual_system": false,
+        "single_focal_point": false,
+        "no_competing_background_effects": false,
+        "no_ground_or_horizon": false,
+        "no_cast_or_drop_shadow": false,
+        "rim_light_separation_appropriate": false,
+        "no_raw_full_page_as_decorative_card": false,
+        "subtitle_visual_weight_controlled": false,
+        "no_crop_residue": false
       }
     },
     {
@@ -107,7 +125,16 @@
         "layout_balanced": false,
         "source_visual_large_enough": false,
         "no_internal_labels": false,
-        "meaningfully_distinct": false
+        "meaningfully_distinct": false,
+        "clean_visual_system": false,
+        "single_focal_point": false,
+        "no_competing_background_effects": false,
+        "no_ground_or_horizon": false,
+        "no_cast_or_drop_shadow": false,
+        "rim_light_separation_appropriate": false,
+        "no_raw_full_page_as_decorative_card": false,
+        "subtitle_visual_weight_controlled": false,
+        "no_crop_residue": false
       }
     }
   ],

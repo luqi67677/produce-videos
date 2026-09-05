@@ -63,6 +63,135 @@ class ReviewApprovalTest(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         self.assertTrue(any("联系表" in item for item in validate(approval, "motion", True)))
 
+    def test_v2_ledger_groups_stages_without_losing_file_hashes(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        script = root / "master-script.json"
+        script.write_text("{}", encoding="utf-8")
+        record = {
+            "review_package": "content-direction",
+            "package_scope": ["script", "source-assets"],
+            "status": "approved",
+            "approved": True,
+            "approved_at": "2026-09-05T00:00:00+08:00",
+            "approved_by": "user",
+            "approval_message": "内容方向包通过",
+            "review_prompt": "请确认口播和真实素材；通过后进入视觉与声音制作。",
+            "approval_context": "上一条只有内容方向包一个待确认问题",
+            "approval_interpretation": "explicit",
+            "accepted_response_rule": "用户明确批准整个内容方向包",
+            "review_delivery": {
+                "primary_path": script.name,
+                "media_type": "text",
+                "directly_presented": True,
+                "fallback_path": "",
+            },
+            "reviewed_files": [
+                {"path": script.name, "sha256": hashlib.sha256(script.read_bytes()).hexdigest()}
+            ],
+        }
+        ledger = root / "approval-ledger.json"
+        ledger.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0",
+                    "project": "test",
+                    "workflow_mode": "fast",
+                    "approvals": {"script": record, "source-assets": dict(record)},
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.assertEqual([], validate(ledger, "script", True, [script]))
+
+    def test_v2_grouped_approval_requires_same_user_message(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        script = root / "master-script.json"
+        script.write_text("{}", encoding="utf-8")
+        reviewed = [{"path": script.name, "sha256": hashlib.sha256(script.read_bytes()).hexdigest()}]
+        base = {
+            "review_package": "content-direction",
+            "package_scope": ["script", "source-assets"],
+            "status": "approved",
+            "approved": True,
+            "approved_at": "2026-09-05T00:00:00+08:00",
+            "approved_by": "user",
+            "approval_message": "内容和素材通过，选 B",
+            "review_prompt": "请确认内容方向包。",
+            "approval_context": "单一确认包",
+            "approval_interpretation": "explicit",
+            "accepted_response_rule": "明确批准",
+            "review_delivery": {
+                "primary_path": script.name,
+                "media_type": "text",
+                "directly_presented": True,
+                "fallback_path": "",
+            },
+            "reviewed_files": reviewed,
+        }
+        source = dict(base)
+        source["approval_message"] = "另一条回复"
+        ledger = root / "approval-ledger.json"
+        ledger.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0",
+                    "project": "test",
+                    "workflow_mode": "fast",
+                    "approvals": {"script": base, "source-assets": source},
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.assertTrue(any("approval_message" in item for item in validate(ledger, "script", True)))
+
+    def test_v2_ledger_requires_stage_in_package_scope(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        script = root / "master-script.json"
+        script.write_text("{}", encoding="utf-8")
+        ledger = root / "approval-ledger.json"
+        ledger.write_text(
+            json.dumps(
+                {
+                    "schema_version": "2.0",
+                    "project": "test",
+                    "workflow_mode": "standard",
+                    "approvals": {
+                        "script": {
+                            "review_package": "content-direction",
+                            "package_scope": ["source-assets"],
+                            "status": "approved",
+                            "approved": True,
+                            "approved_at": "2026-09-05T00:00:00+08:00",
+                            "approved_by": "user",
+                            "approval_message": "通过",
+                            "review_prompt": "请确认内容方向包。",
+                            "approval_context": "单一确认包",
+                            "approval_interpretation": "explicit",
+                            "accepted_response_rule": "明确批准",
+                            "review_delivery": {
+                                "primary_path": script.name,
+                                "media_type": "text",
+                                "directly_presented": True,
+                                "fallback_path": "",
+                            },
+                            "reviewed_files": [
+                                {"path": script.name, "sha256": hashlib.sha256(script.read_bytes()).hexdigest()}
+                            ],
+                        }
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        errors = validate(ledger, "script", True)
+        self.assertTrue(any("package_scope" in item or "缺少 source-assets" in item for item in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

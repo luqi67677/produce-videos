@@ -12,6 +12,7 @@ from typing import Any
 from validate_motion_coverage import validate as validate_motion_coverage
 from validate_master_script import validate as validate_master_script
 from validate_narration_contract import validate as validate_narration_contract
+from validate_review_approval import approval_path
 from validate_review_approval import validate as validate_approval
 from validate_shot_readiness import validate as validate_shot_readiness
 from validate_source_assets import review_files as source_asset_review_files
@@ -119,7 +120,7 @@ def main() -> int:
         "motion": motion_review_files(project),
     }
     for stage in stages:
-        approval = project / f"{stage}-approval.json"
+        approval = approval_path(project, stage)
         for error in validate_approval(approval, stage, True, required_review_files[stage]):
             errors.append(f"{stage}: {error}")
 

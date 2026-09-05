@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "theme_id": "replace-me",
   "name": "待填写的全片视觉主题",
   "status": "selected",
@@ -44,13 +44,28 @@
     "keywords": [],
     "material": "",
     "border": "",
-    "shadow": "",
+    "shadow": "none",
     "chart_style": "",
     "transition_style": ""
+  },
+  "cleanliness_contract": {
+    "no_ground_plane": true,
+    "no_horizon_line": true,
+    "no_cast_shadow": true,
+    "no_drop_shadow": true,
+    "no_floor_reflection": true,
+    "rim_light_mode": "subtle-soft",
+    "single_visual_language": true,
+    "raw_full_page_as_decoration": false,
+    "stacked_background_effects": false,
+    "heavy_subtitle_bar": false,
+    "exception_policy": "only_when_user_explicitly_requires_real_spatial_context"
   },
   "image_generation": {
     "palette_prompt": "",
     "negative_palette_prompt": "",
+    "depth_prompt": "subtle soft low-saturation rim light on one necessary edge for clean subject separation",
+    "negative_composition_prompt": "no floor, no ground plane, no horizon line, no pedestal, no cast shadow, no drop shadow, no floating shadow, no floor reflection, no neon outline, no glowing halo",
     "allowed_real_colors": [
       "skin tones",
       "user-supplied character colors",
