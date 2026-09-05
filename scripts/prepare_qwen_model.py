@@ -5,8 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -37,6 +35,8 @@ def main() -> int:
 
     print(f"model_id={config['model_id']}")
     print(f"model_url={config['model_url']}")
+    print(f"official_project_url={models['official_project_url']}")
+    print(f"official_model_url={models['upstream_model']['model_url']}")
     print(f"approx_size_gb={config['approx_size_gb']}")
     print(f"dependency_install_command={models['dependency_install_command']}")
     print(f"download_command={config['download_command']}")
@@ -46,21 +46,22 @@ def main() -> int:
         print("未执行下载：等待用户明确授权")
         return 0
 
-    cli = shutil.which("huggingface-cli")
-    if cli is None:
+    try:
+        from huggingface_hub import snapshot_download
+    except ImportError:
         print(
-            "未找到 huggingface-cli，请先执行："
+            "当前 Python 缺少 huggingface_hub，请先在同一运行环境执行："
             f" {models['dependency_install_command']}",
             file=sys.stderr,
         )
         return 1
 
     model_dir.mkdir(parents=True, exist_ok=True)
-    command = [cli, "download", config["model_id"], "--local-dir", str(model_dir)]
-    completed = subprocess.run(command, check=False)
-    if completed.returncode != 0:
+    try:
+        snapshot_download(repo_id=config["model_id"], local_dir=str(model_dir))
+    except Exception:
         print("Qwen3-TTS 模型下载失败，请检查网络、磁盘空间和 Hugging Face 权限", file=sys.stderr)
-        return completed.returncode
+        return 1
     print("PASS Qwen3-TTS 模型下载完成；请继续运行 model_preflight.py --smoke-test")
     return 0
 

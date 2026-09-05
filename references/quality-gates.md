@@ -24,7 +24,7 @@
 - `validate_narration_contract.py`：音色来源、发音映射、单层字幕、时间戳。
 - `discover_audio_models.py`：只扫描标准缓存和用户指定目录，并有限发现可导入 `mlx_audio` 的现有 Python 运行环境；默认解释器失败不能直接判定缺少依赖。
 - `model_preflight.py`：使用发现报告选定的 Python 检查设备、运行时、依赖、模型目录和最小加载，并把实际解释器写入报告。
-- `validate_voice_brief.py`：确认 Agent 已先询问并记录用户想要的性别呈现、年龄感、气质、能量、语速和禁忌特征；未获用户确认不得生成试听。
+- `validate_voice_brief.py`：确认 Agent 已在开工信息包中询问并记录用户想要的性别呈现、年龄感、气质、能量、语速和禁忌特征；未获用户确认不得生成试听，后续不得重复追问已锁定字段。
 - `validate_voice_selection.py`：本地模型绑定发现与预检，TTS API 绑定无密钥预检；两路都验证同文案试听、最终声音和用户批准。
 - `prepare_qwen_model.py`：读取单一模型配置；只有明确授权参数同时存在时才下载。
 - `register_audio_artifact.py`：登记用户已有音频或其他 TTS 的实际产物信息。

@@ -1,10 +1,13 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "provider": "Alibaba Qwen3-TTS",
+  "official_project_url": "https://github.com/QwenLM/Qwen3-TTS",
+  "license": "Apache-2.0",
   "runtime": "mlx-audio",
   "supported_platform": "Apple Silicon / arm64",
   "minimum_python_version": "3.10",
   "dependency_install_command": "<兼容的 Python 3.10+> -m pip install -U \"mlx-audio[tts]\" \"huggingface_hub[hf_xet]\"",
+  "safe_download_command": "<兼容的 Python 3.10+> scripts/prepare_qwen_model.py --model-dir <模型目录> --download --download-authorized",
   "recommended": {
     "model_id": "mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16",
     "model_url": "https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16",

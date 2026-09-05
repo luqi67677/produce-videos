@@ -1,24 +1,45 @@
 # 声音系统
 
-## 音频来源先确认
+## 开工时分别确认口播内容和声音
 
-先复用 `video-brief.md` 中用户已经说明的音频路线；只有缺失时才直接询问属于哪一种情况。不扫描、不下载、不调用任何服务。草稿阶段使用 `pending-user-choice`，正式契约不得保留这个值：
+口播稿解决“说什么”，声音路线解决“由谁、从哪里发出声音”，两者必须在第一次开工信息包中分别确认。先复用用户已经说明的内容，只把缺项合并成一次问题。用户不确定本机是否有模型并要求检查时，可在开工阶段只读检查标准缓存和用户明确的目录；除此之外不扫描，不下载、不调用任何服务。草稿阶段使用 `pending-user-choice`，正式契约不得保留这个值。
+
+口播内容来源只选一条：
+
+1. 用户已有确定稿：直接锁定原文。
+2. AI 根据用户资料撰写：先完成口播确认，再生成声音。
+3. 从已有音视频转写：记录真实文件，先转写并由用户确认文字。
+4. 无口播：明确记录，不能擅自增加 TTS。
+
+最终声音来源另选一条：
 
 1. 用户已经录好的完整口播：`external`，不调用 TTS，直接校验成品音频。
-2. 用户已有可调用的 TTS API：`other-tts`，先验证 API，再试听选声；只使用用户提供的服务，不擅自替换。
-3. 用户电脑上已有本地 TTS 模型：先做有限范围发现和预检；兼容 Qwen 时使用 `open-source-model`。
-4. 以上都没有：向用户说明阿里 Qwen3-TTS 的地址、大小、目标目录和依赖，获得明确授权后才下载。
+2. 用户提供的视频已经包含目标口播：从已确认视频提取目标音轨，校验后仍按 `external` 登记。
+3. 用户已有可调用的 TTS API：`other-tts`，先验证 API，再试听选声；只使用用户提供的服务，不擅自替换。
+4. 用户电脑上已有本地 TTS 模型：先做有限范围发现和预检；兼容 Qwen 时使用 `open-source-model`。
+5. 以上都没有且用户选择 AI 配音：开工时就说明免费的 Qwen3-TTS 地址、大小、目标目录和依赖，获得明确授权后才安装和下载。
+6. 无旁白：明确记录，不进入 TTS 和试听流程。
 
 用户希望使用自己的参考音色时另走 `user-reference`：必须提供参考音频、逐字文本和授权说明，并把参考音频与最终旁白分开记录。
 
 Skill 不携带任何预设声音、试听音频或默认音色。没有成品口播、可用 TTS API 或已准备好的 Qwen 模型时，不能继续生成旁白，也不能静默调用未说明的云端服务。
+
+## 从已有视频提取口播
+
+先用 `ffprobe` 确认视频确实有目标音轨。用户确认该轨就是正式口播后，再提取为统一的 WAV：
+
+```bash
+ffmpeg -i <输入视频> -map 0:a:0 -vn -c:a pcm_s16le -ar 48000 -ac 2 <项目目录>/audio/narration.wav
+```
+
+提取后人工抽听开头、中段和结尾。存在背景音乐、多人对话、回声、爆音或明显环境噪声时，先说明问题，让用户决定保留、提供干净音频或改走 TTS；不能静默降噪后假装与原声一致。通过后使用 `scripts/register_audio_artifact.py` 以 `external` 登记实际文件、SHA-256、时长、采样率和声道。
 
 ## 用户已有 TTS API
 
 - 只通过环境变量或系统安全存储读取凭证；不得要求用户把 API Key 粘进公开文件，不得把密钥写入项目、日志、试听清单或 Skill 包。
 - 先执行一次最小测试请求，并确认该服务能列出声音或生成短试听。把不含密钥的证据写入 `tts-api-preflight.json`，格式见 `assets/tts-api-preflight-template.json`。
 - API 预检必须记录供应方、模型标识、HTTPS 服务地址、凭证存储方式、测试结果和检查时间，并明确 `secret_values_persisted: false`。
-- 预检通过后，先询问并确认用户想要的声音，形成 `voice-brief.json`；再用同一段 5—12 秒文案生成 3 个围绕该方向的试听。用户明确选定一个后写入 `voice-selection.json`，声音需求单、API 预检文件及其 SHA-256 都必须与选择记录绑定。
+- 预检通过后，复用开工信息包已经确认的声音方向形成 `voice-brief.json`；只有原回答确有缺项或用户主动改变要求时才补问。随后用同一段 5—12 秒文案生成 3 个围绕该方向的试听。用户明确选定一个后写入 `voice-selection.json`，声音需求单、API 预检文件及其 SHA-256 都必须与选择记录绑定。
 - 只有用户明确要求跳过试听，才允许 `direct-description`，并记录 `direct_description_authorized: true`。否则声音选择校验必须阻断。
 
 ## 用户选择本地模型后再发现
@@ -54,6 +75,14 @@ python3 scripts/discover_audio_models.py \
     --local-dir <模型目录>
   ```
 
+也可以使用仓库的安全下载入口。第一次不带下载参数运行，只展示模型、大小、依赖和目标目录；用户确认后再运行第二条：
+
+```bash
+<兼容的 Python 3.10+> scripts/prepare_qwen_model.py --model-dir <模型目录>
+<兼容的 Python 3.10+> scripts/prepare_qwen_model.py --model-dir <模型目录> \
+  --download --download-authorized
+```
+
 本机内存紧张时可使用较小的量化版本：<https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit>。阿里 Qwen 官方原始模型页是：<https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign>；当前 `mlx_audio` 脚本必须使用 `mlx-community` 转换版，不能把原始 Transformers 模型目录直接交给 MLX 执行器。
 
 运行时分流：
@@ -72,9 +101,9 @@ python3 scripts/discover_audio_models.py \
 
 只有用户明确同意后，才执行安装或下载；推荐使用 `scripts/prepare_qwen_model.py --download --download-authorized`，避免下载到 Skill 包内。用户拒绝下载、也不提供自己的音频、其他 TTS 或已生成旁白时，音频流程阻断，并说明需要补充哪一种音频来源。
 
-## 生成试听前先确认用户要什么声音
+## 开工时收集声音方向，生成试听时不再重复问
 
-TTS API 或 VoiceDesign 模型通过预检后，不能直接替用户设计三个声音。先复用启动信息中已经收集的声音方向；缺项时才用一条简短问题补齐：
+用户选择 TTS 时，第一次开工信息包就要收集以下声音方向。TTS API 或 VoiceDesign 模型通过预检后直接复用，不再重复询问；只有用户主动改变要求或原始回答确有缺项时才补问：
 
 - 性别呈现：男声、女声、儿童声、中性或不限；
 - 年龄感：儿童、少年、青年、成年、成熟或不限；

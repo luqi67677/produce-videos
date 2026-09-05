@@ -21,6 +21,11 @@ class AudioRuntimeDetectionTests(unittest.TestCase):
     def test_qwen_fallback_uses_public_model_config(self) -> None:
         models = load_qwen_models()
 
+        self.assertEqual(models["official_project_url"], "https://github.com/QwenLM/Qwen3-TTS")
+        self.assertEqual(
+            models["upstream_model"]["model_url"],
+            "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+        )
         self.assertEqual(
             models["recommended"]["model_url"],
             "https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16",
@@ -105,6 +110,7 @@ class AudioRuntimeDetectionTests(unittest.TestCase):
 
             self.assertEqual(completed.returncode, 0)
             self.assertIn("model_url=https://huggingface.co/mlx-community/Qwen3-TTS", completed.stdout)
+            self.assertIn("official_project_url=https://github.com/QwenLM/Qwen3-TTS", completed.stdout)
             self.assertIn("approx_size_gb=4.52", completed.stdout)
             self.assertIn("dependency_install_command=", completed.stdout)
             self.assertIn("download_requires_user_authorization=true", completed.stdout)

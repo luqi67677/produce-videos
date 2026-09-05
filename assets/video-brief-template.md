@@ -8,6 +8,7 @@
 - 品牌或主体：
 - 目标观众：
 - 发布平台：
+- 目标时长：
 - 内容模式：账号短视频 / 通用宣传视频 / 用户指定
 - 推荐时长：账号短视频 25—75 秒 / 通用宣传视频 90—150 秒 / 用户指定
 - 成片硬上限：账号短视频默认 90 秒 / 通用宣传视频 180 秒 / 用户指定
@@ -18,14 +19,25 @@
 - 平台风险词：
 - 完整口播母稿：`master-script.json`
 - 完整口播确认：待确认 / 已批准
+- 口播内容来源代码：pending / approved-script / ai-write-from-materials / transcribe-existing-media / no-spoken-narration
+- 口播输入：待提供 / 本轮用户消息 / 已确认稿路径 / 素材路径 / 待转写音视频路径 / not-required
 - 用户真实素材清单：`source-assets.json`
 - 用户真实素材确认：待确认 / 已批准 / 用户确认无真实素材
 - 生成素材边界：只补真实素材无法表达的缺口
-- 音频入口回答：已有成品口播 / 已有 TTS API / 已有本地模型 / 以上都没有
-- 音频路径：自己的成品口播 / 自己的授权参考音频 / 已验证 TTS API / Qwen3-TTS 开源模型
+- 最终声音来源代码：pending / recorded-audio / extract-from-video / tts-api / local-tts-model / qwen-open-source / no-spoken-narration
+- 声音输入：待提供 / 独立口播音频路径 / 含目标人声的视频路径 / not-required
+- TTS 资源状态：pending / not-required / api-configured / local-model-known / qwen-download-approved
+- TTS 供应方与模型：待提供 / not-required
+- TTS API 凭证位置：pending / not-required / environment / secure-store（只记录位置，不记录密钥）
+- 本地模型线索：待提供 / not-required / standard-cache / 用户指定目录
+- Qwen 官方来源：`https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign`
+- Qwen 当前 MLX 模型：`https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16`
+- Qwen 目标目录：待提供 / not-required / 用户明确指定的 Skill 外目录
+- Qwen 安装与下载授权：pending / not-required / approved
+- 声音方向原话：待提供 / not-required / 用户原话或“由你判断”
+- 开工信息确认：pending / approved / covered-by-user-message
 - 旁白来源：pending-user-choice / external / user-reference / other-tts / open-source-model
 - TTS API 预检：`tts-api-preflight.json`
-- API 凭证位置：environment / secure-store（只记录位置，不记录密钥）
 - 本机模型发现报告：`model-discovery.json`
 - 开源模型状态：未检查 / 缺少模型 / 待用户授权下载 / 已就绪
 - 开源模型地址：`assets/qwen-tts-models.json`
@@ -35,7 +47,6 @@
 - 声音选择方式：audition（默认 3 个）/ direct-description（仅用户明确要求跳过试听）
 - 声音选择文件：`voice-selection.json`
 - 用户声音确认：待确认 / 已批准
-- TTS 供应方与模型：
 - TTS 运行时：
 - 旁白契约：`narration-contract.json`
 - 旁白 manifest：`audio/narration_v1.manifest.json`
@@ -57,8 +68,12 @@
 
 > 观众可见文案、平台禁用词和内部制作备注分开记录；扫描范围覆盖口播、字幕、画面文字、封面和发布文案。
 
+> 口播内容来源和最终声音来源必须分别回答。用户有口播稿，不等于已有声音；用户有视频内人声，也不等于需要 TTS。
+
+> 缺项必须合并成一次开工问题。已有确定稿、AI 撰写、音视频转写、独立口播、视频内提取、TTS API、本地模型和 Qwen 下载不能拆成后续多轮重复询问。只有依赖安装、模型下载、授权疑点等高风险动作单独取得确认。
+
 > `pending-user-choice` 只能出现在草稿，正式旁白契约必须在生成或接入音频前改成明确来源。
 
 > 口播确认后先确认用户真实素材；`source-assets-approval.json` 未批准时，不得推荐风格或生成镜头素材。
 
-> 用户没有成品口播时，先问是否已有 TTS API 或本地模型。API/模型通过预检后，必须先询问并确认用户想要的声音，再提供 3 个同文案试听；`voice-brief.json` 未批准时不能生成试听，`voice-selection.json` 未批准时不能生成整条正式旁白。
+> 用户选择 TTS 时，开工信息包就要问是否已有 API 或本地模型，并同步收集声音方向。API/模型通过预检后直接制作 3 个同文案试听，不再重复询问声音偏好；`voice-brief.json` 未批准时不能生成试听，`voice-selection.json` 未批准时不能生成整条正式旁白。

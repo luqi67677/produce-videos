@@ -1,6 +1,6 @@
 # Produce Videos：视频生成与编辑 Skill
 
-面向支持目录式 Agent Skills 的 AI Agent。V2.1.0 已提供 Codex、Kimi Code CLI 和 WorkBuddy 的明确安装路径，同时保留内容、素材、声音、分镜、预览和成片的机器质量门。
+面向支持目录式 Agent Skills 的 AI Agent。V2.2.0 在开工时一次锁定口播内容来源、最终声音来源和 TTS 准备情况，并提供 Codex、Kimi Code CLI 和 WorkBuddy 的明确安装路径。
 
 An open-source **video production skill for AI agents**. It turns scripts, documents, screenshots, images, slides, and screen recordings into quality-gated videos with risk-based review bundles instead of a rigid approval stop after every internal stage.
 
@@ -35,9 +35,9 @@ https://github.com/luqi67677/produce-videos
 
 ## 核心流程
 
-1. 启动信息：只补齐缺失的画幅、平台、时长、素材和声音方向。
+1. 开工信息包：一次补齐画幅、平台、时长、口播内容来源、最终声音来源、现有 API/本地模型和声音方向。
 2. 内容方向包：一次审查完整口播、真实素材联系表和三套风格。
-3. 声音确认包：需要 TTS 时生成三条同文案试听；已有成品口播时跳过。
+3. 声音执行与确认包：需要 TTS 时生成三条同文案试听；已有独立口播或从视频提取口播时跳过试听。
 4. 成片蓝图包：在全量静态分镜中一起审查素材用法、隐私和构图。
 5. 最终预览包：普通项目直接看完整低清预览，高风险动作才先做 4—8 秒样片；批准后导出母版。
 
@@ -45,14 +45,27 @@ https://github.com/luqi67677/produce-videos
 
 ## 声音与 Qwen3-TTS
 
-音频入口支持四种情况：
+最终声音入口支持六种情况：
 
-- 用户已有完整口播音频；
+- 用户已有独立的完整口播音频；
+- 用户提供的视频里已经包含可直接提取的口播；
 - 用户已有可调用的 TTS API；
 - 电脑中已有本地 TTS 模型；
-- 当前没有可用音频方案。
+- 当前没有可用音频方案，选择准备免费的 Qwen3-TTS；
+- 用户明确选择无旁白。
 
-选择本地模型后，Skill 只在标准缓存和用户明确指定的目录中有限发现模型，并尝试复用已有 Python 运行环境。没有发现可用本地模型时，会直接推荐免费的 [Qwen3-TTS VoiceDesign bf16](https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16)（约 4.52 GB）；本机空间或内存紧张时，也可选择约 2.5 GB 的 [5bit 量化版](https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit)。Skill 会先说明依赖、目标目录和下载量，得到用户明确授权后才安装或下载。
+Skill 会在第一次开工时分别询问“口播内容从哪里来”和“最终声音从哪里来”。选择 TTS 时，会同步问清声音偏好，并优先复用已有 API 或本地模型。没有发现可用本地模型时，会直接推荐免费的 [Qwen3-TTS VoiceDesign bf16](https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16)（约 4.52 GB）；本机空间或内存紧张时，也可选择约 2.5 GB 的 [5bit 量化版](https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit)。[阿里 Qwen 官方原始模型](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign)和[官方项目](https://github.com/QwenLM/Qwen3-TTS)同时保留在配置中，当前 Apple Silicon 执行器使用 MLX 转换版。
+
+Apple Silicon 的明确安装与下载步骤：
+
+```bash
+<兼容的 Python 3.10+> -m pip install -U "mlx-audio[tts]" "huggingface_hub[hf_xet]"
+<兼容的 Python 3.10+> scripts/prepare_qwen_model.py --model-dir <模型目录>
+<兼容的 Python 3.10+> scripts/prepare_qwen_model.py --model-dir <模型目录> \
+  --download --download-authorized
+```
+
+第一条安装依赖、第三条下载模型，都只能在用户明确同意后执行；第二条只展示地址、预计大小、依赖和目标目录，不会下载模型。Agent 必须先把命令中的两个占位符替换为本机已确认的 Python 运行环境和 Skill 仓库之外的模型目录，再向用户展示命令并申请授权。
 
 当前内置 Qwen 执行器面向 Apple Silicon 的 `mlx-audio` 路线。其他设备可以使用用户自己的完整音频或已验证 TTS 服务。仓库不包含模型权重、预设声音、私人参考音频或 API Key。
 
@@ -170,6 +183,7 @@ produce-videos/
 python3 -m unittest discover -s tests -v
 python3 scripts/validate_theme_catalog.py \
   references/frontend-slides-themes/bold-template-pack/selection-index.json
+python3 scripts/validate_startup_brief.py project/video-brief.md --require-approved
 python3 scripts/scan_release.py
 python3 scripts/package_workbuddy.py --output /tmp/produce-videos-workbuddy.zip
 ```
