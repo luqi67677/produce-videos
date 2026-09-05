@@ -1,10 +1,77 @@
 # Produce Videos：视频生成与编辑 Skill
 
-面向支持目录式 Agent Skills 的 AI Agent。V2.2.0 在开工时一次锁定口播内容来源、最终声音来源和 TTS 准备情况，并提供 Codex、Kimi Code CLI 和 WorkBuddy 的明确安装路径。
+> 把讲稿、文档、PPT、截图、图片、录屏和已有视频交给 AI Agent，让它协助完成口播、素材、配音、分镜、动画、字幕、预览、质检和成片导出。
 
-An open-source **video production skill for AI agents**. It turns scripts, documents, screenshots, images, slides, and screen recordings into quality-gated videos with risk-based review bundles instead of a rigid approval stop after every internal stage.
+Produce Videos 是一个开源的 Agent Skill。它不是独立剪辑软件，也不是视频生成模型，而是一套可以被 Codex、Kimi Code CLI、WorkBuddy 等本地 AI Agent 执行的视频制作流程。
 
-## 复制这段话，让 AI 帮你安装
+An open-source video production skill for AI agents. It turns scripts and source assets into reviewable videos, covers, storyboards, narration, motion, subtitles, and verified final renders.
+
+## 它是做什么的
+
+当你有一个视频想法、一份稿子或一批素材，却不想自己从头学习剪辑、配音和动画工具时，可以把任务交给支持本地文件与终端操作的 AI Agent，再让 Agent 按这套 Skill 完成制作。
+
+你可以提供：
+
+- 已经确认的口播稿，或用于撰写口播的文档和资料；
+- PPT、截图、图片、录屏、已有视频和品牌素材；
+- 自己录好的口播、视频中的人声、TTS API 或本地语音模型；
+- 发布平台、画幅、时长、目标观众和想要的视觉方向。
+
+它可以协助完成：
+
+- 整理或撰写完整口播；
+- 核对真实素材、授权和隐私信息；
+- 从 34 套视觉模板中匹配三种真实候选；
+- 复用录音、视频人声、TTS API 或本地模型完成配音；
+- 拆分镜头，设计画面、动画、字幕和切换时间；
+- 生成静态分镜、完整低清预览和独立封面；
+- 检查时长、编码、音轨、响度、黑帧、画幅和旁白绑定；
+- 导出可播放的正式视频和一张独立 3:4 封面。
+
+适合产品介绍、功能演示、教程、知识讲解、品牌宣传、作品展示和已有视频的定点修改。
+
+这套 Skill 不调用视频生成模型来生成整段 AI 视频。它主要组合真实素材、补充图片、代码动画、配音和字幕。需要纯文本生成连续真人镜头或电影级视频时，应另外使用视频生成工具。
+
+## 使用流程
+
+### 1. 把需求和素材交给 Agent
+
+告诉 Agent 想做什么视频，并提供已经有的文字、PPT、截图、图片、录屏、视频或音频。需求还不清楚也可以直接说，让 Agent 一次把缺失信息问完。
+
+### 2. 一次确认开工信息
+
+Agent 会整理平台、画幅、时长、目标观众、口播内容来源、最终声音来源、现有 API 或本地模型，以及想要的声音方向。已经说明的信息不会重复询问。
+
+### 3. 确认口播、真实素材和视觉方向
+
+Agent 先给出完整口播和真实素材联系表。没有指定视觉方向时，它会评估仓库中的 34 套模板，并用相同内容生成三套可直接查看的真实候选。你可以一次回复口播和素材是否通过，并选择 A、B 或 C。
+
+### 4. 确认声音
+
+声音可以来自六种入口：
+
+- 已经录好的独立口播；
+- 从已有视频中提取的人声；
+- 已有 TTS API；
+- 电脑中已有的本地 TTS 模型；
+- 经授权后准备免费的 Qwen3-TTS；
+- 明确选择无旁白。
+
+选择 TTS 时，Agent 会复用开工阶段已经确认的声音方向，生成三条同文案试听。你选定一个以后，它才生成完整旁白。已有可用口播时会跳过试听。
+
+### 5. 确认完整分镜
+
+素材和声音确定后，Agent 会拆分镜头，说明每段口播对应什么画面、素材怎样进入、画面怎么动、字幕放在哪里、什么时候切换。你会看到完整静态分镜，而不只是文字方案。
+
+### 6. 查看整片预览并导出
+
+普通项目直接生成完整低清预览；涉及新动画、敏感录屏或高风险素材时，才会先做最短风险样片。整片预览通过后，Agent 再导出正式视频和独立封面。
+
+短片且信息完整时，通常只需要 4 次确认。普通项目约为 4 至 5 次。隐私、素材授权、依赖安装和模型下载会单独确认。
+
+## 安装
+
+### 最简单的方式：把这段话复制给 AI
 
 ```text
 请帮我安装并验证这个开源视频 Skill：
@@ -21,174 +88,202 @@ https://github.com/luqi67677/produce-videos
 如果当前平台不能安装目录式 Skill，请明确说明限制和可行的手动导入方式，不要假装安装成功。安装阶段不要下载 TTS 模型，也不要调用任何付费服务。
 ```
 
-> 这里的 Kimi 指 **Kimi Code CLI**，不是普通 Kimi 聊天网页。纯聊天产品如果不能读取本地文件、执行脚本和生成媒体文件，就无法完整运行这个 Skill。
+> 这里的 Kimi 指 **Kimi Code CLI**，不是普通 Kimi 聊天网页。普通聊天产品如果不能读取本地文件、运行脚本和生成媒体文件，就不能完整执行这套 Skill。
 
-## 它解决什么问题
+### 手动安装
 
-- 先生成整条视频，最后才发现口播、素材或风格不对。
-- 风格选择只有名称和色块，没有真实样张，也没有完整模板库。
-- 没检查已有模型就要求重新安装，或没问声音偏好就随机生成试听。
-- 静态分镜是一套，最终视频又变成另一套画面。
-- 用户看不到本地预览，却被要求继续确认。
-- 画面叠加脏色、重字幕条、整页截图、地面和投射阴影，技术检查通过但仍不具备分享质量。
-- 输出视频只有文件，没有时长、编码、响度、黑帧和旁白绑定检查。
+| 平台 | 安装位置或入口 | 安装后调用 |
+|---|---|---|
+| Codex | `~/.codex/skills/produce-videos` | `$produce-videos` |
+| Kimi Code CLI | `~/.config/agents/skills/produce-videos` | `/skill:produce-videos` |
+| WorkBuddy | 技能市场中上传仓库生成的 ZIP | 在对话中直接描述视频任务 |
 
-## 核心流程
-
-1. 开工信息包：一次补齐画幅、平台、时长、口播内容来源、最终声音来源、现有 API/本地模型和声音方向。
-2. 内容方向包：一次审查完整口播、真实素材联系表和三套风格。
-3. 声音执行与确认包：需要 TTS 时生成三条同文案试听；已有独立口播或从视频提取口播时跳过试听。
-4. 成片蓝图包：在全量静态分镜中一起审查素材用法、隐私和构图。
-5. 最终预览包：普通项目直接看完整低清预览，高风险动作才先做 4—8 秒样片；批准后导出母版。
-
-短片且信息完整时通常只需 4 次确认；普通项目为 4—5 次。隐私、授权、模型下载或新运动语法会单独展开。五个内部审批阶段仍写入同一个 `approval-ledger.json` 并校验真实文件哈希。
-
-## 声音与 Qwen3-TTS
-
-最终声音入口支持六种情况：
-
-- 用户已有独立的完整口播音频；
-- 用户提供的视频里已经包含可直接提取的口播；
-- 用户已有可调用的 TTS API；
-- 电脑中已有本地 TTS 模型；
-- 当前没有可用音频方案，选择准备免费的 Qwen3-TTS；
-- 用户明确选择无旁白。
-
-Skill 会在第一次开工时分别询问“口播内容从哪里来”和“最终声音从哪里来”。选择 TTS 时，会同步问清声音偏好，并优先复用已有 API 或本地模型。没有发现可用本地模型时，会直接推荐免费的 [Qwen3-TTS VoiceDesign bf16](https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16)（约 4.52 GB）；本机空间或内存紧张时，也可选择约 2.5 GB 的 [5bit 量化版](https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit)。[阿里 Qwen 官方原始模型](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign)和[官方项目](https://github.com/QwenLM/Qwen3-TTS)同时保留在配置中，当前 Apple Silicon 执行器使用 MLX 转换版。
-
-Apple Silicon 的明确安装与下载步骤：
-
-```bash
-<兼容的 Python 3.10+> -m pip install -U "mlx-audio[tts]" "huggingface_hub[hf_xet]"
-<兼容的 Python 3.10+> scripts/prepare_qwen_model.py --model-dir <模型目录>
-<兼容的 Python 3.10+> scripts/prepare_qwen_model.py --model-dir <模型目录> \
-  --download --download-authorized
-```
-
-第一条安装依赖、第三条下载模型，都只能在用户明确同意后执行；第二条只展示地址、预计大小、依赖和目标目录，不会下载模型。Agent 必须先把命令中的两个占位符替换为本机已确认的 Python 运行环境和 Skill 仓库之外的模型目录，再向用户展示命令并申请授权。
-
-当前内置 Qwen 执行器面向 Apple Silicon 的 `mlx-audio` 路线。其他设备可以使用用户自己的完整音频或已验证 TTS 服务。仓库不包含模型权重、预设声音、私人参考音频或 API Key。
-
-## 视觉模板
-
-仓库包含 34 套通用视觉模板的设计说明和选择索引。每次推荐都会先检查目录完整性，再依据内容、受众、情绪、密度和平台评估全部模板，从中选择三套不同候选。全部 34 套保留分数和简短理由，详细解释集中在前三名。
-
-候选必须使用相同标题、相同内容和相同主视觉生成：
-
-- 1080×1440 的 3:4 封面样张；
-- 与主视频一致画幅的内容样张；
-- 270×360 的信息流缩略图；
-- 能完整看到三套候选的总览图片。
-
-## 输出规格
-
-- 竖屏：3:4、1080×1440、30fps。
-- 横屏：16:9、1920×1080、30fps。
-- 独立封面：3:4、1080×1440，同时输出 270×360 缩略图。
-- 推荐视频编码：H.264；推荐音频：AAC、48kHz、双声道。
-- 综合响度可接受范围：-19 至 -14 LUFS，目标约 -16.5 LUFS。
-
-## 视觉干净度
-
-- 生成与合成画面默认无地面、无地平线、无投射阴影、无悬浮阴影和地面反射。
-- 主体需要与背景分离时，只使用柔和、低饱和、窄范围的轮廓光；不使用霓虹描边或完整光环。
-- 不叠加多套背景色偏、渐变和材质，不用重色字幕通栏抢主体，不把整页截图缩小塞进卡片。
-- 原尺寸和信息流缩略图都必须通过干净度复核；用户明确要求真实空间时才允许记录例外并重新确认样张。
-
-## 调用示例
-
-```text
-使用 $produce-videos，把这份讲稿和产品截图制作成 3:4 竖屏宣传视频。
-按风险合并确认；优先使用真实素材，缺少的部分再生成。
-```
-
-```text
-使用 $produce-videos，把这段录屏制作成 16:9 教程视频。
-先检查隐私信息和口播，再做完整静态分镜；新运动语法才先做短样片。
-```
-
-## 三个平台怎么安装
-
-| 平台 | 支持方式 | 安装位置或入口 | 调用方式 |
-|---|---|---|---|
-| Codex | 原生读取标准 `SKILL.md` 目录 | `~/.codex/skills/produce-videos` | `$produce-videos` |
-| Kimi Code CLI | 原生读取 Agent Skills | 推荐 `~/.config/agents/skills/produce-videos` | `/skill:produce-videos`，也可由 Agent 自动发现 |
-| WorkBuddy | 使用本仓库生成符合其上传结构的 ZIP | 技能市场 → 添加技能 → 上传技能 | 安装后在对话中用自然语言调用 |
-
-### Codex
+#### Codex
 
 ```bash
 git clone https://github.com/luqi67677/produce-videos.git ~/.codex/skills/produce-videos
 ```
 
-安装完成后重新打开一次会话，再输入 `$produce-videos` 使用。
+安装完成后重新打开会话，再输入 `$produce-videos` 使用。
 
-### Kimi Code CLI
+#### Kimi Code CLI
 
 ```bash
 git clone https://github.com/luqi67677/produce-videos.git ~/.config/agents/skills/produce-videos
 ```
 
-安装后输入 `/skill:produce-videos`，或直接描述视频任务让 Kimi Code 自动发现。项目内安装也可以放到 `.agents/skills/produce-videos`。
+重新打开 Kimi Code CLI 后输入 `/skill:produce-videos`。也可以直接描述视频任务，让 Agent 根据 Skill 描述自动发现。项目级安装可以放在 `.agents/skills/produce-videos`。
 
-### WorkBuddy
+#### WorkBuddy
 
-先下载仓库，在仓库目录运行：
+先下载仓库，在仓库目录生成上传包：
 
 ```bash
 python3 scripts/package_workbuddy.py --output produce-videos-workbuddy.zip
 ```
 
-然后在 WorkBuddy 的“技能市场 → 添加技能 → 上传技能”中选择生成的 ZIP。打包器会从同一份标准 `SKILL.md` 生成 WorkBuddy 所需的双语描述、版本和作者字段，不会维护第二份视频流程。
+然后打开“技能市场 → 添加技能 → 上传技能”，选择生成的 ZIP。打包器会把完整的 `SKILL.md`、`scripts`、`references` 和 `assets` 放入 WorkBuddy 要求的目录结构。
 
-以上是三种不同的安装入口，不代表所有聊天 AI 都能安装本地 Skill。其他 Agent 只有在支持 `SKILL.md`、本地文件读写和脚本执行时，才具备完整运行条件。
+#### 其他 Agent
 
-主要依赖：
+如果 Agent 支持目录式 `SKILL.md`、本地文件读写和命令执行，可以把完整的 `produce-videos` 目录放入它的 Skills 目录。不能只复制 `SKILL.md`，因为声音、模板、校验和渲染流程还依赖同级的 `scripts`、`references` 和 `assets`。
 
-- Python 3.10+
-- `ffmpeg` 与 `ffprobe`
-- 能生成最终画面的浏览器、Remotion、FFmpeg 或其他视频渲染环境
-- 本地 Qwen3-TTS 路线可选安装 `mlx-audio`
+平台依据：[Codex Skill 示例](https://github.com/openai/codex/blob/main/codex-rs/skills/src/assets/samples/skill-creator/SKILL.md)、[Kimi Code CLI Agent Skills](https://github.com/MoonshotAI/kimi-cli/blob/main/docs/en/customization/skills.md)、[WorkBuddy Skill 文档](https://open.workbuddy.cn/docs/skill)。
 
-平台依据：[Codex Skill 规范](https://github.com/openai/codex/blob/main/codex-rs/skills/src/assets/samples/skill-creator/SKILL.md)、[Kimi Code Agent Skills](https://github.com/MoonshotAI/kimi-cli/blob/main/docs/en/customization/skills.md)、[WorkBuddy Skill 文档](https://open.workbuddy.cn/docs/skill)。
+## 安装后怎么使用
+
+最短调用方式：
+
+```text
+使用 $produce-videos，把这份讲稿和产品截图制作成一条 3:4 竖屏宣传视频。
+```
+
+Kimi Code CLI 可以这样说：
+
+```text
+/skill:produce-videos 把这段录屏制作成一条 16:9 教程视频。
+```
+
+信息比较完整时，可以一次提供：
+
+```text
+使用 produce-videos 帮我制作一条视频。
+
+发布平台：抖音
+画幅：3:4 竖屏
+目标时长：60 秒以内
+目标观众：第一次了解这个产品的人
+想讲的内容：介绍它解决什么问题，以及怎么使用
+已有素材：口播稿、产品截图和一段操作录屏
+口播内容：使用我提供的稿子
+最终声音：从我提供的视频中提取
+
+如果还有缺失信息，请在开工时一次问完。
+```
+
+还不知道想做成什么样，也可以说：
+
+```text
+使用 produce-videos 帮我做一条视频。我现在只有这些资料，还没有想清楚结构、风格和声音。请先一次问清楚需要的信息，再开始制作。
+```
+
+## 一次完整演示应该录什么
+
+如果要向别人演示这套 Skill，可以按下面的顺序录屏。每一段都对应用户真正会经历的步骤。
+
+| 录屏段落 | 画面 | 需要说明的重点 |
+|---|---|---|
+| 1. 找到仓库 | GitHub 首页和 README 第一屏 | 这是一个开源的视频制作 Agent Skill |
+| 2. 安装 | 复制“请帮我安装并验证”整段口令到 Codex 或 Kimi Code CLI | 不需要手动研究目录，让 Agent 完成安装和验证 |
+| 3. 发起任务 | 输入“使用 produce-videos 帮我做一条视频”，同时展示已有素材 | 文字、PPT、截图、录屏、视频和音频都可以作为输入 |
+| 4. 开工信息 | Agent 一次询问平台、画幅、时长、内容和声音 | 先把基础需求说清楚，减少后面返工 |
+| 5. 内容方向 | 完整口播、真实素材联系表和三套视觉候选 | 用户确认内容与素材，并从真实样张中选择风格 |
+| 6. 声音 | 已有口播直接使用，或展示三条 TTS 试听 | 会先复用现有音频、API 或本地模型，没有时才推荐开源模型 |
+| 7. 分镜 | 完整静态分镜联系表 | 每句话对应什么画面、怎么动、何时切换都能看见 |
+| 8. 成片 | 完整低清预览、正式视频和独立封面 | 预览确认后才导出最终文件 |
+
+录屏时不需要展示内部脚本和测试代码。观众只需要看见三件事：怎么安装、怎么把素材交给它、最后能得到什么。
+
+## 声音与 Qwen3-TTS
+
+Skill 会优先使用用户已经拥有的音频能力。选择 TTS 时，会先检查已配置的 API、用户明确提供的本地模型目录和标准缓存。没有可用方案时，才会推荐免费的 Qwen3-TTS，并在安装依赖或下载模型前单独取得授权。
+
+- [Qwen3-TTS 官方项目](https://github.com/QwenLM/Qwen3-TTS)
+- [Qwen3-TTS VoiceDesign 官方模型](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign)
+- [Apple Silicon 使用的 MLX bf16 转换版](https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16)，约 4.52 GB
+- [较小的 MLX 5bit 转换版](https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit)，约 2.5 GB
+
+当前内置的 Qwen 执行器面向 Apple Silicon 和 `mlx-audio`。其他设备可以使用自己的完整口播、已验证 TTS API 或兼容的本地模型。仓库不包含模型权重、预设声音、私人参考音频或 API Key。
+
+安装 Skill 本身不会下载 TTS 模型。只有用户在视频任务中选择 Qwen 路线并明确授权后，Agent 才能安装依赖或执行下载。
+
+## 34 套视觉模板
+
+仓库包含 34 套通用视觉模板的设计说明和选择索引。用户没有指定视觉系统时，Skill 会先检查模板目录完整性，再根据内容、受众、情绪、信息密度和发布平台评估全部模板，从中推荐三套不同候选。
+
+三套候选必须使用相同标题、相同代表内容、相同主视觉和目标画幅，并直接展示：
+
+- 3:4 封面样张；
+- 与主视频一致画幅的内容样张；
+- 270×360 信息流缩略图；
+- 能完整看到三套候选的总览图。
+
+选中以后，全片的封面、字幕、分镜、动画和成片都会读取同一套视觉主题，不会在后面的制作中自行换风格。
+
+## 运行要求
+
+完整执行需要：
+
+- 能读取和写入本地文件、运行命令并直接展示图片、音频和视频的 AI Agent；
+- Python 3.10 或更高版本；
+- `ffmpeg` 与 `ffprobe`；
+- 浏览器、Remotion、FFmpeg 或其他可完成最终画面渲染的环境。
+
+可选能力：
+
+- 用户自己的 TTS API；
+- 已经安装的本地 TTS 模型；
+- Apple Silicon 上的 `mlx-audio` 与 Qwen3-TTS。
+
+缺少关键能力时，Agent 必须说明当前能交付到哪一步，不能把“已经读取仓库”当成“已经安装”，也不能把脚本或分镜当成最终视频。
+
+## 输出规格
+
+- 竖屏视频：3:4、1080×1440、30fps；
+- 横屏视频：16:9、1920×1080、30fps；
+- 独立封面：3:4、1080×1440，同时输出 270×360 缩略图；
+- 推荐视频编码：H.264；
+- 推荐音频：AAC、48kHz、双声道；
+- 综合响度可接受范围：-19 至 -14 LUFS，目标约 -16.5 LUFS。
+
+生成和合成画面默认无地面、无地平线、无投射阴影、无悬浮阴影和地面反射。主体需要与背景分离时，只使用柔和、克制的轮廓光。
 
 ## 目录结构
 
 ```text
 produce-videos/
-├── SKILL.md
-├── agents/
-│   └── openai.yaml
-├── assets/
-├── references/
-│   └── frontend-slides-themes/
-├── scripts/
-│   └── package_workbuddy.py
-├── tests/
-├── evals/
+├── SKILL.md                  # Agent 执行入口
+├── agents/openai.yaml        # Codex 界面元数据
+├── assets/                   # brief、审批、声音、分镜和主题模板
+├── references/               # 按阶段读取的详细制作规则与 34 套视觉模板
+├── scripts/                  # 模型发现、校验、质检和打包脚本
+├── tests/                    # 自动测试
+├── evals/                    # Skill 行为评估用例
 ├── THIRD_PARTY_NOTICES.md
 └── LICENSE
 ```
 
-## 隐私边界
+`SKILL.md` 是 Agent 的正式执行入口。README 面向第一次接触仓库的人，负责说明能力、流程、安装和使用方式。
 
-- 不包含作者个人形象、私人音色、水印、账号资料、本机路径或用户项目素材。
-- 用户提供的素材只属于当前项目，不得写回 Skill 仓库。
-- API 凭证只从环境变量或系统安全存储读取，不写入聊天、项目文件或日志。
-- 发布前可运行 `python3 scripts/scan_release.py` 检查本机路径、联系方式、密钥、符号链接和未经证明安全的二进制文件。
+## 验证安装
 
-## 验证
+在仓库目录运行：
 
 ```bash
 python3 -m unittest discover -s tests -v
 python3 scripts/validate_theme_catalog.py \
   references/frontend-slides-themes/bold-template-pack/selection-index.json
-python3 scripts/validate_startup_brief.py project/video-brief.md --require-approved
 python3 scripts/scan_release.py
 python3 scripts/package_workbuddy.py --output /tmp/produce-videos-workbuddy.zip
 ```
 
-自动检查不能替代用户对确认包和最终预览的实际判断，也不能证明视频已上传、发布或产生真实用户效果。
+验证至少应确认：
+
+- 能读取 `SKILL.md`；
+- `scripts`、`references` 和 `assets` 都存在；
+- 自动测试通过；
+- 34 套视觉模板完整；
+- 开源扫描没有发现个人路径、密钥或未经审核的二进制资产。
+
+自动检查不能替代用户对口播、素材、声音、分镜和最终预览的实际判断，也不能证明视频已经上传、发布或产生真实用户效果。
+
+## 隐私与安全
+
+- 仓库不包含作者个人形象、私人音色、水印、账号资料、本机路径或用户项目素材；
+- 用户提供的品牌、人物、声音和素材只属于当前视频项目，不能写回 Skill 仓库；
+- API 凭证只从环境变量或系统安全存储读取，不写入聊天、项目文件或日志；
+- 安装依赖、下载模型、调用付费服务和上传文件前必须单独取得用户授权；
+- 发布前运行 `python3 scripts/scan_release.py` 检查本机路径、联系方式、密钥、符号链接和未经审核的二进制文件。
 
 ## 许可证
 
