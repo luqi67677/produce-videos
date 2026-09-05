@@ -1,8 +1,27 @@
 # Produce Videos：视频生成与编辑 Skill
 
-面向 Codex、Claude Code、Hermes 等 AI Agent 的开源视频制作 Skill。V2.0.1 按风险把制作过程收敛为少量确认包，同时保留内容、素材、声音、分镜、预览和成片的机器质量门。
+面向支持目录式 Agent Skills 的 AI Agent。V2.1.0 已提供 Codex、Kimi Code CLI 和 WorkBuddy 的明确安装路径，同时保留内容、素材、声音、分镜、预览和成片的机器质量门。
 
 An open-source **video production skill for AI agents**. It turns scripts, documents, screenshots, images, slides, and screen recordings into quality-gated videos with risk-based review bundles instead of a rigid approval stop after every internal stage.
+
+## 复制这段话，让 AI 帮你安装
+
+```text
+请帮我安装并验证这个开源视频 Skill：
+https://github.com/luqi67677/produce-videos
+
+请先判断你当前运行的是 Codex、Kimi Code CLI、WorkBuddy，还是不具备本地文件和终端能力的普通聊天 AI，再按仓库 README 中对应的平台说明安装。不要覆盖已经存在且被修改过的同名目录。
+
+安装后请实际验证：
+1. 能读取 produce-videos/SKILL.md；
+2. 能看到 scripts、references 和 assets；
+3. 运行仓库自带的最小验证；
+4. 告诉我真实安装位置、验证结果，以及是否需要重启或重新打开会话。
+
+如果当前平台不能安装目录式 Skill，请明确说明限制和可行的手动导入方式，不要假装安装成功。安装阶段不要下载 TTS 模型，也不要调用任何付费服务。
+```
+
+> 这里的 Kimi 指 **Kimi Code CLI**，不是普通 Kimi 聊天网页。纯聊天产品如果不能读取本地文件、执行脚本和生成媒体文件，就无法完整运行这个 Skill。
 
 ## 它解决什么问题
 
@@ -33,7 +52,7 @@ An open-source **video production skill for AI agents**. It turns scripts, docum
 - 电脑中已有本地 TTS 模型；
 - 当前没有可用音频方案。
 
-选择本地模型后，Skill 只在标准缓存和用户明确指定的目录中有限发现模型，并尝试复用已有 Python 运行环境。只有确认没有可用模型或运行时后，才会说明下载地址、大小和目标目录，并在得到明确授权后准备 Qwen3-TTS。
+选择本地模型后，Skill 只在标准缓存和用户明确指定的目录中有限发现模型，并尝试复用已有 Python 运行环境。没有发现可用本地模型时，会直接推荐免费的 [Qwen3-TTS VoiceDesign bf16](https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16)（约 4.52 GB）；本机空间或内存紧张时，也可选择约 2.5 GB 的 [5bit 量化版](https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-5bit)。Skill 会先说明依赖、目标目录和下载量，得到用户明确授权后才安装或下载。
 
 当前内置 Qwen 执行器面向 Apple Silicon 的 `mlx-audio` 路线。其他设备可以使用用户自己的完整音频或已验证 TTS 服务。仓库不包含模型权重、预设声音、私人参考音频或 API Key。
 
@@ -75,13 +94,41 @@ An open-source **video production skill for AI agents**. It turns scripts, docum
 先检查隐私信息和口播，再做完整静态分镜；新运动语法才先做短样片。
 ```
 
-## 安装
+## 三个平台怎么安装
 
-将整个仓库克隆到目标 Agent 可以读取的 Skill 目录，保持目录结构不变：
+| 平台 | 支持方式 | 安装位置或入口 | 调用方式 |
+|---|---|---|---|
+| Codex | 原生读取标准 `SKILL.md` 目录 | `~/.codex/skills/produce-videos` | `$produce-videos` |
+| Kimi Code CLI | 原生读取 Agent Skills | 推荐 `~/.config/agents/skills/produce-videos` | `/skill:produce-videos`，也可由 Agent 自动发现 |
+| WorkBuddy | 使用本仓库生成符合其上传结构的 ZIP | 技能市场 → 添加技能 → 上传技能 | 安装后在对话中用自然语言调用 |
+
+### Codex
 
 ```bash
-git clone https://github.com/luqi67677/produce-videos.git
+git clone https://github.com/luqi67677/produce-videos.git ~/.codex/skills/produce-videos
 ```
+
+安装完成后重新打开一次会话，再输入 `$produce-videos` 使用。
+
+### Kimi Code CLI
+
+```bash
+git clone https://github.com/luqi67677/produce-videos.git ~/.config/agents/skills/produce-videos
+```
+
+安装后输入 `/skill:produce-videos`，或直接描述视频任务让 Kimi Code 自动发现。项目内安装也可以放到 `.agents/skills/produce-videos`。
+
+### WorkBuddy
+
+先下载仓库，在仓库目录运行：
+
+```bash
+python3 scripts/package_workbuddy.py --output produce-videos-workbuddy.zip
+```
+
+然后在 WorkBuddy 的“技能市场 → 添加技能 → 上传技能”中选择生成的 ZIP。打包器会从同一份标准 `SKILL.md` 生成 WorkBuddy 所需的双语描述、版本和作者字段，不会维护第二份视频流程。
+
+以上是三种不同的安装入口，不代表所有聊天 AI 都能安装本地 Skill。其他 Agent 只有在支持 `SKILL.md`、本地文件读写和脚本执行时，才具备完整运行条件。
 
 主要依赖：
 
@@ -90,7 +137,7 @@ git clone https://github.com/luqi67677/produce-videos.git
 - 能生成最终画面的浏览器、Remotion、FFmpeg 或其他视频渲染环境
 - 本地 Qwen3-TTS 路线可选安装 `mlx-audio`
 
-具体安装位置和调用方式以目标 Agent 的官方说明为准。
+平台依据：[Codex Skill 规范](https://github.com/openai/codex/blob/main/codex-rs/skills/src/assets/samples/skill-creator/SKILL.md)、[Kimi Code Agent Skills](https://github.com/MoonshotAI/kimi-cli/blob/main/docs/en/customization/skills.md)、[WorkBuddy Skill 文档](https://open.workbuddy.cn/docs/skill)。
 
 ## 目录结构
 
@@ -103,6 +150,7 @@ produce-videos/
 ├── references/
 │   └── frontend-slides-themes/
 ├── scripts/
+│   └── package_workbuddy.py
 ├── tests/
 ├── evals/
 ├── THIRD_PARTY_NOTICES.md
@@ -123,6 +171,7 @@ python3 -m unittest discover -s tests -v
 python3 scripts/validate_theme_catalog.py \
   references/frontend-slides-themes/bold-template-pack/selection-index.json
 python3 scripts/scan_release.py
+python3 scripts/package_workbuddy.py --output /tmp/produce-videos-workbuddy.zip
 ```
 
 自动检查不能替代用户对确认包和最终预览的实际判断，也不能证明视频已上传、发布或产生真实用户效果。

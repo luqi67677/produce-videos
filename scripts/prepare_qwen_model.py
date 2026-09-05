@@ -37,8 +37,11 @@ def main() -> int:
 
     print(f"model_id={config['model_id']}")
     print(f"model_url={config['model_url']}")
+    print(f"approx_size_gb={config['approx_size_gb']}")
+    print(f"dependency_install_command={models['dependency_install_command']}")
     print(f"download_command={config['download_command']}")
     print(f"target={model_dir}")
+    print("download_requires_user_authorization=true")
     if not args.download:
         print("未执行下载：等待用户明确授权")
         return 0

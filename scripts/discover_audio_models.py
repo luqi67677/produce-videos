@@ -22,6 +22,33 @@ RUNTIME_PROBE_MARKER = "__QWEN_RUNTIME_JSON__"
 MAX_RUNTIME_CANDIDATES = 40
 
 
+def load_qwen_models() -> dict[str, Any]:
+    path = Path(__file__).resolve().parents[1] / "assets" / "qwen-tts-models.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def qwen_recommendation(models: dict[str, Any]) -> dict[str, Any]:
+    recommended = models["recommended"]
+    smaller = models["smaller_option"]
+    return {
+        "provider": models["provider"],
+        "runtime": models["runtime"],
+        "supported_platform": models["supported_platform"],
+        "model_id": recommended["model_id"],
+        "model_url": recommended["model_url"],
+        "approx_size_gb": recommended["approx_size_gb"],
+        "smaller_model_id": smaller["model_id"],
+        "smaller_model_url": smaller["model_url"],
+        "smaller_approx_size_gb": smaller["approx_size_gb"],
+        "dependency_install_command": models["dependency_install_command"],
+        "download_requires_user_authorization": True,
+        "next_step": (
+            "先向用户展示模型地址、预计下载量、依赖和目标目录；"
+            "只有用户明确同意后，才运行 prepare_qwen_model.py --download --download-authorized"
+        ),
+    }
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -190,6 +217,7 @@ def discover(
     max_depth: int,
     max_directories: int,
     runtime_pythons: list[Path] | None = None,
+    qwen_models: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     candidates: list[dict[str, Any]] = []
     scanned_directories = 0
@@ -223,7 +251,7 @@ def discover(
     if compatible and not compatible_runtimes:
         warnings.append("发现兼容模型，但在有限范围内未发现可导入 mlx_audio 的 Python 运行环境")
     status = "compatible-found" if compatible else "other-found" if candidates else "none-found"
-    return {
+    report = {
         "schema_version": "1.1",
         "status": status,
         "runtime_status": "compatible-runtime-found" if compatible_runtimes else "none-found",
@@ -235,6 +263,14 @@ def discover(
         "runtime_candidates": runtime_candidates,
         "warnings": warnings,
     }
+    if not compatible:
+        report["next_action"] = "recommend-qwen-and-request-download-authorization"
+        report["qwen_recommendation"] = qwen_recommendation(qwen_models or load_qwen_models())
+    elif not compatible_runtimes:
+        report["next_action"] = "locate-compatible-runtime-before-installing"
+    else:
+        report["next_action"] = "preflight-existing-model"
+    return report
 
 
 def main() -> int:
@@ -267,6 +303,16 @@ def main() -> int:
         print("PASS 发现可由当前执行器预检的 Qwen3-TTS MLX 模型")
     if report["runtime_status"] == "none-found":
         print("RUNTIME_NOT_FOUND 有模型不等于缺少依赖；请先追加已知 --runtime-python，确认仍无兼容环境后再申请安装")
+    recommendation = report.get("qwen_recommendation")
+    if recommendation:
+        print(
+            "QWEN_RECOMMENDED "
+            f"{recommendation['model_url']} "
+            f"约 {recommendation['approx_size_gb']} GB"
+        )
+        print(f"QWEN_SMALLER {recommendation['smaller_model_url']} 约 {recommendation['smaller_approx_size_gb']} GB")
+        print(f"INSTALL {recommendation['dependency_install_command']}")
+        print("AUTHORIZATION_REQUIRED 下载前必须向用户说明目标目录并取得明确同意")
     return 0
 
 

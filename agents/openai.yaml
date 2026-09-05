@@ -1,4 +1,4 @@
 interface:
   display_name: "视频生成与编辑"
-  short_description: "V2.0.1｜增加干净视觉、无地面阴影与轮廓光质量门"
+  short_description: "V2.1.0｜支持 Codex、Kimi Code 与 WorkBuddy 安装"
   default_prompt: "使用 $produce-videos 把这份内容制作成动态视频：复用我已说明的信息，按风险合并为内容方向、声音、成片蓝图和最终预览确认包；保留 34 模板、真实素材、旁白绑定和渲染质量门，交付成片与独立 3:4 封面，全程不使用作者私人资产。"
