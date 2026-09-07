@@ -1,5 +1,12 @@
 # Changelog
 
+## V2.4.2 — 2026-09-07
+
+- 把面向用户的安装入口改为一条可直接发送给当前 AI Agent 的中文口令；用户不再打开终端，也不再选择目标平台。
+- 新增 Agent 安装执行契约：Codex、Claude Code、Cursor 和 Kimi Code CLI 必须识别自身平台，只执行对应的非交互全局安装命令并读回验证结果。
+- 明确普通网页聊天不具备本地文件与命令权限时不能代装，防止把“读过仓库”误报为“安装成功”。
+- 修正 README 演示录屏中的旧终端流程，统一安装口径。
+
 ## V2.4.1 — 2026-09-07
 
 - 新增经 Vercel Labs Skills CLI 实际识别和落盘验证的一行安装命令，支持 Codex、Claude Code、Cursor、Kimi Code CLI 等本地 Agent。

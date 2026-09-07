@@ -2,22 +2,41 @@
 
 目标：安装完整 `produce-videos` 目录并实际验证，不只读取 README，也不覆盖用户已经修改过的同名 Skill。
 
-## 优先方式
+## 用户只需要发送这一行
 
-1. 判断当前产品是否能读取本地文件、运行 Python/FFmpeg 并输出媒体文件。普通网页聊天若不具备这些能力，只说明限制，不假装安装成功。
-2. 对 Vercel Labs Skills CLI 已支持的本地 Agent，优先运行：
+```text
+请把这个视频 Skill 安装到你当前使用的 AI，并验证安装成功：https://github.com/luqi67677/produce-videos
+```
+
+收到这条口令后，由当前 Agent 完成平台判断、安装和验证。不要让用户打开终端，不要再问用户“安装到哪个平台”，也不要把内部命令原样退回给用户执行。
+
+## Agent 自动安装
+
+1. 先根据当前运行环境判断自己是 Codex、Claude Code、Cursor 还是 Kimi Code CLI；不得根据电脑上同时存在的其他 Agent 目录，让用户再次选择平台。
+2. 检查目标目录是否已有同名 Skill。不存在时继续；存在时先确认它是未修改的旧版还是用户自己的修改版，不得静默覆盖。
+3. 选择并自行执行唯一对应的非交互命令：
 
    ```bash
-   npx skills add luqi67677/produce-videos -g
+   # Codex
+   npx skills add luqi67677/produce-videos -g -a codex -y
+
+   # Claude Code
+   npx skills add luqi67677/produce-videos -g -a claude-code -y
+
+   # Cursor
+   npx skills add luqi67677/produce-videos -g -a cursor -y
+
+   # Kimi Code CLI
+   npx skills add luqi67677/produce-videos -g -a kimi-code-cli -y
    ```
 
-   按提示选择目标 Agent。安装器必须识别出唯一的 `produce-videos`，并安装完整目录；若目标机器没有 Node.js 18 或更高版本，再走下面的 Release 或手动安装路线。
-3. WorkBuddy 或无法运行 `npx` 的环境，从 [最新 Release](https://github.com/luqi67677/produce-videos/releases/latest) 下载：
+   只执行与当前 Agent 对应的一条，不安装到所有 Agent。`-g` 锁定用户级目录，`-a` 锁定当前平台，`-y` 跳过平台和范围选择。
+4. 若当前环境没有 Node.js 18 或无法运行 `npx`，但 Agent 仍有本地文件和网络能力，由 Agent 自己从 [最新 Release](https://github.com/luqi67677/produce-videos/releases/latest) 下载通用包，或克隆完整仓库到当前平台目录。不要先要求用户研究终端和目录。
+5. WorkBuddy 使用专用上传包：
    - 通用 Agent：`produce-videos.skill` 或 `produce-videos.zip`；
    - WorkBuddy：`produce-videos-workbuddy.zip`。
-4. Release 同时提供 `SHA256SUMS.txt` 时，下载后先核对安装包哈希；校验失败不得继续安装。
-5. 没有 Skills CLI 和 Release 下载能力时，克隆完整仓库。
-6. 手动安装时把完整目录放到平台 Skills 目录；不能只复制 `SKILL.md`。
+6. Release 同时提供 `SHA256SUMS.txt` 时，下载后先核对安装包哈希；校验失败不得继续安装。
+7. 无法读取本地文件、执行命令或写入 Skill 目录时，明确说明当前平台不能安装，不要假装安装成功。
 
 常见位置：
 

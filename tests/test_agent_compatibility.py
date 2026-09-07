@@ -21,13 +21,20 @@ class AgentCompatibilityTests(unittest.TestCase):
         keys = {line.split(":", 1)[0] for line in frontmatter.splitlines() if ":" in line}
         self.assertEqual(keys, {"name", "description"})
 
-    def test_readme_has_copyable_install_prompt_and_platform_routes(self) -> None:
+    def test_readme_has_agent_first_install_entry_and_platform_routes(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("npx skills add luqi67677/produce-videos -g", readme)
-        self.assertIn("请帮我安装并验证这个开源视频 Skill", readme)
+        install_prompt = (
+            "请把这个视频 Skill 安装到你当前使用的 AI，并验证安装成功："
+            "https://github.com/luqi67677/produce-videos"
+        )
+        install_section = readme.split("## 安装", 1)[1].split("## 安装后怎么使用", 1)[0]
+        self.assertIn(install_prompt, install_section)
+        self.assertLess(install_section.index(install_prompt), install_section.index("npx skills add"))
+        self.assertIn("用户不需要打开终端，也不需要选择安装平台", install_section)
+        self.assertNotIn("在终端运行 `npx skills add", readme)
+        self.assertNotIn("按提示选择本地 Agent", readme)
         self.assertIn("Kimi Code CLI", readme)
         self.assertIn("WorkBuddy", readme)
-        self.assertIn("不要假装安装成功", readme)
         self.assertIn("普通 Kimi 聊天网页", readme)
         self.assertIn("GitHub Releases", readme)
         self.assertIn("34 套视觉主题和 88 套结构化布局", readme)
@@ -35,9 +42,23 @@ class AgentCompatibilityTests(unittest.TestCase):
         self.assertIn("scripts/resume_project.py", readme)
         self.assertIn("Zara Zhang 的 Frontend Slides", readme)
 
-    def test_skill_declares_v241_and_creative_foundation_contract(self) -> None:
+    def test_agent_install_contract_is_noninteractive_and_platform_specific(self) -> None:
+        content = (ROOT / "INSTALL_FOR_AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("不要让用户打开终端", content)
+        self.assertIn("不要再问用户“安装到哪个平台”", content)
+        expected_commands = {
+            "codex": "npx skills add luqi67677/produce-videos -g -a codex -y",
+            "claude-code": "npx skills add luqi67677/produce-videos -g -a claude-code -y",
+            "cursor": "npx skills add luqi67677/produce-videos -g -a cursor -y",
+            "kimi-code-cli": "npx skills add luqi67677/produce-videos -g -a kimi-code-cli -y",
+        }
+        for command in expected_commands.values():
+            self.assertEqual(content.count(command), 1)
+        self.assertIn("只执行与当前 Agent 对应的一条", content)
+
+    def test_skill_declares_v242_and_creative_foundation_contract(self) -> None:
         content = (ROOT / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("V2.4.1", content)
+        self.assertIn("V2.4.2", content)
         self.assertIn("每个 B-roll 必须填写 `covers`", content)
         self.assertIn("edit-decision-list.json", content)
         self.assertIn("story-contract.json", content)

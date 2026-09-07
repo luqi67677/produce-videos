@@ -51,40 +51,44 @@ An open-source video-production workflow for local AI agents, from scripts and s
 
 ## 安装
 
-### 一条命令安装
+### 最简单的方式：直接发给你正在用的 AI
 
-在终端运行：
+把下面这一整行复制到 **Codex、Claude Code、Cursor 或 Kimi Code CLI 的对话框**：
 
-```bash
-npx skills add luqi67677/produce-videos -g
+```text
+请把这个视频 Skill 安装到你当前使用的 AI，并验证安装成功：https://github.com/luqi67677/produce-videos
 ```
 
-安装器会找到仓库中的 `produce-videos`，再让你选择 Codex、Claude Code、Cursor、Kimi Code CLI 等本地 Agent。`-g` 表示安装到用户级目录，安装一次后可以在不同项目中使用。这个入口采用开源的 [Vercel Labs Skills CLI](https://github.com/vercel-labs/skills)，本仓库已完成仓库识别和项目级实际落盘验证。
+用户不需要打开终端，也不需要选择安装平台。收到口令的 Agent 会识别自己当前运行的平台，选择对应的全局 Skill 目录，完成非交互安装并报告真实安装位置和验证结果。Agent 的执行契约见 [INSTALL_FOR_AGENTS.md](INSTALL_FOR_AGENTS.md)。
 
-> 运行这条命令需要 Node.js 18 或更高版本。普通聊天网页没有本地文件和终端能力，不能完整安装或执行这套 Skill。
+> 这里指具备本地文件读写和命令执行能力的 **Kimi Code CLI** 等本地 Agent，不是普通 Kimi 聊天网页。普通网页聊天无法替用户修改电脑文件，不能完成安装。
 
 ### WorkBuddy
 
 打开 [GitHub Releases](https://github.com/luqi67677/produce-videos/releases/latest)，下载 `produce-videos-workbuddy.zip`，然后在“技能市场 → 添加技能 → 上传技能”中选择这个文件。
 
-### 让本地 AI 代你安装
+### Agent 内部怎样安装
 
-如果你不熟悉终端，也可以把下面这段话发给能够读取本地文件和运行命令的 AI：
+用户无需执行下面的命令。收到安装口令后，Agent 会按自己的平台在内部运行对应命令：
 
-```text
-请帮我安装并验证这个开源视频 Skill，不要覆盖我已经修改过的同名目录：
-https://github.com/luqi67677/produce-videos
+| 当前 Agent | 内部非交互安装命令 |
+|---|---|
+| Codex | `npx skills add luqi67677/produce-videos -g -a codex -y` |
+| Claude Code | `npx skills add luqi67677/produce-videos -g -a claude-code -y` |
+| Cursor | `npx skills add luqi67677/produce-videos -g -a cursor -y` |
+| Kimi Code CLI | `npx skills add luqi67677/produce-videos -g -a kimi-code-cli -y` |
 
-请优先使用 README 中的一行安装命令。安装后读取 SKILL.md，确认 scripts、references 和 assets 完整，运行仓库自带验证，并告诉我真实安装位置和结果。不能安装时请直接说明限制，不要假装安装成功。
-```
+这些命令使用开源的 [Vercel Labs Skills CLI](https://github.com/vercel-labs/skills)。`-g` 表示用户级安装，`-a` 明确当前 Agent，`-y` 跳过平台和范围选择。仓库已经对四个目标参数分别完成隔离落盘验证。
 
-> 这里的 Kimi 指 **Kimi Code CLI**，不是普通 Kimi 聊天网页。普通聊天产品如果不能读取本地文件、运行脚本和生成媒体文件，就不能完整执行这套 Skill。
+### 手动安装兜底
 
-### 手动安装
+只有当前 Agent 无法运行 `npx` 时，才由 Agent 自己按下面的位置下载或克隆完整仓库；不应先把这些步骤交给用户。
 
 | 平台 | 安装位置或入口 | 安装后调用 |
 |---|---|---|
 | Codex | `~/.codex/skills/produce-videos` | `$produce-videos` |
+| Claude Code | `~/.claude/skills/produce-videos` | `/produce-videos` 或直接描述任务 |
+| Cursor | `~/.cursor/skills/produce-videos` | 在 Agent 对话中直接描述任务 |
 | Kimi Code CLI | `~/.config/agents/skills/produce-videos` | `/skill:produce-videos` |
 | WorkBuddy | 技能市场中上传仓库生成的 ZIP | 在对话中直接描述视频任务 |
 
@@ -103,6 +107,10 @@ git clone https://github.com/luqi67677/produce-videos.git ~/.config/agents/skill
 ```
 
 重新打开 Kimi Code CLI 后输入 `/skill:produce-videos`。也可以直接描述视频任务，让 Agent 根据 Skill 描述自动发现。项目级安装可以放在 `.agents/skills/produce-videos`。
+
+#### Claude Code 与 Cursor
+
+无法运行 Skills CLI 时，Agent 分别把完整仓库克隆到 `~/.claude/skills/produce-videos` 或 `~/.cursor/skills/produce-videos`。安装完成后重新打开会话。
 
 #### WorkBuddy
 
@@ -166,7 +174,7 @@ python3 scripts/resume_project.py /path/to/video-project
 | 录屏段落 | 画面 | 需要说明的重点 |
 |---|---|---|
 | 1. 找到仓库 | GitHub 首页和 README 第一屏 | 这是一个开源的视频制作 Agent Skill |
-| 2. 安装 | 在终端运行 `npx skills add luqi67677/produce-videos -g` | 按提示选择本地 Agent，安装完成后重新打开会话 |
+| 2. 安装 | 把上面的统一安装口令直接发进当前 Agent 对话框 | Agent 自己识别平台、完成安装并报告验证结果；用户不打开终端、不选择平台 |
 | 3. 发起任务 | 输入“使用 produce-videos 帮我做一条视频”，同时展示已有素材 | 文字、PPT、截图、录屏、视频和音频都可以作为输入 |
 | 4. 开工信息 | Agent 一次询问平台、画幅、时长、内容和声音 | 先把基础需求说清楚，减少后面返工 |
 | 5. 内容方向 | 叙事契约、完整口播、真实素材联系表和三套视觉候选 | 用户确认内容与素材，并从真实样张中选择风格 |
