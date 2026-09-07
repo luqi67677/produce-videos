@@ -1,5 +1,11 @@
 # Changelog
 
+## V2.4.1 — 2026-09-07
+
+- 新增经 Vercel Labs Skills CLI 实际识别和落盘验证的一行安装命令，支持 Codex、Claude Code、Cursor、Kimi Code CLI 等本地 Agent。
+- 把 README 的安装入口改为“一条命令优先、WorkBuddy 上传包、AI 代装与手动安装兜底”，减少第一次安装的理解成本。
+- 在 README 与第三方 notices 中明确致谢 Zara Zhang 的 Frontend Slides 视觉模板和 dreamid27 扩展的 88 套布局，并区分上游资源与本 Skill 的视频化改造。
+
 ## V2.4.0 — 2026-09-06
 
 - 新增真实 0—2 秒开场、唯一核心张力、贯穿线与结尾兑现的叙事契约，禁止制造无证据冲突。

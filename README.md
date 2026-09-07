@@ -51,23 +51,31 @@ An open-source video-production workflow for local AI agents, from scripts and s
 
 ## 安装
 
-可以直接从 [GitHub Releases](https://github.com/luqi67677/produce-videos/releases/latest) 下载：通用 Agent 使用 `produce-videos.skill` 或 `produce-videos.zip`，WorkBuddy 使用 `produce-videos-workbuddy.zip`。给 Agent 的完整安装契约见 [INSTALL_FOR_AGENTS.md](INSTALL_FOR_AGENTS.md)。
+### 一条命令安装
 
-### 最简单的方式：把这段话复制给 AI
+在终端运行：
+
+```bash
+npx skills add luqi67677/produce-videos -g
+```
+
+安装器会找到仓库中的 `produce-videos`，再让你选择 Codex、Claude Code、Cursor、Kimi Code CLI 等本地 Agent。`-g` 表示安装到用户级目录，安装一次后可以在不同项目中使用。这个入口采用开源的 [Vercel Labs Skills CLI](https://github.com/vercel-labs/skills)，本仓库已完成仓库识别和项目级实际落盘验证。
+
+> 运行这条命令需要 Node.js 18 或更高版本。普通聊天网页没有本地文件和终端能力，不能完整安装或执行这套 Skill。
+
+### WorkBuddy
+
+打开 [GitHub Releases](https://github.com/luqi67677/produce-videos/releases/latest)，下载 `produce-videos-workbuddy.zip`，然后在“技能市场 → 添加技能 → 上传技能”中选择这个文件。
+
+### 让本地 AI 代你安装
+
+如果你不熟悉终端，也可以把下面这段话发给能够读取本地文件和运行命令的 AI：
 
 ```text
-请帮我安装并验证这个开源视频 Skill：
+请帮我安装并验证这个开源视频 Skill，不要覆盖我已经修改过的同名目录：
 https://github.com/luqi67677/produce-videos
 
-请先判断你当前运行的是 Codex、Kimi Code CLI、WorkBuddy，还是不具备本地文件和终端能力的普通聊天 AI，再按仓库 README 中对应的平台说明安装。不要覆盖已经存在且被修改过的同名目录。
-
-安装后请实际验证：
-1. 能读取 produce-videos/SKILL.md；
-2. 能看到 scripts、references 和 assets；
-3. 运行仓库自带的最小验证；
-4. 告诉我真实安装位置、验证结果，以及是否需要重启或重新打开会话。
-
-如果当前平台不能安装目录式 Skill，请明确说明限制和可行的手动导入方式，不要假装安装成功。安装阶段不要下载 TTS 模型，也不要调用任何付费服务。
+请优先使用 README 中的一行安装命令。安装后读取 SKILL.md，确认 scripts、references 和 assets 完整，运行仓库自带验证，并告诉我真实安装位置和结果。不能安装时请直接说明限制，不要假装安装成功。
 ```
 
 > 这里的 Kimi 指 **Kimi Code CLI**，不是普通 Kimi 聊天网页。普通聊天产品如果不能读取本地文件、运行脚本和生成媒体文件，就不能完整执行这套 Skill。
@@ -98,13 +106,7 @@ git clone https://github.com/luqi67677/produce-videos.git ~/.config/agents/skill
 
 #### WorkBuddy
 
-先下载仓库，在仓库目录生成上传包：
-
-```bash
-python3 scripts/package_workbuddy.py --output produce-videos-workbuddy.zip
-```
-
-然后打开“技能市场 → 添加技能 → 上传技能”，选择生成的 ZIP。打包器会把完整的 `SKILL.md`、`scripts`、`references` 和 `assets` 放入 WorkBuddy 要求的目录结构。
+从 [GitHub Releases](https://github.com/luqi67677/produce-videos/releases/latest) 下载 `produce-videos-workbuddy.zip`，然后打开“技能市场 → 添加技能 → 上传技能”。这个安装包已经包含完整的 `SKILL.md`、`scripts`、`references` 和 `assets`。
 
 #### 其他 Agent
 
@@ -164,7 +166,7 @@ python3 scripts/resume_project.py /path/to/video-project
 | 录屏段落 | 画面 | 需要说明的重点 |
 |---|---|---|
 | 1. 找到仓库 | GitHub 首页和 README 第一屏 | 这是一个开源的视频制作 Agent Skill |
-| 2. 安装 | 复制“请帮我安装并验证”整段口令到 Codex 或 Kimi Code CLI | 不需要手动研究目录，让 Agent 完成安装和验证 |
+| 2. 安装 | 在终端运行 `npx skills add luqi67677/produce-videos -g` | 按提示选择本地 Agent，安装完成后重新打开会话 |
 | 3. 发起任务 | 输入“使用 produce-videos 帮我做一条视频”，同时展示已有素材 | 文字、PPT、截图、录屏、视频和音频都可以作为输入 |
 | 4. 开工信息 | Agent 一次询问平台、画幅、时长、内容和声音 | 先把基础需求说清楚，减少后面返工 |
 | 5. 内容方向 | 叙事契约、完整口播、真实素材联系表和三套视觉候选 | 用户确认内容与素材，并从真实样张中选择风格 |
@@ -190,6 +192,8 @@ Skill 会优先使用用户已经拥有的音频能力。选择 TTS 时，会先
 ## 34 套视觉主题 + 88 套布局
 
 仓库包含 34 套视觉主题和 88 套结构化布局。主题决定颜色、字体、材质和动效语气；布局决定标题、截图、人物、图表和辅助信息放在哪里。用户没有指定视觉系统时，Skill 会评估全部 34 套主题并推荐三套真实候选；主题锁定后，每个镜头再按语义选择布局，避免临场乱摆元素。
+
+这部分排版能力参考并引入了 [Zara Zhang 的 Frontend Slides](https://github.com/zarazhangrui/frontend-slides) 视觉模板，以及 [dreamid27/frontend-slides](https://github.com/dreamid27/frontend-slides) 扩展的 88 套布局。Produce Videos 在此基础上增加了 3:4 竖屏适配、视频分镜、平台安全区、干净度限制和成片质量门。第三方许可证与固定来源见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 三套候选必须使用相同标题、相同代表内容、相同主视觉和目标画幅，并直接展示：
 

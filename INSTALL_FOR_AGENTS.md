@@ -5,17 +5,24 @@
 ## 优先方式
 
 1. 判断当前产品是否能读取本地文件、运行 Python/FFmpeg 并输出媒体文件。普通网页聊天若不具备这些能力，只说明限制，不假装安装成功。
-2. 优先下载 [最新 Release](https://github.com/luqi67677/produce-videos/releases/latest)：
+2. 对 Vercel Labs Skills CLI 已支持的本地 Agent，优先运行：
+
+   ```bash
+   npx skills add luqi67677/produce-videos -g
+   ```
+
+   按提示选择目标 Agent。安装器必须识别出唯一的 `produce-videos`，并安装完整目录；若目标机器没有 Node.js 18 或更高版本，再走下面的 Release 或手动安装路线。
+3. WorkBuddy 或无法运行 `npx` 的环境，从 [最新 Release](https://github.com/luqi67677/produce-videos/releases/latest) 下载：
    - 通用 Agent：`produce-videos.skill` 或 `produce-videos.zip`；
    - WorkBuddy：`produce-videos-workbuddy.zip`。
-3. Release 同时提供 `SHA256SUMS.txt` 时，下载后先核对安装包哈希；校验失败不得继续安装。
-4. 没有 Release 下载能力时，克隆完整仓库。
-5. 把完整目录放到平台 Skills 目录；不能只复制 `SKILL.md`。
+4. Release 同时提供 `SHA256SUMS.txt` 时，下载后先核对安装包哈希；校验失败不得继续安装。
+5. 没有 Skills CLI 和 Release 下载能力时，克隆完整仓库。
+6. 手动安装时把完整目录放到平台 Skills 目录；不能只复制 `SKILL.md`。
 
 常见位置：
 
 - Codex：`~/.codex/skills/produce-videos`
-- Kimi Code CLI / 通用 Agents：`~/.config/agents/skills/produce-videos` 或项目 `.agents/skills/produce-videos`
+- Kimi Code CLI / 通用 Agents：`~/.agents/skills/produce-videos`、`~/.config/agents/skills/produce-videos` 或项目 `.agents/skills/produce-videos`
 - Claude Code：`~/.claude/skills/produce-videos`
 - Cursor：`~/.cursor/skills/produce-videos`
 - WorkBuddy：上传专用 ZIP

@@ -23,6 +23,7 @@ class AgentCompatibilityTests(unittest.TestCase):
 
     def test_readme_has_copyable_install_prompt_and_platform_routes(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("npx skills add luqi67677/produce-videos -g", readme)
         self.assertIn("请帮我安装并验证这个开源视频 Skill", readme)
         self.assertIn("Kimi Code CLI", readme)
         self.assertIn("WorkBuddy", readme)
@@ -32,15 +33,22 @@ class AgentCompatibilityTests(unittest.TestCase):
         self.assertIn("34 套视觉主题和 88 套结构化布局", readme)
         self.assertIn("scripts/doctor.py", readme)
         self.assertIn("scripts/resume_project.py", readme)
+        self.assertIn("Zara Zhang 的 Frontend Slides", readme)
 
-    def test_skill_declares_v240_and_creative_foundation_contract(self) -> None:
+    def test_skill_declares_v241_and_creative_foundation_contract(self) -> None:
         content = (ROOT / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("V2.4.0", content)
+        self.assertIn("V2.4.1", content)
         self.assertIn("每个 B-roll 必须填写 `covers`", content)
         self.assertIn("edit-decision-list.json", content)
         self.assertIn("story-contract.json", content)
         self.assertIn("character-profile.json", content)
         self.assertIn("platform-overlay-profiles.json", content)
+
+    def test_third_party_notices_credit_frontend_slides_sources(self) -> None:
+        notices = (ROOT / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
+        self.assertIn("Zara Zhang", notices)
+        self.assertIn("zarazhangrui/frontend-slides", notices)
+        self.assertIn("dreamid27/frontend-slides", notices)
 
     def test_workbuddy_package_has_required_schema_and_resources(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
