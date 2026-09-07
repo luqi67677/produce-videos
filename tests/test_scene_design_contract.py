@@ -72,6 +72,31 @@ class SceneDesignContractTests(unittest.TestCase):
         scene["visual_source_strategy"]["video_model_used"] = True
         self.assertTrue(any("视频生成模型" in error for error in validate_scene_design(scene, "s01")))
 
+    def test_v25_narrative_continuity_passes(self) -> None:
+        scene = valid_scene()
+        scene["narrative_function"] = "用产品结果推进核心问题"
+        scene["continuity"] = {
+            "entering_state": "观众刚听到结果主张",
+            "leaving_state": "观众已经看到产品证据",
+            "anchor": "同一产品和同一句旁白",
+            "advances_story": True,
+            "returns_to_main_axis": True,
+        }
+        self.assertEqual(validate_scene_design(scene, "s01", "2.5"), [])
+
+    def test_v25_broll_must_return_to_main_axis(self) -> None:
+        scene = valid_scene()
+        scene["narrative_function"] = "补充证据"
+        scene["continuity"] = {
+            "entering_state": "切入结果证据",
+            "leaving_state": "证据完成",
+            "anchor": "同一产品",
+            "advances_story": True,
+            "returns_to_main_axis": False,
+        }
+        errors = validate_scene_design(scene, "s01", "2.5")
+        self.assertTrue(any("主叙事轴" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

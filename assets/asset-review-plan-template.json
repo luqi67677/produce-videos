@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "workflow_mode": "standard",
+  "review_mode": "merged-blueprint",
+  "risk_flags": [],
+  "risk_reason": "",
+  "raw_asset_count": 0,
+  "raw_asset_contact_sheet": {
+    "path": "review/raw-assets-contact-sheet.png",
+    "sha256": "",
+    "machine_checked": false
+  },
+  "identity_anchor_review": {
+    "required": false,
+    "paths": [],
+    "approved": false
+  },
+  "user_review": {
+    "required_before_storyboard": false,
+    "approved": false,
+    "approval_stage": "assets"
+  }
+}

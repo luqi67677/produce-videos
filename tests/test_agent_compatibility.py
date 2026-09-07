@@ -33,11 +33,14 @@ class AgentCompatibilityTests(unittest.TestCase):
         self.assertIn("scripts/doctor.py", readme)
         self.assertIn("scripts/resume_project.py", readme)
 
-    def test_skill_declares_v230_and_new_director_contract(self) -> None:
+    def test_skill_declares_v240_and_creative_foundation_contract(self) -> None:
         content = (ROOT / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("V2.3.0", content)
+        self.assertIn("V2.4.0", content)
         self.assertIn("每个 B-roll 必须填写 `covers`", content)
         self.assertIn("edit-decision-list.json", content)
+        self.assertIn("story-contract.json", content)
+        self.assertIn("character-profile.json", content)
+        self.assertIn("platform-overlay-profiles.json", content)
 
     def test_workbuddy_package_has_required_schema_and_resources(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -52,6 +55,9 @@ class AgentCompatibilityTests(unittest.TestCase):
                 self.assertTrue(any(name.startswith("skills/produce-videos/scripts/") for name in names))
                 self.assertTrue(any(name.startswith("skills/produce-videos/references/") for name in names))
                 self.assertTrue(any(name.startswith("skills/produce-videos/assets/") for name in names))
+                self.assertIn("skills/produce-videos/examples/README.md", names)
+                self.assertTrue(any(name.startswith("skills/produce-videos/examples/thumbnails/") for name in names))
+                self.assertFalse(any("examples/videos/" in name for name in names))
                 self.assertFalse(any("/.git/" in name for name in names))
 
                 content = archive.read(skill_path).decode("utf-8")

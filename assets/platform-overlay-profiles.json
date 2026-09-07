@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "notice": "Conservative review defaults, not official platform specifications. A recent user-provided screenshot may override them inside the current project.",
+  "profiles": {
+    "generic-portrait": {
+      "format": "portrait",
+      "aspect_ratio": "3:4",
+      "safe_area_pixels": {"left": 64, "right": 64, "top": 144, "bottom": 240},
+      "occlusion_ratio": {"left": 0.0, "right": 0.0, "top": 0.0, "bottom": 0.0},
+      "review_overlay_required": false,
+      "overlay_layers": []
+    },
+    "douyin-portrait": {
+      "format": "portrait",
+      "aspect_ratio": "3:4",
+      "safe_area_pixels": {"left": 76, "right": 173, "top": 173, "bottom": 346},
+      "occlusion_ratio": {"left": 0.0, "right": 0.16, "top": 0.12, "bottom": 0.24},
+      "review_overlay_required": true,
+      "overlay_layers": ["top-navigation", "right-actions", "bottom-account-caption-search"]
+    },
+    "generic-landscape": {
+      "format": "landscape",
+      "aspect_ratio": "16:9",
+      "safe_area_pixels": {"left": 120, "right": 120, "top": 90, "bottom": 180},
+      "occlusion_ratio": {"left": 0.0, "right": 0.0, "top": 0.0, "bottom": 0.0},
+      "review_overlay_required": false,
+      "overlay_layers": []
+    }
+  }
+}

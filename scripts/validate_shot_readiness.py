@@ -29,6 +29,8 @@ VALID_VISUAL_SOURCES = {"user-provided", "official", "verified-keyframe", "gener
 VISUAL_SOURCE_ORDER = ["user-provided", "official", "verified-keyframe", "generated-still", "code-motion", "text-only"]
 VALID_TRANSITIONS = {"none", "hard-cut", "match-cut", "insert-cut", "graphic-bridge"}
 VALID_LAYOUT_ADAPTATIONS = {"native-landscape", "portrait-reflow", "custom-verified"}
+VALID_MEMORY_MODES = {"disabled", "project-only", "workspace-opt-in"}
+VALID_PLATFORM_CALIBRATION_SOURCES = {"bundled-conservative-default", "user-recent-screenshot"}
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$", re.IGNORECASE)
 
 
@@ -61,7 +63,7 @@ def canonical_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def validate_scene_design(scene: dict[str, Any], label: str) -> list[str]:
+def validate_scene_design(scene: dict[str, Any], label: str, schema_version: str = "2.4") -> list[str]:
     errors: list[str] = []
     roll = scene.get("roll")
     if not isinstance(roll, dict) or roll.get("type") not in VALID_ROLL_TYPES:
@@ -132,7 +134,40 @@ def validate_scene_design(scene: dict[str, Any], label: str) -> list[str]:
             errors.append(f"{label}.composition_budget.largest_empty_area_ratio 必须在 0—1 之间")
         elif empty > 0.42 and not nonempty_text(budget.get("intentional_whitespace_reason")):
             errors.append(f"{label} 存在大面积空白，但没有说明其构图职责")
+    if schema_version == "2.5":
+        if not nonempty_text(scene.get("narrative_function")):
+            errors.append(f"{label} 缺少 narrative_function")
+        continuity = scene.get("continuity")
+        if not isinstance(continuity, dict):
+            errors.append(f"{label}.continuity 必须为对象")
+        else:
+            for field in ("entering_state", "leaving_state", "anchor"):
+                if not nonempty_text(continuity.get(field)):
+                    errors.append(f"{label}.continuity 缺少 {field}")
+            if continuity.get("advances_story") is not True:
+                errors.append(f"{label} 没有证明本镜头推进了叙事")
+            if isinstance(roll, dict) and roll.get("type") in {"b-roll", "hybrid"} and continuity.get("returns_to_main_axis") is not True:
+                errors.append(f"{label} 的 B-roll 没有回到主叙事轴")
     return errors
+
+
+def validate_artifact_binding(contract_path: Path, binding: Any, label: str) -> tuple[Path | None, list[str]]:
+    errors: list[str] = []
+    if not isinstance(binding, dict):
+        return None, [f"缺少 {label}"]
+    target = resolve_path(contract_path, binding.get("path"))
+    if target is None or not target.is_file():
+        errors.append(f"{label} 指向的文件不存在或不可读取")
+    else:
+        project_root = contract_path.parent.resolve()
+        if target != project_root and project_root not in target.parents:
+            errors.append(f"{label} 必须位于当前视频项目内")
+        expected = str(binding.get("sha256", "")).strip()
+        if not SHA256_PATTERN.fullmatch(expected) or file_sha256(target).casefold() != expected.casefold():
+            errors.append(f"{label} SHA-256 与实际文件不一致")
+    if binding.get("approved") is not True:
+        errors.append(f"{label} 尚未批准")
+    return target, errors
 
 
 def validate(path: Path, narration_contract_path: Path | None = None) -> list[str]:
@@ -187,6 +222,123 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
         errors.append("缺少已锁定的 theme_id")
     if data.get("human_presence") not in VALID_HUMAN_PRESENCE:
         errors.append("human_presence 取值无效")
+
+    schema_version = data.get("schema_version")
+    character_ids: set[str] = set()
+    if schema_version == "2.5":
+        _, binding_errors = validate_artifact_binding(path, data.get("story_binding"), "story_binding")
+        errors.extend(binding_errors)
+        _, binding_errors = validate_artifact_binding(path, data.get("asset_review_binding"), "asset_review_binding")
+        errors.extend(binding_errors)
+
+        memory = data.get("memory_binding")
+        if not isinstance(memory, dict) or memory.get("mode") not in VALID_MEMORY_MODES:
+            errors.append("memory_binding.mode 必须为 disabled、project-only 或 workspace-opt-in")
+        else:
+            applied = text_list(memory.get("applied_memory_ids"))
+            if applied is None:
+                errors.append("memory_binding.applied_memory_ids 必须为字符串数组")
+                applied = []
+            if memory.get("mode") == "disabled":
+                if nonempty_text(memory.get("path")) or nonempty_text(memory.get("sha256")) or applied:
+                    errors.append("关闭创作记忆时不得绑定路径、哈希或历史规则")
+                if memory.get("reuse_approved") is not False:
+                    errors.append("关闭创作记忆时 reuse_approved 必须为 false")
+            else:
+                memory_path = resolve_path(path, memory.get("path"))
+                if memory_path is None or not memory_path.is_file():
+                    errors.append("memory_binding 指向的创作记忆不存在")
+                else:
+                    expected = str(memory.get("sha256", "")).strip()
+                    if not SHA256_PATTERN.fullmatch(expected) or file_sha256(memory_path).casefold() != expected.casefold():
+                        errors.append("memory_binding SHA-256 与实际记忆不一致")
+                    project_root = path.parent.resolve()
+                    if memory.get("mode") == "project-only" and memory_path != project_root and project_root not in memory_path.parents:
+                        errors.append("project-only 创作记忆必须位于当前视频项目内")
+                if memory.get("mode") == "workspace-opt-in" and memory.get("reuse_approved") is not True:
+                    errors.append("跨项目创作记忆尚未获得用户授权")
+
+        platform_overlay = data.get("platform_overlay")
+        profiles_path = Path(__file__).resolve().parents[1] / "assets/platform-overlay-profiles.json"
+        try:
+            profiles = json.loads(profiles_path.read_text(encoding="utf-8")).get("profiles", {})
+        except (OSError, json.JSONDecodeError):
+            profiles = {}
+        if not isinstance(platform_overlay, dict):
+            errors.append("缺少 platform_overlay 平台遮挡审查")
+        else:
+            profile_id = str(platform_overlay.get("profile_id", "")).strip()
+            profile = profiles.get(profile_id) if isinstance(profiles, dict) else None
+            if not isinstance(profile, dict):
+                errors.append("platform_overlay.profile_id 不在平台安全区目录中")
+            elif profile.get("format") != data.get("format"):
+                errors.append("平台安全区与当前画幅不一致")
+            calibration_source = platform_overlay.get("calibration_source")
+            if calibration_source not in VALID_PLATFORM_CALIBRATION_SOURCES:
+                errors.append("platform_overlay.calibration_source 无效")
+            screenshot_calibration = calibration_source == "user-recent-screenshot"
+            override = platform_overlay.get("occlusion_ratio_override")
+            if override is None:
+                override = {}
+            if not isinstance(override, dict):
+                errors.append("platform_overlay.occlusion_ratio_override 必须为对象")
+                override = {}
+            if screenshot_calibration:
+                evidence_path = resolve_path(path, platform_overlay.get("calibration_evidence_path"))
+                project_root = path.parent.resolve()
+                if evidence_path is None or not evidence_path.is_file() or evidence_path.stat().st_size == 0:
+                    errors.append("使用近期平台截图校准时必须绑定真实截图证据")
+                elif evidence_path != project_root and project_root not in evidence_path.parents:
+                    errors.append("平台校准截图必须整理到当前视频项目内")
+                for side in ("left", "right", "top", "bottom"):
+                    value = override.get(side)
+                    if not isinstance(value, (int, float)) or isinstance(value, bool) or not 0 <= float(value) <= 0.4:
+                        errors.append(f"platform_overlay.occlusion_ratio_override.{side} 必须在 0—0.4 之间")
+            elif override:
+                errors.append("内置保守配置不得静默附加项目覆盖值")
+            overlay_required = isinstance(profile, dict) and profile.get("review_overlay_required") is True
+            if overlay_required or screenshot_calibration:
+                overlay_path = resolve_path(path, platform_overlay.get("review_overlay_path"))
+                if overlay_path is None or not overlay_path.is_file() or overlay_path.stat().st_size == 0:
+                    errors.append("当前平台必须生成可关闭的 UI 遮挡审查图")
+            if platform_overlay.get("review_only") is not True:
+                errors.append("平台 UI 遮挡层只能用于审查，不得进入成片")
+            if platform_overlay.get("safe_without_overlay") is not True:
+                errors.append("关闭平台遮挡层后，成片本身仍未通过安全区检查")
+
+        registry = data.get("character_profiles")
+        if not isinstance(registry, list):
+            errors.append("character_profiles 必须为数组")
+            registry = []
+        for index, item in enumerate(registry):
+            label = f"character_profiles[{index}]"
+            if not isinstance(item, dict):
+                errors.append(f"{label} 必须为对象")
+                continue
+            character_id = str(item.get("character_id", "")).strip()
+            if not character_id:
+                errors.append(f"{label} 缺少唯一 character_id")
+            elif character_id in character_ids:
+                errors.append(f"{label} 缺少唯一 character_id")
+            else:
+                character_ids.add(character_id)
+            profile_path = resolve_path(path, item.get("path"))
+            if profile_path is None or not profile_path.is_file():
+                errors.append(f"{label} 指向的人物档案不存在")
+                continue
+            if path.parent.resolve() not in profile_path.parents:
+                errors.append(f"{label} 必须位于当前视频项目内")
+            expected = str(item.get("sha256", "")).strip()
+            if not SHA256_PATTERN.fullmatch(expected) or file_sha256(profile_path).casefold() != expected.casefold():
+                errors.append(f"{label} SHA-256 与实际档案不一致")
+            try:
+                profile_data = json.loads(profile_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                profile_data = {}
+            if profile_data.get("character_id") != character_id or profile_data.get("status") != "locked":
+                errors.append(f"{label} 的人物 ID 不一致或尚未锁定")
+        if data.get("human_presence") in {"supplied-character", "generated-scene-illustration"} and not character_ids:
+            errors.append("反复使用人物或生成角色时必须锁定 character profile")
 
     privacy_targets = data.get("privacy_targets")
     privacy_by_id: dict[str, dict[str, Any]] = {}
@@ -279,8 +431,8 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
             scene_records[scene_id] = scene
         label = scene_id or label
 
-        if data.get("schema_version") == "2.4":
-            errors.extend(validate_scene_design(scene, label))
+        if data.get("schema_version") in {"2.4", "2.5"}:
+            errors.extend(validate_scene_design(scene, label, str(data.get("schema_version"))))
 
         duration = scene.get("duration_seconds")
         if not isinstance(duration, (int, float)) or duration <= 0:
@@ -459,7 +611,7 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
             ):
                 if layout_review.get(field) is not True:
                     errors.append(f"{label}.layout_review.{field} 尚未通过")
-            if data.get("schema_version") == "2.4":
+            if data.get("schema_version") in {"2.4", "2.5"}:
                 for field in (
                     "single_focal_point",
                     "balanced_density",
@@ -581,6 +733,29 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
             for field in ("anatomy_safe", "edge_safe"):
                 if interaction.get(field) is not True:
                     errors.append(f"{label} 的主体交互 {field} 未通过")
+
+        if schema_version == "2.5":
+            scene_character_ids = text_list(scene.get("character_ids"))
+            if scene_character_ids is None:
+                errors.append(f"{label}.character_ids 必须为字符串数组")
+                scene_character_ids = []
+            unknown_characters = set(scene_character_ids) - character_ids
+            if unknown_characters:
+                errors.append(f"{label} 引用了未锁定人物：{', '.join(sorted(unknown_characters))}")
+            if isinstance(interaction, dict) and interaction.get("required") is True and data.get("human_presence") in {"supplied-character", "generated-scene-illustration"} and not scene_character_ids:
+                errors.append(f"{label} 有人物交互但未绑定 character_id")
+            continuity_review = scene.get("character_continuity_review")
+            if scene_character_ids:
+                if not isinstance(continuity_review, dict):
+                    errors.append(f"{label} 缺少 character_continuity_review")
+                else:
+                    for field in ("identity_verified", "style_consistent"):
+                        if continuity_review.get(field) is not True:
+                            errors.append(f"{label}.character_continuity_review.{field} 尚未通过")
+                    if continuity_review.get("unexplained_changes") is not False:
+                        errors.append(f"{label} 的人物存在未解释的换脸、换衣或画风变化")
+            if scene.get("platform_safe") is not True:
+                errors.append(f"{label} 尚未通过平台 UI 遮挡安全检查")
 
         symbols = scene.get("semantic_symbols")
         if not isinstance(symbols, list):

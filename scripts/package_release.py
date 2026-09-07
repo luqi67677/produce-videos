@@ -11,7 +11,7 @@ from pathlib import Path
 from package_workbuddy import build_package as build_workbuddy
 
 
-SKIP_PARTS = {".git", "dist", "examples", "__pycache__", ".pytest_cache"}
+SKIP_PARTS = {".git", "dist", "__pycache__", ".pytest_cache"}
 SKIP_NAMES = {".DS_Store"}
 
 
@@ -20,6 +20,7 @@ def included_files(root: Path) -> list[Path]:
         path for path in sorted(root.rglob("*"))
         if path.is_file() and not path.is_symlink()
         and not any(part in SKIP_PARTS for part in path.relative_to(root).parts)
+        and path.relative_to(root).parts[:2] != ("examples", "videos")
         and path.name not in SKIP_NAMES and path.suffix != ".pyc"
     ]
 

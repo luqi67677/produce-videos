@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "scope_id": "",
+  "storage_scope": "project-only",
+  "consent": {
+    "reuse_across_projects": false,
+    "store_relative_asset_references": false,
+    "store_voice_or_person_identity_references": false
+  },
+  "preferences": [
+    {
+      "memory_id": "memory-001",
+      "category": "visual",
+      "rule": "",
+      "status": "candidate",
+      "user_confirmed_for_future": false,
+      "evidence": [
+        {
+          "project_id": "",
+          "artifact_sha256": "",
+          "user_feedback": "",
+          "approved": false
+        }
+      ]
+    }
+  ],
+  "retired_memory_ids": [],
+  "updated_at": ""
+}

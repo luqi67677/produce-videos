@@ -1,16 +1,25 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
+  "workflow_mode": "standard",
   "watermark_required": false,
   "required_grammars": [],
   "samples": [
     {
       "sample_id": "motion-01",
       "path": "",
+      "proof_kind": "micro-sample",
+      "representative": true,
       "grammars": [],
       "uses_final_audio": true,
+      "uses_locked_storyboard": true,
       "single_subtitle_layer": true,
       "watermark_included": false,
-      "visual_coverage_verified": true
+      "visual_coverage_verified": true,
+      "character_continuity_verified": true,
+      "platform_safe": true,
+      "machine_reviewed": false,
+      "user_review_required": false,
+      "user_reviewed": false
     }
   ]
 }

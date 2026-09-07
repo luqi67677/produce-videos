@@ -9,7 +9,7 @@ import zipfile
 from pathlib import Path
 
 
-SKIP_PARTS = {".git", "dist", "examples", "__pycache__", ".pytest_cache"}
+SKIP_PARTS = {".git", "dist", "__pycache__", ".pytest_cache"}
 SKIP_NAMES = {".DS_Store"}
 
 
@@ -47,6 +47,8 @@ def should_skip(path: Path, output: Path) -> bool:
     if path.resolve() == output.resolve():
         return True
     if any(part in SKIP_PARTS for part in path.parts):
+        return True
+    if "examples" in path.parts and "videos" in path.parts:
         return True
     return path.name in SKIP_NAMES or path.suffix == ".pyc"
 

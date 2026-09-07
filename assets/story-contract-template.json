@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "content_mode": "short-social",
+  "opening": {
+    "strategy": "result",
+    "promise": "",
+    "visible_evidence": "",
+    "evidence_by_seconds": 2.0,
+    "truth_basis": "",
+    "conflict_source": "not-required"
+  },
+  "central_tension": {
+    "starting_state": "",
+    "friction": "",
+    "key_action": "",
+    "evidence": "",
+    "changed_state": "",
+    "single_main_tension": true,
+    "manufactured_conflict": false
+  },
+  "throughline": {
+    "type": "object",
+    "anchor": "",
+    "setup_scene_id": "",
+    "development_scene_ids": [],
+    "payoff_scene_id": ""
+  },
+  "ending": {
+    "resolves_opening": true,
+    "result_evidence": "",
+    "cta": "",
+    "cta_supports_story": true
+  },
+  "continuity_checks": {
+    "every_scene_advances": false,
+    "broll_returns_to_axis": false,
+    "opening_and_ending_match": false
+  }
+}

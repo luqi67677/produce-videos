@@ -25,6 +25,8 @@ AUDIO_SOURCES = {
 TTS_SOURCES = {"tts-api", "local-tts-model", "qwen-open-source"}
 STILL_POLICIES = {"user-assets-only", "allow-generated-stills"}
 PENDING = {"", "pending", "待提供", "待确认", "未选择"}
+MEMORY_MODES = {"disabled", "project-only", "workspace-opt-in"}
+CHARACTER_MODES = {"none", "user-defined", "to-define"}
 
 
 def parse_fields(path: Path) -> dict[str, str]:
@@ -118,6 +120,34 @@ def validate(path: Path, require_approved: bool = False) -> list[str]:
 
     if require_approved and fields.get("开工信息确认") not in {"approved", "covered-by-user-message"}:
         errors.append("开工信息尚未获得用户确认")
+
+    platform_profile = fields.get("平台遮挡配置")
+    if platform_profile is not None and not is_ready(platform_profile):
+        errors.append("开工信息缺少平台遮挡配置")
+
+    memory_mode = fields.get("创作记忆模式")
+    if memory_mode is not None:
+        if memory_mode not in MEMORY_MODES:
+            errors.append("创作记忆模式必须为 disabled、project-only 或 workspace-opt-in")
+        memory_path = fields.get("创作记忆路径", "")
+        memory_approval = fields.get("跨项目记忆授权", "")
+        if memory_mode == "disabled":
+            if memory_path != "not-required" or memory_approval != "not-required":
+                errors.append("关闭创作记忆时，路径和跨项目授权必须为 not-required")
+        elif not is_ready(memory_path) or memory_path == "not-required":
+            errors.append("启用创作记忆时必须记录项目或用户指定的工作区路径")
+        elif memory_mode == "workspace-opt-in" and memory_approval != "approved":
+            errors.append("跨项目创作记忆必须获得用户明确授权")
+
+    character_mode = fields.get("重复人物或角色")
+    if character_mode is not None:
+        if character_mode not in CHARACTER_MODES:
+            errors.append("重复人物或角色必须为 none、user-defined 或 to-define")
+        character_input = fields.get("人物定义输入", "")
+        if character_mode == "none" and character_input != "not-required":
+            errors.append("不使用重复人物时，人物定义输入必须为 not-required")
+        if character_mode == "user-defined" and (not is_ready(character_input) or character_input == "not-required"):
+            errors.append("用户自定义人物时必须提供描述与授权参考素材")
     return errors
 
 

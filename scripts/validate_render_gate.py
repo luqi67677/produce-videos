@@ -21,6 +21,7 @@ from validate_source_assets import validate as validate_source_assets
 from validate_style_options import validate as validate_style_options
 from validate_theme_catalog import validate as validate_theme_catalog
 from validate_video_theme import validate as validate_video_theme
+from validate_creative_foundation import validate_project as validate_creative_foundation
 
 
 SAMPLE_STAGES = ("script", "source-assets", "assets", "storyboard")
@@ -46,6 +47,11 @@ def storyboard_review_files(project: Path) -> list[Path]:
     shot_path = project / "shot-readiness.json"
     required = [shot_path]
     shot_data = load_object(shot_path)
+    platform_overlay = shot_data.get("platform_overlay")
+    if isinstance(platform_overlay, dict):
+        overlay = resolve_project_path(project, platform_overlay.get("review_overlay_path"))
+        if overlay is not None:
+            required.append(overlay)
     for scene in shot_data.get("scenes", []):
         if not isinstance(scene, dict):
             continue
@@ -73,6 +79,33 @@ def storyboard_review_files(project: Path) -> list[Path]:
             resolved = resolve_project_path(project, artifact.get("path"))
             if resolved is not None:
                 required.append(resolved)
+    return list(dict.fromkeys(required))
+
+
+def asset_review_files(project: Path) -> list[Path]:
+    required = [project / "asset-manifest.md"]
+    plan_path = project / "asset-review-plan.json"
+    if plan_path.is_file():
+        required.append(plan_path)
+        plan = load_object(plan_path)
+        contact = plan.get("raw_asset_contact_sheet")
+        if isinstance(contact, dict):
+            resolved = resolve_project_path(project, contact.get("path"))
+            if resolved is not None:
+                required.append(resolved)
+        identity = plan.get("identity_anchor_review")
+        if isinstance(identity, dict):
+            for value in identity.get("paths", []):
+                resolved = resolve_project_path(project, value)
+                if resolved is not None:
+                    required.append(resolved)
+    shot = load_object(project / "shot-readiness.json")
+    for item in shot.get("character_profiles", []):
+        if not isinstance(item, dict):
+            continue
+        resolved = resolve_project_path(project, item.get("path"))
+        if resolved is not None:
+            required.append(resolved)
     return list(dict.fromkeys(required))
 
 
@@ -113,10 +146,14 @@ def main() -> int:
 
     stages = SAMPLE_STAGES if args.mode == "sample" else FULL_STAGES
     errors: list[str] = []
+    shot_data = load_object(project / "shot-readiness.json")
+    script_files = [project / "master-script.json"]
+    if shot_data.get("schema_version") == "2.5":
+        script_files.append(project / "story-contract.json")
     required_review_files = {
-        "script": [project / "master-script.json"],
+        "script": script_files,
         "source-assets": source_asset_review_files(project / "source-assets.json"),
-        "assets": [project / "asset-manifest.md"],
+        "assets": asset_review_files(project),
         "storyboard": storyboard_review_files(project),
         "motion": motion_review_files(project),
     }
@@ -135,6 +172,10 @@ def main() -> int:
     for name, contract, validator in contracts:
         for error in validator(contract):
             errors.append(f"{name}: {error}")
+
+    if shot_data.get("schema_version") == "2.5":
+        for error in validate_creative_foundation(project):
+            errors.append(f"creative-foundation: {error}")
 
     skill_root = Path(__file__).resolve().parent.parent
     catalog = skill_root / "references/frontend-slides-themes/bold-template-pack/selection-index.json"

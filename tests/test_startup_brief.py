@@ -17,7 +17,13 @@ def write_brief(root: Path, **values: str) -> Path:
     defaults = {
         "视频模式": "portrait",
         "发布平台": "抖音",
+        "平台遮挡配置": "douyin-portrait",
         "目标时长": "60 秒以内",
+        "创作记忆模式": "disabled",
+        "创作记忆路径": "not-required",
+        "跨项目记忆授权": "not-required",
+        "重复人物或角色": "none",
+        "人物定义输入": "not-required",
         "口播内容来源代码": "approved-script",
         "口播输入": "本轮用户消息",
         "最终声音来源代码": "recorded-audio",
@@ -120,6 +126,26 @@ class StartupBriefTests(unittest.TestCase):
                 },
             )
             self.assertEqual(validate(brief, True), [])
+
+    def test_workspace_memory_requires_explicit_authorization(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            brief = write_brief(
+                Path(temp_dir),
+                **{
+                    "创作记忆模式": "workspace-opt-in",
+                    "创作记忆路径": "/workspace/video-memory.json",
+                    "跨项目记忆授权": "pending",
+                },
+            )
+            self.assertTrue(any("跨项目" in error for error in validate(brief, True)))
+
+    def test_user_defined_character_requires_input(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            brief = write_brief(
+                Path(temp_dir),
+                **{"重复人物或角色": "user-defined", "人物定义输入": "待提供"},
+            )
+            self.assertTrue(any("人物" in error for error in validate(brief, True)))
 
 
 if __name__ == "__main__":

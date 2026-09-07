@@ -21,7 +21,10 @@
         "directly_presented": false,
         "fallback_path": ""
       },
-      "reviewed_files": [{"path": "master-script.json", "sha256": ""}]
+      "reviewed_files": [
+        {"path": "master-script.json", "sha256": ""},
+        {"path": "story-contract.json", "sha256": ""}
+      ]
     },
     "source-assets": {
       "review_package": "content-direction",
@@ -41,7 +44,10 @@
         "directly_presented": false,
         "fallback_path": "source-assets.json"
       },
-      "reviewed_files": []
+      "reviewed_files": [
+        {"path": "source-assets.json", "sha256": ""},
+        {"path": "source-assets-contact-sheet.png", "sha256": ""}
+      ]
     },
     "assets": {
       "review_package": "production-blueprint",
@@ -61,7 +67,11 @@
         "directly_presented": false,
         "fallback_path": "asset-manifest.md"
       },
-      "reviewed_files": []
+      "reviewed_files": [
+        {"path": "asset-manifest.md", "sha256": ""},
+        {"path": "asset-review-plan.json", "sha256": ""},
+        {"path": "storyboard/contact-sheet.png", "sha256": ""}
+      ]
     },
     "storyboard": {
       "review_package": "production-blueprint",
@@ -81,7 +91,10 @@
         "directly_presented": false,
         "fallback_path": "shot-readiness.json"
       },
-      "reviewed_files": []
+      "reviewed_files": [
+        {"path": "shot-readiness.json", "sha256": ""},
+        {"path": "storyboard/contact-sheet.png", "sha256": ""}
+      ]
     },
     "motion": {
       "review_package": "final-preview",
@@ -101,7 +114,11 @@
         "directly_presented": false,
         "fallback_path": "preview/contact-sheet.png"
       },
-      "reviewed_files": []
+      "reviewed_files": [
+        {"path": "motion-coverage.json", "sha256": ""},
+        {"path": "preview/video-preview.mp4", "sha256": ""},
+        {"path": "preview/contact-sheet.png", "sha256": ""}
+      ]
     }
   }
 }

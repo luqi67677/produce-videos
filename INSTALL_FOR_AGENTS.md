@@ -8,8 +8,9 @@
 2. 优先下载 [最新 Release](https://github.com/luqi67677/produce-videos/releases/latest)：
    - 通用 Agent：`produce-videos.skill` 或 `produce-videos.zip`；
    - WorkBuddy：`produce-videos-workbuddy.zip`。
-3. 没有 Release 下载能力时，克隆完整仓库。
-4. 把完整目录放到平台 Skills 目录；不能只复制 `SKILL.md`。
+3. Release 同时提供 `SHA256SUMS.txt` 时，下载后先核对安装包哈希；校验失败不得继续安装。
+4. 没有 Release 下载能力时，克隆完整仓库。
+5. 把完整目录放到平台 Skills 目录；不能只复制 `SKILL.md`。
 
 常见位置：
 
@@ -28,13 +29,15 @@ python3 scripts/doctor.py --skip-model-scan
 python3 -m unittest discover -s tests -v
 python3 scripts/validate_theme_catalog.py references/frontend-slides-themes/bold-template-pack/selection-index.json
 python3 scripts/validate_layout_catalog.py
+python3 scripts/scan_release.py
 ```
 
 然后读回并报告：
 
 - `SKILL.md` 是否存在；
-- `scripts`、`references`、`assets` 是否完整；
+- `scripts`、`references`、`assets` 是否完整，并且包含声音发现、断点续作、平台遮挡、人物一致性和质量门禁所需文件；
 - 34 套主题、88 套布局和测试是否通过；
+- 开源边界扫描是否通过；
 - 实际安装位置；
 - 当前能做完整成片、只能做部分阶段，还是缺少 FFmpeg/渲染环境。
 

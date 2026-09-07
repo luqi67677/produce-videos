@@ -11,6 +11,10 @@ from pathlib import Path
 from typing import Any
 
 
+VALID_WORKFLOW_MODES = {"fast", "standard", "high-risk"}
+VALID_PROOF_KINDS = {"micro-sample", "full-preview"}
+
+
 def nonempty_text(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
@@ -63,6 +67,12 @@ def validate(path: Path) -> list[str]:
         return [f"动态样片覆盖表无法解析：{exc}"]
 
     errors: list[str] = []
+    schema_version = data.get("schema_version")
+    if schema_version not in {"1.0", "1.1", "1.2"}:
+        errors.append("schema_version 必须为 1.0、1.1 或 1.2")
+    workflow_mode = data.get("workflow_mode")
+    if schema_version == "1.2" and workflow_mode not in VALID_WORKFLOW_MODES:
+        errors.append("workflow_mode 必须为 fast、standard 或 high-risk")
     watermark_required = data.get("watermark_required")
     if not isinstance(watermark_required, bool):
         errors.append("watermark_required 必须明确为布尔值")
@@ -83,6 +93,8 @@ def validate(path: Path) -> list[str]:
 
     covered: set[str] = set()
     sample_ids: set[str] = set()
+    micro_samples: list[dict[str, Any]] = []
+    full_previews: list[dict[str, Any]] = []
     for index, sample in enumerate(samples):
         label = f"samples[{index}]"
         if not isinstance(sample, dict):
@@ -96,6 +108,17 @@ def validate(path: Path) -> list[str]:
         else:
             sample_ids.add(sample_id)
         label = sample_id or label
+
+        if schema_version == "1.2":
+            proof_kind = sample.get("proof_kind")
+            if proof_kind not in VALID_PROOF_KINDS:
+                errors.append(f"{label}.proof_kind 必须为 micro-sample 或 full-preview")
+            elif proof_kind == "micro-sample":
+                micro_samples.append(sample)
+                if sample.get("representative") is not True:
+                    errors.append(f"{label} 未标记为代表性动态证明")
+            else:
+                full_previews.append(sample)
 
         sample_path = resolve_path(path, sample.get("path"))
         if sample_path is None:
@@ -118,6 +141,19 @@ def validate(path: Path) -> list[str]:
         ):
             if sample.get(field) is not True:
                 errors.append(f"{label}{message}")
+        if schema_version == "1.2":
+            for field, message in (
+                ("uses_locked_storyboard", "未使用已锁定静态分镜"),
+                ("character_continuity_verified", "未检查人物身份连续性"),
+                ("platform_safe", "未通过平台 UI 遮挡安全检查"),
+                ("machine_reviewed", "未完成动态样片机器与 Agent 检查"),
+            ):
+                if sample.get(field) is not True:
+                    errors.append(f"{label}{message}")
+            if not isinstance(sample.get("user_review_required"), bool) or not isinstance(sample.get("user_reviewed"), bool):
+                errors.append(f"{label} 必须明确记录是否需要用户审核及审核结果")
+            elif sample.get("user_review_required") is True and sample.get("user_reviewed") is not True:
+                errors.append(f"{label} 需要用户审核但尚未通过")
         if sample.get("watermark_included") is not watermark_required:
             expected = "包含真实水印" if watermark_required else "不包含水印"
             errors.append(f"{label} 的水印状态与项目契约不一致，应{expected}")
@@ -125,6 +161,18 @@ def validate(path: Path) -> list[str]:
     missing = sorted(required_set - covered)
     if missing:
         errors.append(f"以下运动语法没有动态样片覆盖：{', '.join(missing)}")
+    if schema_version == "1.2":
+        if workflow_mode in {"standard", "high-risk"} and not micro_samples:
+            errors.append("standard/high-risk 项目在完整低清预览前必须先做代表性微样片")
+        if workflow_mode == "high-risk":
+            for sample in micro_samples:
+                if sample.get("user_review_required") is not True or sample.get("user_reviewed") is not True:
+                    errors.append("high-risk 微样片必须单独给用户审核通过")
+        if not full_previews:
+            errors.append("正式母版前必须存在完整低清预览证据")
+        for sample in full_previews:
+            if sample.get("user_review_required") is not True or sample.get("user_reviewed") is not True:
+                errors.append("完整低清预览必须经用户确认")
     return errors
 
 

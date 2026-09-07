@@ -22,6 +22,8 @@ class ReleasePackageTests(unittest.TestCase):
             with zipfile.ZipFile(Path(temp_dir) / "produce-videos.zip") as archive:
                 archived = set(archive.namelist())
                 self.assertIn("produce-videos/SKILL.md", archived)
+                self.assertIn("produce-videos/examples/README.md", archived)
+                self.assertIn("produce-videos/examples/thumbnails/obsidian-ai-brain.jpg", archived)
                 self.assertFalse(any("examples/videos/" in name for name in archived))
                 self.assertFalse(any("/dist/" in name for name in archived))
 

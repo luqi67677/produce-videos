@@ -1,5 +1,5 @@
 {
-  "schema_version": "2.4",
+  "schema_version": "2.5",
   "project": "",
   "format": "portrait",
   "theme_id": "",
@@ -7,6 +7,33 @@
   "human_presence": "none",
   "forbidden_terms": [],
   "privacy_targets": [],
+  "story_binding": {
+    "path": "story-contract.json",
+    "sha256": "",
+    "approved": false
+  },
+  "asset_review_binding": {
+    "path": "asset-review-plan.json",
+    "sha256": "",
+    "approved": false
+  },
+  "memory_binding": {
+    "mode": "disabled",
+    "path": "",
+    "sha256": "",
+    "reuse_approved": false,
+    "applied_memory_ids": []
+  },
+  "platform_overlay": {
+    "profile_id": "generic-portrait",
+    "calibration_source": "bundled-conservative-default",
+    "calibration_evidence_path": "",
+    "occlusion_ratio_override": {},
+    "review_overlay_path": "",
+    "review_only": true,
+    "safe_without_overlay": false
+  },
+  "character_profiles": [],
   "subtitle": {
     "layer_count": 1,
     "renderer": "final-timeline-only"
@@ -46,6 +73,14 @@
       "duration_seconds": 3.0,
       "narration": "",
       "narration_segment_ids": ["s01"],
+      "narrative_function": "",
+      "continuity": {
+        "entering_state": "",
+        "leaving_state": "",
+        "anchor": "",
+        "advances_story": false,
+        "returns_to_main_axis": true
+      },
       "roll": {
         "type": "a-roll",
         "narrative_role": "",
@@ -178,6 +213,13 @@
         "anatomy_safe": true,
         "edge_safe": true
       },
+      "character_ids": [],
+      "character_continuity_review": {
+        "identity_verified": true,
+        "style_consistent": true,
+        "unexplained_changes": false
+      },
+      "platform_safe": false,
       "subtitle_safe": true,
       "watermark_safe": true,
       "full_frame_motion": false,

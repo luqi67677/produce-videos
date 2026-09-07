@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "character_id": "character-001",
+  "display_name": "",
+  "status": "draft",
+  "authorization": "",
+  "identity": {
+    "age_presentation": "",
+    "face": "",
+    "hair": "",
+    "body": "",
+    "wardrobe": "",
+    "palette": "",
+    "visual_style": "",
+    "fixed_traits": [],
+    "allowed_variations": [],
+    "forbidden_variations": []
+  },
+  "reference_assets": [
+    {
+      "path": "",
+      "sha256": "",
+      "role": "identity-anchor",
+      "authorization": ""
+    }
+  ],
+  "continuity": {
+    "same_identity_across_rolls": true,
+    "applies_to": ["a-roll", "b-roll", "hybrid", "graphic-led", "cover"],
+    "identity_anchor_reviewed": false,
+    "representative_actions_reviewed": false
+  },
+  "approval": {
+    "approved": false,
+    "approval_message": "",
+    "approved_at": ""
+  }
+}

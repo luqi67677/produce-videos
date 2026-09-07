@@ -7,6 +7,8 @@
     "fps": 30,
     "safeArea": {"left": 64, "right": 64, "top": 144, "bottom": 240},
     "captionBottom": 240,
+    "defaultPlatformOverlayProfile": "generic-portrait",
+    "platformOverlayOverrides": {"douyin": "douyin-portrait"},
     "platforms": ["douyin", "xiaohongshu", "wechat_channels"]
   },
   "landscape": {
@@ -17,6 +19,7 @@
     "fps": 30,
     "safeArea": {"left": 120, "right": 120, "top": 90, "bottom": 180},
     "captionBottom": 180,
+    "defaultPlatformOverlayProfile": "generic-landscape",
     "platforms": ["douyin"]
   }
 }

@@ -28,6 +28,23 @@
 - 一屏保留一个主视觉动作；横向流程改为纵向递进，不把整条流程等比缩小。
 - 主体高度优先占画面 42%—62%，避免中央只有一个小物体、四周全是空背景。
 
+## 平台 UI 遮挡审查
+
+- 从 `assets/platform-overlay-profiles.json` 读取平台配置。未匹配到具体平台时使用通用画幅配置，不凭印象发明安全区。
+- 抖音 3:4 竖屏默认只采用保守审查值：顶部 12%、底部 24%、右侧 16%。这些值不是平台官方规范；用户提供近期截图时，在当前项目保存校准覆盖值，内置目录保持不变。
+- 竖屏分镜生成一张可关闭的 UI 遮挡审查图，至少模拟顶部导航、右侧交互按钮、底部账号/文案/搜索区。遮挡层只用于审片，不进入最终视频。
+- 主标题、首屏结果、字幕、按钮、关键数据、人物面部与交互目标不得落入遮挡区；关闭遮挡层后，画面本身仍须构图成立，不能依赖半透明蒙层掩盖脏边或空白。
+- 若平台界面已改版又没有近期截图，明确标记“使用保守预设、待真机复核”，不得把预设描述成当前官方尺寸。
+
+建立 `shot-readiness.json` 后，可生成实际审查层：
+
+```bash
+python3 scripts/generate_platform_overlay.py project/shot-readiness.json \
+  --output project/storyboard/platform-overlay-review.svg
+```
+
+将输出路径写回 `platform_overlay.review_overlay_path`，再把审查层叠在完整分镜总览上直接展示给用户。
+
 ## 中文与品牌名
 
 - 中文或中英混排标题使用中文优先字体栈：`PingFang SC`、`Hiragino Sans GB`、`Microsoft YaHei`、系统无衬线。
