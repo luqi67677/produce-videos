@@ -20,6 +20,7 @@ from validate_source_assets import review_files as source_asset_review_files
 from validate_source_assets import validate as validate_source_assets
 from validate_style_options import validate as validate_style_options
 from validate_theme_catalog import validate as validate_theme_catalog
+from validate_timeline_sync import validate as validate_timeline_sync
 from validate_video_theme import validate as validate_video_theme
 from validate_creative_foundation import validate_project as validate_creative_foundation
 
@@ -68,6 +69,12 @@ def storyboard_review_files(project: Path) -> list[Path]:
             resolved = resolve_project_path(project, value)
             if resolved is not None:
                 required.append(resolved)
+    for shot in shot_data.get("shots", []):
+        if not isinstance(shot, dict):
+            continue
+        resolved = resolve_project_path(project, shot.get("reviewed_frame_path"))
+        if resolved is not None:
+            required.append(resolved)
     revision_scope = shot_data.get("revision_scope")
     if isinstance(revision_scope, dict) and revision_scope.get("mode") == "revision":
         baseline = resolve_project_path(project, revision_scope.get("baseline_shot_readiness"))
@@ -148,7 +155,7 @@ def main() -> int:
     errors: list[str] = []
     shot_data = load_object(project / "shot-readiness.json")
     script_files = [project / "master-script.json"]
-    if shot_data.get("schema_version") == "2.5":
+    if shot_data.get("schema_version") in {"2.5", "2.6"}:
         script_files.append(project / "story-contract.json")
     required_review_files = {
         "script": script_files,
@@ -173,7 +180,11 @@ def main() -> int:
         for error in validator(contract):
             errors.append(f"{name}: {error}")
 
-    if shot_data.get("schema_version") == "2.5":
+    if shot_data.get("schema_version") == "2.6":
+        for error in validate_timeline_sync(project, narration_contract):
+            errors.append(f"timeline-sync: {error}")
+
+    if shot_data.get("schema_version") in {"2.5", "2.6"}:
         for error in validate_creative_foundation(project):
             errors.append(f"creative-foundation: {error}")
 

@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.2",
+  "schema_version": "1.4",
   "workflow_mode": "standard",
   "watermark_required": false,
   "required_grammars": [],
@@ -20,6 +20,27 @@
       "machine_reviewed": false,
       "user_review_required": false,
       "user_reviewed": false
+    },
+    {
+      "sample_id": "full-preview-01",
+      "path": "",
+      "proof_kind": "full-preview",
+      "representative": false,
+      "grammars": [],
+      "uses_final_audio": true,
+      "uses_locked_storyboard": true,
+      "single_subtitle_layer": true,
+      "watermark_included": false,
+      "visual_coverage_verified": true,
+      "character_continuity_verified": true,
+      "platform_safe": true,
+      "machine_reviewed": false,
+      "user_review_required": true,
+      "user_reviewed": false
     }
-  ]
+  ],
+  "full_preview_motion_audit": {
+    "path": "",
+    "schema_version": "1.1"
+  }
 }

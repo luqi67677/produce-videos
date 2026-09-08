@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "status": "draft",
+  "theme_binding": {
+    "path": "video-style-theme.json",
+    "sha256": "",
+    "approved": false
+  },
+  "format": {
+    "width": 1080,
+    "height": 1440,
+    "aspect_ratio": "3:4"
+  },
+  "main_title": {
+    "text": "",
+    "target_user_or_context_present": false,
+    "pain_or_outcome_present": false
+  },
+  "subtitle": {
+    "text": "",
+    "skill_differentiator_present": false,
+    "duplicates_main_title": false
+  },
+  "skill_name": {
+    "text": "",
+    "prominent": false,
+    "original_case_preserved": false
+  },
+  "text_hierarchy_review": {
+    "main_title_dominant": false,
+    "subtitle_distinct": false,
+    "orphan_line_free": false,
+    "thumbnail_readable": false
+  },
+  "hero_subject": {
+    "type": "product",
+    "asset_path": "",
+    "authorization_verified": false,
+    "action": "",
+    "action_supports_message": false,
+    "arbitrary_pose_free": false,
+    "styling_matches_context": false
+  },
+  "output_cover": "",
+  "output_thumbnail": "",
+  "review": {
+    "native_size_reviewed": false,
+    "thumbnail_reviewed": false,
+    "approved": false,
+    "approval_message": ""
+  }
+}

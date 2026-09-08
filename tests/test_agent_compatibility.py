@@ -56,12 +56,14 @@ class AgentCompatibilityTests(unittest.TestCase):
             self.assertEqual(content.count(command), 1)
         self.assertIn("只执行与当前 Agent 对应的一条", content)
 
-    def test_skill_declares_v242_and_creative_foundation_contract(self) -> None:
+    def test_skill_declares_v250_and_fine_shot_contract(self) -> None:
         content = (ROOT / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("V2.4.2", content)
+        self.assertIn("V2.5.0", content)
         self.assertIn("每个 B-roll 必须填写 `covers`", content)
         self.assertIn("edit-decision-list.json", content)
         self.assertIn("story-contract.json", content)
+        self.assertIn("validate_timeline_sync.py", content)
+        self.assertIn("validate_cover_contract.py", content)
         self.assertIn("character-profile.json", content)
         self.assertIn("platform-overlay-profiles.json", content)
 

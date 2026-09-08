@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +32,12 @@ VALID_TRANSITIONS = {"none", "hard-cut", "match-cut", "insert-cut", "graphic-bri
 VALID_LAYOUT_ADAPTATIONS = {"native-landscape", "portrait-reflow", "custom-verified"}
 VALID_MEMORY_MODES = {"disabled", "project-only", "workspace-opt-in"}
 VALID_PLATFORM_CALIBRATION_SOURCES = {"bundled-conservative-default", "user-recent-screenshot"}
+VALID_SHOT_READINESS_SCHEMAS = {"1.0", "2.0", "2.1", "2.2", "2.3", "2.4", "2.5", "2.6"}
+DESIGN_SCHEMAS = {"2.4", "2.5", "2.6"}
+FOUNDATION_SCHEMAS = {"2.5", "2.6"}
+FINE_SHOT_SCHEMAS = {"2.6"}
+VALID_PROOF_CLAIMS = {"none", "quantity", "workflow", "result", "installation", "comparison"}
+VALID_EVIDENCE_MODES = {"not-applicable", "real-preview", "verified-result", "illustration", "text-only"}
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$", re.IGNORECASE)
 
 
@@ -61,6 +68,199 @@ def resolve_path(contract_path: Path, value: Any) -> Path | None:
 
 def canonical_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def normalize_spoken_text(value: Any) -> str:
+    return "".join(
+        character.casefold()
+        for character in str(value)
+        if not character.isspace() and unicodedata.category(character)[0] not in {"P", "Z"}
+    )
+
+
+def validate_fine_shots(
+    contract_path: Path,
+    shots: Any,
+    expected_segments: dict[str, dict[str, Any]],
+    contract_duration: float | None,
+    character_ids: set[str],
+) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(shots, list) or not shots:
+        return ["schema 2.6 的 shots 必须包含逐个剪辑镜头，不能只校验章节级 scenes"]
+
+    project_root = contract_path.parent.resolve()
+    seen_shot_ids: set[str] = set()
+    previous_end: float | None = None
+    excerpts_by_segment: dict[str, list[str]] = {}
+    used_segment_ids: set[str] = set()
+    seen_action_signatures: dict[str, str] = {}
+
+    for index, shot in enumerate(shots):
+        label = f"shots[{index}]"
+        if not isinstance(shot, dict):
+            errors.append(f"{label} 必须为对象")
+            continue
+
+        shot_id = str(shot.get("shot_id", "")).strip()
+        if not shot_id or shot_id in seen_shot_ids:
+            errors.append(f"{label} 缺少唯一 shot_id")
+        else:
+            seen_shot_ids.add(shot_id)
+            label = shot_id
+
+        segment_id = str(shot.get("narration_segment_id", "")).strip()
+        excerpt = str(shot.get("narration_excerpt", "")).strip()
+        if not segment_id:
+            errors.append(f"{label} 缺少 narration_segment_id")
+        else:
+            used_segment_ids.add(segment_id)
+            excerpts_by_segment.setdefault(segment_id, []).append(excerpt)
+            if expected_segments and segment_id not in expected_segments:
+                errors.append(f"{label} 绑定了旁白契约中不存在的段：{segment_id}")
+        if not excerpt:
+            errors.append(f"{label} 缺少 narration_excerpt")
+        if not nonempty_text(shot.get("visual_duty")):
+            errors.append(f"{label} 缺少与当前口播对应的 visual_duty")
+        if shot.get("alignment_verified") is not True:
+            errors.append(f"{label} 尚未逐句确认声画对应")
+
+        roll_type = shot.get("roll_type")
+        if roll_type not in VALID_ROLL_TYPES:
+            errors.append(f"{label}.roll_type 无效")
+        if roll_type in {"b-roll", "hybrid"} and not nonempty_text(shot.get("covers")):
+            errors.append(f"{label} 的 B-roll 必须填写 covers")
+
+        start = shot.get("timeline_start_seconds")
+        end = shot.get("timeline_end_seconds")
+        duration = shot.get("duration_seconds")
+        if any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in (start, end, duration)):
+            errors.append(f"{label} 缺少有效的逐镜时间范围")
+        else:
+            start_value = float(start)
+            end_value = float(end)
+            duration_value = float(duration)
+            if start_value < 0 or end_value <= start_value or duration_value <= 0:
+                errors.append(f"{label} 的逐镜时间范围无效")
+            elif abs((end_value - start_value) - duration_value) > 0.05:
+                errors.append(f"{label} 的 duration_seconds 与起止时间不一致")
+            if previous_end is None and start_value > 0.05:
+                errors.append(f"{label} 没有从 0 秒附近开始")
+            if previous_end is not None and abs(start_value - previous_end) > 0.05:
+                errors.append(f"{label} 与上一镜存在空洞或重叠")
+            previous_end = end_value
+
+        boundary = shot.get("semantic_boundary")
+        if not isinstance(boundary, dict):
+            errors.append(f"{label} 缺少 semantic_boundary")
+        else:
+            for field in ("starts_on_semantic_boundary", "ends_on_semantic_boundary", "next_visual_after_narration"):
+                if boundary.get(field) is not True:
+                    errors.append(f"{label}.semantic_boundary.{field} 尚未通过")
+
+        frame_path = resolve_path(contract_path, shot.get("reviewed_frame_path"))
+        if frame_path is None or not frame_path.is_file():
+            errors.append(f"{label} 缺少可读取的逐镜审查帧")
+        elif frame_path != project_root and project_root not in frame_path.parents:
+            errors.append(f"{label} 的逐镜审查帧必须位于当前项目内")
+
+        layout_review = shot.get("layout_review")
+        if not isinstance(layout_review, dict):
+            errors.append(f"{label} 缺少逐镜 layout_review")
+        else:
+            for field in (
+                "alignment_verified",
+                "text_overflow_free",
+                "orphan_line_free",
+                "brand_case_preserved",
+                "balanced_density",
+            ):
+                if layout_review.get(field) is not True:
+                    errors.append(f"{label}.layout_review.{field} 尚未通过")
+
+        rendered_text = text_list(shot.get("rendered_text"))
+        production_notes = text_list(shot.get("production_notes"))
+        if rendered_text is None:
+            errors.append(f"{label}.rendered_text 必须为字符串数组")
+            rendered_text = []
+        if production_notes is None:
+            errors.append(f"{label}.production_notes 必须为字符串数组")
+            production_notes = []
+        visible_normalized = {normalize_spoken_text(item) for item in rendered_text if normalize_spoken_text(item)}
+        note_normalized = {normalize_spoken_text(item) for item in production_notes if normalize_spoken_text(item)}
+        if visible_normalized & note_normalized:
+            errors.append(f"{label} 把制作说明渲染成了观众文案")
+        text_review = shot.get("text_boundary_review")
+        if not isinstance(text_review, dict):
+            errors.append(f"{label} 缺少 text_boundary_review")
+        else:
+            for field in ("production_notes_excluded", "privacy_treatment_visual_only", "generic_asset_labels_removed"):
+                if text_review.get(field) is not True:
+                    errors.append(f"{label}.text_boundary_review.{field} 尚未通过")
+
+        proof = shot.get("proof")
+        if not isinstance(proof, dict) or proof.get("claim_type") not in VALID_PROOF_CLAIMS:
+            errors.append(f"{label}.proof.claim_type 无效")
+        else:
+            evidence_mode = proof.get("evidence_mode")
+            if evidence_mode not in VALID_EVIDENCE_MODES:
+                errors.append(f"{label}.proof.evidence_mode 无效")
+            evidence_paths = text_list(proof.get("evidence_asset_paths"))
+            if evidence_paths is None:
+                errors.append(f"{label}.proof.evidence_asset_paths 必须为字符串数组")
+                evidence_paths = []
+            if proof.get("claim_type") != "none":
+                if evidence_mode not in {"real-preview", "verified-result"}:
+                    errors.append(f"{label} 的数量、流程或结果主张必须使用真实预览或已验证结果")
+                if not evidence_paths:
+                    errors.append(f"{label} 的能力主张不能使用空框或文字口号代替证据")
+                if proof.get("complete_context_visible") is not True:
+                    errors.append(f"{label} 的真实截图或结果没有完整展示有效上下文")
+            for value in evidence_paths:
+                evidence_path = resolve_path(contract_path, value)
+                if evidence_path is None or not evidence_path.is_file():
+                    errors.append(f"{label} 的证据文件不存在：{value}")
+
+        shot_character_ids = text_list(shot.get("character_ids"))
+        if shot_character_ids is None:
+            errors.append(f"{label}.character_ids 必须为字符串数组")
+            shot_character_ids = []
+        unknown_characters = set(shot_character_ids) - character_ids
+        if unknown_characters:
+            errors.append(f"{label} 引用了未锁定人物：{', '.join(sorted(unknown_characters))}")
+        if shot_character_ids:
+            character_review = shot.get("character_review")
+            if not isinstance(character_review, dict):
+                errors.append(f"{label} 缺少 character_review")
+            else:
+                for field in ("action", "action_signature"):
+                    if not nonempty_text(character_review.get(field)):
+                        errors.append(f"{label}.character_review 缺少 {field}")
+                for field in ("pose_matches_visual_duty", "styling_matches_context", "identity_verified", "anatomy_safe"):
+                    if character_review.get(field) is not True:
+                        errors.append(f"{label}.character_review.{field} 尚未通过")
+                signature = str(character_review.get("action_signature", "")).strip()
+                if signature:
+                    previous_shot = seen_action_signatures.get(signature)
+                    if previous_shot is not None:
+                        approved = character_review.get("reuse_approved") is True
+                        if not approved or not nonempty_text(character_review.get("reuse_reason")):
+                            errors.append(f"{label} 与 {previous_shot} 重复人物动作，且没有经审查的叙事理由")
+                    seen_action_signatures[signature] = label
+
+    if contract_duration is not None and previous_end is not None and abs(previous_end - contract_duration) > 0.05:
+        errors.append(f"逐镜时间线结束于 {previous_end:.3f} 秒，与旁白 {contract_duration:.3f} 秒不一致")
+
+    if expected_segments:
+        missing = set(expected_segments) - used_segment_ids
+        if missing:
+            errors.append(f"逐镜表没有覆盖旁白段：{', '.join(sorted(missing))}")
+        for segment_id, segment in expected_segments.items():
+            expected_text = normalize_spoken_text(segment.get("display_text", ""))
+            actual_text = normalize_spoken_text("".join(excerpts_by_segment.get(segment_id, [])))
+            if expected_text != actual_text:
+                errors.append(f"{segment_id} 的逐镜口播片段未完整、按顺序覆盖批准稿")
+    return errors
 
 
 def validate_scene_design(scene: dict[str, Any], label: str, schema_version: str = "2.4") -> list[str]:
@@ -134,7 +334,7 @@ def validate_scene_design(scene: dict[str, Any], label: str, schema_version: str
             errors.append(f"{label}.composition_budget.largest_empty_area_ratio 必须在 0—1 之间")
         elif empty > 0.42 and not nonempty_text(budget.get("intentional_whitespace_reason")):
             errors.append(f"{label} 存在大面积空白，但没有说明其构图职责")
-    if schema_version == "2.5":
+    if schema_version in FOUNDATION_SCHEMAS:
         if not nonempty_text(scene.get("narrative_function")):
             errors.append(f"{label} 缺少 narrative_function")
         continuity = scene.get("continuity")
@@ -223,9 +423,11 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
     if data.get("human_presence") not in VALID_HUMAN_PRESENCE:
         errors.append("human_presence 取值无效")
 
-    schema_version = data.get("schema_version")
+    schema_version = str(data.get("schema_version", "")).strip()
+    if schema_version not in VALID_SHOT_READINESS_SCHEMAS:
+        errors.append("schema_version 未受支持；禁止用未知版本跳过镜头门禁")
     character_ids: set[str] = set()
-    if schema_version == "2.5":
+    if schema_version in FOUNDATION_SCHEMAS:
         _, binding_errors = validate_artifact_binding(path, data.get("story_binding"), "story_binding")
         errors.extend(binding_errors)
         _, binding_errors = validate_artifact_binding(path, data.get("asset_review_binding"), "asset_review_binding")
@@ -337,6 +539,26 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
                 profile_data = {}
             if profile_data.get("character_id") != character_id or profile_data.get("status") != "locked":
                 errors.append(f"{label} 的人物 ID 不一致或尚未锁定")
+            if schema_version in FINE_SHOT_SCHEMAS:
+                identity = profile_data.get("identity")
+                if not isinstance(identity, dict):
+                    errors.append(f"{label} 缺少人物 identity")
+                else:
+                    for field in ("wardrobe", "styling_context", "pose_language"):
+                        if not nonempty_text(identity.get(field)):
+                            errors.append(f"{label}.identity 缺少 {field}")
+                continuity = profile_data.get("continuity")
+                if not isinstance(continuity, dict):
+                    errors.append(f"{label} 缺少人物 continuity")
+                else:
+                    for field in (
+                        "identity_anchor_reviewed",
+                        "wardrobe_context_reviewed",
+                        "representative_actions_reviewed",
+                        "action_silhouette_duplicates_checked",
+                    ):
+                        if continuity.get(field) is not True:
+                            errors.append(f"{label}.continuity.{field} 尚未通过")
         if data.get("human_presence") in {"supplied-character", "generated-scene-illustration"} and not character_ids:
             errors.append("反复使用人物或生成角色时必须锁定 character profile")
 
@@ -431,8 +653,8 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
             scene_records[scene_id] = scene
         label = scene_id or label
 
-        if data.get("schema_version") in {"2.4", "2.5"}:
-            errors.extend(validate_scene_design(scene, label, str(data.get("schema_version"))))
+        if schema_version in DESIGN_SCHEMAS:
+            errors.extend(validate_scene_design(scene, label, schema_version))
 
         duration = scene.get("duration_seconds")
         if not isinstance(duration, (int, float)) or duration <= 0:
@@ -611,7 +833,7 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
             ):
                 if layout_review.get(field) is not True:
                     errors.append(f"{label}.layout_review.{field} 尚未通过")
-            if data.get("schema_version") in {"2.4", "2.5"}:
+            if schema_version in DESIGN_SCHEMAS:
                 for field in (
                     "single_focal_point",
                     "balanced_density",
@@ -734,7 +956,7 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
                 if interaction.get(field) is not True:
                     errors.append(f"{label} 的主体交互 {field} 未通过")
 
-        if schema_version == "2.5":
+        if schema_version in FOUNDATION_SCHEMAS:
             scene_character_ids = text_list(scene.get("character_ids"))
             if scene_character_ids is None:
                 errors.append(f"{label}.character_ids 必须为字符串数组")
@@ -769,6 +991,9 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
                 meaning = str(symbol["meaning"]).strip().casefold()
                 if symbol_name in ARROW_SYMBOLS and any(word in meaning for word in ABSENCE_WORDS):
                     errors.append(f"{label} 用箭头表达没有或排除，应改用否定符号")
+
+    if schema_version in FINE_SHOT_SCHEMAS:
+        errors.extend(validate_fine_shots(path, data.get("shots"), expected_segments, contract_duration, character_ids))
 
     if narration_contract_path is not None:
         missing_segment_ids = set(expected_segments) - used_segment_ids

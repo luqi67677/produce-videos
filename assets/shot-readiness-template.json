@@ -1,5 +1,5 @@
 {
-  "schema_version": "2.5",
+  "schema_version": "2.6",
   "project": "",
   "format": "portrait",
   "theme_id": "",
@@ -226,6 +226,57 @@
       "full_frame_motion_reason": "",
       "reuse_advances_state": false,
       "reuse_reason": ""
+    }
+  ],
+  "shots": [
+    {
+      "shot_id": "c01-s01",
+      "narration_segment_id": "s01",
+      "timeline_start_seconds": 0,
+      "timeline_end_seconds": 3,
+      "duration_seconds": 3,
+      "narration_excerpt": "",
+      "visual_duty": "",
+      "roll_type": "graphic-led",
+      "covers": "",
+      "reviewed_frame_path": "",
+      "alignment_verified": false,
+      "semantic_boundary": {
+        "starts_on_semantic_boundary": false,
+        "ends_on_semantic_boundary": false,
+        "next_visual_after_narration": false
+      },
+      "rendered_text": [],
+      "production_notes": [],
+      "text_boundary_review": {
+        "production_notes_excluded": false,
+        "privacy_treatment_visual_only": false,
+        "generic_asset_labels_removed": false
+      },
+      "proof": {
+        "claim_type": "none",
+        "evidence_mode": "not-applicable",
+        "evidence_asset_paths": [],
+        "complete_context_visible": true
+      },
+      "layout_review": {
+        "alignment_verified": false,
+        "text_overflow_free": false,
+        "orphan_line_free": false,
+        "brand_case_preserved": false,
+        "balanced_density": false
+      },
+      "character_ids": [],
+      "character_review": {
+        "action": "",
+        "action_signature": "",
+        "pose_matches_visual_duty": false,
+        "styling_matches_context": false,
+        "identity_verified": false,
+        "anatomy_safe": false,
+        "reuse_approved": false,
+        "reuse_reason": ""
+      }
     }
   ]
 }

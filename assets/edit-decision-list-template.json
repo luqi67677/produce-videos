@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "project": "",
   "format": {
     "width": 1920,
@@ -14,8 +14,8 @@
   },
   "picture_track": [
     {
-      "clip_id": "c01",
-      "scene_id": "s01",
+      "clip_id": "c01-s01",
+      "scene_id": "c01-s01",
       "asset_id": "asset-001",
       "source_path": "",
       "source_in_seconds": 0,
@@ -23,6 +23,8 @@
       "duration_seconds": 3,
       "roll_type": "a-roll",
       "covers": "",
+      "narration_excerpt": "",
+      "semantic_boundary_verified": false,
       "cut_locked": false
     }
   ],

@@ -10,6 +10,8 @@
     "hair": "",
     "body": "",
     "wardrobe": "",
+    "styling_context": "",
+    "pose_language": "",
     "palette": "",
     "visual_style": "",
     "fixed_traits": [],
@@ -28,7 +30,9 @@
     "same_identity_across_rolls": true,
     "applies_to": ["a-roll", "b-roll", "hybrid", "graphic-led", "cover"],
     "identity_anchor_reviewed": false,
-    "representative_actions_reviewed": false
+    "wardrobe_context_reviewed": false,
+    "representative_actions_reviewed": false,
+    "action_silhouette_duplicates_checked": false
   },
   "approval": {
     "approved": false,
