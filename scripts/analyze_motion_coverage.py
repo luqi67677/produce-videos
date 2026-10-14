@@ -161,10 +161,29 @@ def blank_visual_failed(
     baseline_visible: bool,
     intentional_blank: bool,
 ) -> bool:
-    return not intentional_blank and (
-        (baseline_visible and initial_detail_ratio < minimum_initial_detail_ratio)
-        or underfilled_hold > maximum_underfilled_hold
-    )
+    return bool(blank_visual_failure_reasons(
+        initial_detail_ratio, underfilled_hold, minimum_initial_detail_ratio,
+        maximum_underfilled_hold, baseline_visible, intentional_blank,
+    ))
+
+
+def blank_visual_failure_reasons(
+    initial_detail_ratio: float,
+    underfilled_hold: float,
+    minimum_initial_detail_ratio: float,
+    maximum_underfilled_hold: float,
+    baseline_visible: bool,
+    intentional_blank: bool,
+) -> list[str]:
+    """保留原阈值；细节比例只能提示复核，不能证明真实空屏。"""
+    if intentional_blank:
+        return []
+    reasons: list[str] = []
+    if baseline_visible and initial_detail_ratio < minimum_initial_detail_ratio:
+        reasons.append("initial-detail-ratio")
+    if underfilled_hold > maximum_underfilled_hold:
+        reasons.append("underfilled-hold")
+    return reasons
 
 
 def main() -> int:
@@ -320,7 +339,7 @@ def main() -> int:
         plan_item = plan_by_shot.get(shot_id, {})
         baseline_visible = plan_item.get("baseline_visible_from_start") is not False
         intentional_blank = plan_item.get("intentional_blank_approved") is True
-        blank_failed = blank_visual_failed(
+        blank_reasons = blank_visual_failure_reasons(
             initial_detail_ratio,
             underfilled_hold,
             minimum_initial_detail_ratio,
@@ -328,7 +347,7 @@ def main() -> int:
             baseline_visible,
             intentional_blank,
         )
-        if blank_failed:
+        if blank_reasons:
             blank_visual_shot_ids.append(shot_id)
         covered_shot_ids.append(shot_id)
         results.append({
@@ -341,6 +360,7 @@ def main() -> int:
             "changed_sample_count": sum(flags),
             "longest_static_run_seconds": longest_false_run(flags, args.sample_fps),
             "initial_detail_ratio": round(initial_detail_ratio, 4),
+            "blank_visual_failure_reasons": blank_reasons,
             "minimum_detail_ratio": round(min(detail_ratios), 4) if detail_ratios else 0.0,
             "underfilled_hold_seconds": underfilled_hold,
             "baseline_visible_from_start": baseline_visible,
@@ -350,6 +370,7 @@ def main() -> int:
     all_shot_ids = [str(item.get("scene_id")) for item in clips if isinstance(item, dict)]
     all_shots_covered = timeline_start == 0 and audit_end >= timeline_end - 0.05 and covered_shot_ids == all_shot_ids
     audit = {
+        "artifact_type": "motion-audit",
         "schema_version": "1.1",
         "preview_path": str(video),
         "preview_sha256": sha256(video),
@@ -371,7 +392,7 @@ def main() -> int:
         "staged_reveal_failures": staged_reveal_failures,
         "blank_visual_shot_ids": blank_visual_shot_ids,
         "timeline_sync_failures": timeline_sync_failures,
-        "machine_pass": not static_shot_ids and not staged_reveal_failures and not blank_visual_shot_ids and not timeline_sync_failures,
+        "machine_pass": all_shots_covered and not static_shot_ids and not staged_reveal_failures and not blank_visual_shot_ids and not timeline_sync_failures,
         "shots": results,
     }
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -382,6 +403,12 @@ def main() -> int:
     print(f"FAIL 静态镜头：{', '.join(static_shot_ids) or '无'}")
     print(f"FAIL 分段揭示不足：{', '.join(staged_reveal_failures) or '无'}")
     print(f"FAIL 空白或欠填充镜头：{', '.join(blank_visual_shot_ids) or '无'}")
+    for result in results:
+        reasons = result["blank_visual_failure_reasons"]
+        if reasons:
+            print(f"REVIEW {result['shot_id']} 细节比例提示（不是已确认空屏）：{', '.join(reasons)}；请取实际帧复核，保留机器结果")
+    if not all_shots_covered:
+        print("FAIL 审计未覆盖完整 EDL")
     print(f"FAIL 时间线同步：{'; '.join(timeline_sync_failures) or '无'}")
     return 1
 

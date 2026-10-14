@@ -13,6 +13,7 @@ from analyze_motion_coverage import (  # noqa: E402
     FRAME_HEIGHT,
     FRAME_WIDTH,
     blank_visual_failed,
+    blank_visual_failure_reasons,
     frame_detail,
     longest_true_run,
 )
@@ -32,6 +33,11 @@ class MotionAnalysisTests(unittest.TestCase):
     def test_sparse_opening_fails_without_intentional_blank(self) -> None:
         self.assertTrue(blank_visual_failed(0.3, 0.4, 0.45, 0.2, True, False))
         self.assertFalse(blank_visual_failed(0.3, 0.4, 0.45, 0.2, True, True))
+
+    def test_detail_diagnostic_keeps_original_thresholds(self) -> None:
+        self.assertEqual(blank_visual_failure_reasons(0.3, 0.1, 0.45, 0.2, True, False), ["initial-detail-ratio"])
+        self.assertEqual(blank_visual_failure_reasons(0.9, 0.3, 0.45, 0.2, True, False), ["underfilled-hold"])
+        self.assertEqual(blank_visual_failure_reasons(0.45, 0.2, 0.45, 0.2, True, False), [])
 
 
 if __name__ == "__main__":

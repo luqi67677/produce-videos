@@ -99,7 +99,15 @@
 - 切点必须落在词或短语结束后的自然边界；下一镜的标题、对象或结果不能提前替上一句旁白背书。
 - 全片渲染后必须把预览、EDL、运动计划的文件哈希和逐镜检测结果写入机器审计；存在静态镜头、分段揭示失败、等待入场的空白或时间线漂移时，不得把完整预览登记为动态证据。
 
-## Remotion 实现原则
+## 机器报告与覆盖契约
++
++`analyze_motion_coverage.py` 输出 schema 1.1 的原始机器报告 `motion-audit.json`；`validate_motion_coverage.py` 读取 schema 1.4 的外层覆盖契约 `motion-coverage.json`。两者字段和职责不同，不能把机器报告改名当成覆盖契约。
++
++运行 `build_motion_coverage.py motion-audit.json motion-coverage.json --grammar <实际语法>` 生成外层待审骨架。它引用原始报告并绑定 SHA-256，人工与用户审核字段默认未完成，已有文件默认不覆盖。补入真实样片、覆盖与审片证据后再校验；构建成功不等于检查通过。
++
++首帧细节比例低是像素统计信号，不独立证明画面空白。按逐镜失败原因检查实际首帧、交接中间和结果状态；原始 `machine_pass` 与阈值保持不变，人工解释另记。当前门禁仍拒绝机器失败，不能通过改哈希、删失败或伪填审查放行。
++
++## Remotion 实现原则
 
 - 因果链使用同一个 `frame` 派生各阶段进度，阶段窗口首尾相接。
 - 路径优先使用 `strokeDasharray`/`strokeDashoffset`，节点在路径抵达后激活。

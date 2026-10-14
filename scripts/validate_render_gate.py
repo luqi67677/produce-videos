@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from validate_motion_coverage import validate as validate_motion_coverage
+from validate_motion_coverage import RAW_AUDIT_MESSAGE, is_motion_audit
 from validate_master_script import validate as validate_master_script
 from validate_narration_contract import validate as validate_narration_contract
 from validate_review_approval import approval_path
@@ -119,7 +120,13 @@ def asset_review_files(project: Path) -> list[Path]:
 def motion_review_files(project: Path) -> list[Path]:
     coverage_path = project / "motion-coverage.json"
     required = [coverage_path]
-    for sample in load_object(coverage_path).get("samples", []):
+    coverage = load_object(coverage_path)
+    reference = coverage.get("full_preview_motion_audit")
+    if isinstance(reference, dict):
+        resolved = resolve_project_path(project, reference.get("path"))
+        if resolved is not None:
+            required.append(resolved)
+    for sample in coverage.get("samples", []):
         if not isinstance(sample, dict):
             continue
         resolved = resolve_project_path(project, sample.get("path"))
@@ -152,6 +159,10 @@ def main() -> int:
         parser.error(f"旁白契约必须位于当前项目内：{narration_contract}")
 
     stages = SAMPLE_STAGES if args.mode == "sample" else FULL_STAGES
+    if args.mode == "full" and is_motion_audit(load_object(project / "motion-coverage.json")):
+        print(f"FAIL motion-coverage.json: {RAW_AUDIT_MESSAGE}")
+        print("STOP 不允许进入 full 渲染")
+        return 1
     errors: list[str] = []
     shot_data = load_object(project / "shot-readiness.json")
     script_files = [project / "master-script.json"]

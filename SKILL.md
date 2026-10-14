@@ -3,11 +3,11 @@ name: produce-videos
 description: 把讲稿、文档、截图、图片、PPT 或录屏制作成 16:9 横屏或 3:4 竖屏动态视频和独立封面。建立真实 0—2 秒叙事、平台安全区、项目级创作记忆和人物一致性，按风险合并确认包，同时保留口播、素材、声音、分镜、动态证明和成片质量门；可复用本地 TTS，缺失时经授权准备 Qwen3-TTS。适用于完整制作、续作和定点修改；只要求脚本、分镜或审查时不擅自渲染。
 ---
 
-# 2026-10-14 视频生成与编辑 V2.6.7
+# 2026-10-15 视频生成与编辑 V2.6.8
 
 创建日期：2026-09-03
 
-版本：V2.6.7
+版本：V2.6.8
 
 ## 运行环境与兼容边界
 
@@ -64,10 +64,12 @@ description: 把讲稿、文档、截图、图片、PPT 或录屏制作成 16:9 
 | 模式 | 适用条件 | 用户确认节奏 |
 |---|---|---|
 | `fast` | 通常不超过 30 秒；事实稳定；无反复生成人物、敏感录屏或授权疑点；使用成熟主题和运动语法 | 完整低清预览同时承担动态证明 |
-| `standard` | 普通宣传片、教程或混合素材；需要 TTS；风险可控 | 默认 4—5 个确认包；蓝图通过后先做代表性微样片，机器和 Agent 检查通过即继续 |
-| `high-risk` | 反复生成人物、敏感录屏、授权不明、强事实主张、超过 90 秒、首次运动语法或需要下载安装 | 先审人物锚点/高风险原始素材，并单独确认短动态样片 |
+| `standard` | 普通宣传片、教程或混合素材；需要 TTS；风险可控 | 复用已确认项，只合并询问新增决策；蓝图通过后先做代表性微样片，内部检查通过即继续 |
+| `high-risk` | 反复生成人物、敏感录屏、授权不明、强事实主张、首次运动语法或尚未授权的下载安装 | 先审人物锚点/高风险原始素材，并单独确认短动态样片 |
 
-风险升高时可以升级模式并说明原因；不得为了少问一步静默降级。
+时长只影响检查覆盖与渲染量，不单独触发高风险或增加确认轮次。风险升高时可以升级模式并说明原因；不得为了少问一步静默降级。
+
+已有确定稿、授权声音或批准画面时，先读 `references/confirmed-project-fast-path.md`。保留原批准范围和文件绑定，只处理变化项；机器检查次数不等于用户确认次数。
 
 ## 审查交付规则
 
@@ -95,18 +97,18 @@ description: 把讲稿、文档、截图、图片、PPT 或录屏制作成 16:9 
 
 按需读取 `references/content-to-video-orchestration.md`、`references/director-workflow.md`、`references/narrative-continuity-system.md`、`references/creator-memory-and-identity.md` 和 `references/visual-style-system.md`。
 
-1. 从资料建立 `claims-ledger.md`、完整 `master-script.json` 和 `story-contract.json`；区分事实、推断、演示数据和待核验项。信息流短视频的开头在 0—2 秒内给出可证结果、反差、问题或操作证据，中段只推进一条核心张力，结尾回应开头。
+1. 已有确定稿时逐字导入，记录来源和 SHA-256；旧编辑稿与最近明确确认冲突时，只核对冲突段，不静默回退。从资料新写时再建立完整口播。两路均维护 `claims-ledger.md`、`master-script.json` 和 `story-contract.json`；区分事实、推断、演示数据和待核验项。信息流短视频的开头在 0—2 秒内给出可证结果、反差、问题或操作证据，中段只推进一条核心张力，结尾回应开头。
 2. 建立 `source-assets.json`，记录真实文件、SHA-256、来源、授权、用途、隐私目标和联系表；没有真实素材时记录生成边界。
-3. 验证 34 套主题目录和 88 套布局目录。机器侧为全部主题记录分数、结论和简短理由码，只为入围 A/B/C 写详细理由；布局在逐镜排版时按信息结构选择并完成横竖屏适配。
+3. 已有用户指定视觉系统时，验证并锁定 `video-style-theme.json`（`selected_option=user-specified`），引用批准证据，跳过第 4—5 步，不伪造三套候选。尚无视觉系统时，验证 34 套主题目录和 88 套布局目录。机器侧为全部主题记录分数、结论和简短理由码，只为入围 A/B/C 写详细理由；布局在逐镜排版时按信息结构选择并完成横竖屏适配。
 4. 三套候选使用同一标题、同一代表内容、同一主视觉和目标画幅，分别输出 3:4 封面帧、内容帧、270×360 缩略图和完整总览图。
 5. 候选内容帧必须达到校准画面质量并通过视觉干净度硬门；用户选中后直接作为版式基线。只有选中后仍需内容特定调整时才补校准画面。
 
-`fast/standard` 把完整口播、叙事摘要、真实素材联系表和三套风格放入一个确认包。提示用户按“内容和素材通过，选 B”回复；单独的 `B` 只表示选择风格，不自动批准口播和素材。`high-risk` 先单独确认隐私、授权和禁止使用项。
+`fast/standard` 把尚未批准的口播、叙事摘要、真实素材与新风格候选合并成一个确认包；已批准项直接引用，不重新出题。提示用户按“内容和素材通过，选 B”回复；单独的 `B` 只表示选择风格，不自动批准口播和素材。`high-risk` 先单独确认隐私、授权和禁止使用项。
 
 批准后：
 
 - 在 `approval-ledger.json` 写入 `script` 与 `source-assets`；
-- 在 `visual-style-options.json` 记录用户原话和选择；
+- 新选风格在 `visual-style-options.json` 记录用户原话和选择；已有指定系统的批准证据写入唯一主题，不另建候选；
 - 锁定 `video-style-theme.json`；
 - 先校验账本、选择和主题，再生成依赖这些决定的内容。
 
@@ -151,14 +153,14 @@ description: 把讲稿、文档、截图、图片、PPT 或录屏制作成 16:9 
 读取 `references/motion-system.md` 和 `references/quality-gates.md`。
 
 - `fast`：只有成熟运动语法、无反复生成人物且无平台/隐私疑点时，用完整低清预览同时承担动态证明。
-- `standard`：蓝图通过后先做 4—8 秒代表性微样片，检查主题、最终声音、单层字幕、人物一致性、平台安全区和实际运动。机器与 Agent 通过后自动继续完整低清预览；样片暴露创意偏差时才停止请用户判断。
+- `standard`：蓝图通过后先做 4—8 秒代表性微样片，优先覆盖本片实景、机制与结果的连续混合段，不能只测漂亮开头。检查主题、最终声音、单层字幕、人物一致性、平台安全区和实际运动。机器与 Agent 通过后自动继续完整低清预览；样片暴露创意偏差时才停止请用户判断。
 - `high-risk` 或首次运动语法：先做 4—8 秒最短样片并给用户单独确认；通过后再生成完整低清预览。
 - 若计划样片超过预计成片的 40%，跳过短样片，直接生成完整低清预览。
-- 低清预览与母版使用同一原生坐标、主题、旁白、字幕、真实素材和运动契约，只降低输出分辨率或码率。
+- 低清预览与母版使用同一原生坐标、帧渲染函数、主题、旁白、字幕、真实素材和运动契约，只降低输出分辨率或码率；在已有质检报告记录来源哈希。先用实际口播字形样张检查最终字体，再渲染全片。
 - 从 `assets/motion-plan-template.json` 建立逐镜运动计划。每镜第一帧先有稳定骨架或主视觉；只有经审查的叙事需要才允许短暂留白，并写明原因。
 - 完整低清预览生成后运行 `scripts/analyze_motion_coverage.py`，把视频、EDL 和运动计划的 SHA-256、逐镜有效变化次数、最长静止段、欠填充时长、静态镜头和分段揭示失败写入审计 JSON；任一应动镜头无语义变化、三项以上内容未分段建立、存在等待入场的空白帧或运动计划与 EDL 漂移，都不得进入 `motion` 审批。
 - 直接展示可播放预览和联系表。用户批准后在账本写入 `motion`，再运行 full 门禁导出正式母版。
-- 正式母版运行 `video_preflight.py` 并人工检查事实、隐私、授权、文字、字幕安全区、遮挡、镜头连续性和独立封面。
+- 正式母版运行 `video_preflight.py` 并人工检查事实、隐私、授权、文字、字幕安全区、遮挡、镜头连续性和独立封面。抽帧覆盖动作前、结果成立、阅读停留和转场中间，来源是实际编码 MP4。抽帧检查与连续带声审片分别记录。
 
 ### 6. 修改既有成片
 
@@ -178,7 +180,7 @@ description: 把讲稿、文档、截图、图片、PPT 或录屏制作成 16:9 
 
 项目至少保留：brief、主张账本、叙事契约、完整口播、真实素材清单、原始素材审片计划、视觉候选、唯一主题、需要时的创作记忆和人物档案、声音需求与选择、旁白契约、V2.6 逐镜就绪表、V1.1 EDL、运动计划与运动覆盖、V2 审批账本、平台遮挡审查图、分镜、代表性微样片、完整低清预览、正式视频、质检报告和联系表。
 
-每条完整视频都交付一张 1080×1440 独立封面和 270×360 缩略图。读取 `assets/cover-brief-template.md` 并建立 `cover-contract.json`：主标题说明目标用户/场景与痛点或结果，副标题说明 Skill 差异，Skill 名称保持原始大小写并形成清晰层级；人物动作和服装必须支持标题。运行 `scripts/validate_cover_contract.py`，不用横屏首帧裁切代替。使用 Remotion 时同时交付源码、锁文件、素材清单和渲染命令；用户需要继续剪辑时从同一 EDL 导出 FCPXML，并说明哪些复杂合成已扁平化。
+每条完整视频都交付一张 1080×1440 独立封面和 270×360 缩略图。读取 `assets/cover-brief-template.md` 并建立 `cover-contract.json`：普通内容使用 `content_mode=general`，主标题说明主题、场景或结果，副标题按需，不要求 Skill 名称；推广 Skill 才使用 `skill-promotion` 并检查 Skill 名称、原始大小写及差异副标题。两类都检查主题绑定、真实产物、授权主视觉和缩略图；人物出现时动作和服装必须支持标题。运行 `scripts/validate_cover_contract.py`，不用横屏首帧裁切代替。使用 Remotion 时同时交付源码、锁文件、素材清单和渲染命令；用户需要继续剪辑时从同一 EDL 导出 FCPXML，并说明哪些复杂合成已扁平化。
 ## 校验命令
 
 ```bash
@@ -193,6 +195,8 @@ python3 scripts/validate_timeline_sync.py project \
   --narration-contract project/narration-contract.json
 python3 scripts/analyze_motion_coverage.py project/preview/video-preview.mp4 \
   project/edit-decision-list.json project/motion-plan.json project/motion-audit.json
+python3 scripts/build_motion_coverage.py project/motion-audit.json project/motion-coverage.json \
+  --grammar object-reveal --workflow-mode standard
 python3 scripts/validate_cover_contract.py project/cover-contract.json
 python3 scripts/validate_review_approval.py project/approval-ledger.json \
   --require-stage script --require-approved
@@ -205,10 +209,11 @@ python3 scripts/video_preflight.py project/final/video.mp4 --orientation portrai
 python3 scripts/scan_release.py
 ```
 
-各阶段的模型发现、声音、版式和分镜命令按需读取对应 reference，不在入口重复维护。
+`--grammar` 改为项目实际运动语法，可重复传入。构建工具只生成待审覆盖契约，不能把命令成功当作运动检查通过。各阶段的模型发现、声音、版式和分镜命令按需读取对应 reference，不在入口重复维护。
 
 ## 按需读取的参考
 
+- 已确认项目续作、来源锁定与局部重做：`references/confirmed-project-fast-path.md`
 - 模板推荐与主题锁定：`references/visual-style-system.md`
 - 内容到视频编排：`references/content-to-video-orchestration.md`
 - 叙事冲突、0—2 秒开头与镜头连贯：`references/narrative-continuity-system.md`

@@ -1,5 +1,6 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
+  "content_mode": "general",
   "status": "draft",
   "theme_binding": {
     "path": "video-style-theme.json",
@@ -18,13 +19,7 @@
   },
   "subtitle": {
     "text": "",
-    "skill_differentiator_present": false,
     "duplicates_main_title": false
-  },
-  "skill_name": {
-    "text": "",
-    "prominent": false,
-    "original_case_preserved": false
   },
   "text_hierarchy_review": {
     "main_title_dominant": false,

@@ -16,6 +16,21 @@ VALID_WORKFLOW_MODES = {"fast", "standard", "high-risk"}
 VALID_PROOF_KINDS = {"micro-sample", "full-preview"}
 
 
+def is_motion_audit(data: Any) -> bool:
+    """兼容尚未写 artifact_type 的 V1.0/V1.1 机器报告。"""
+    return isinstance(data, dict) and (
+        data.get("artifact_type") == "motion-audit"
+        or ("samples" not in data and all(key in data for key in ("preview_path", "machine_pass", "shots")))
+    )
+
+
+RAW_AUDIT_MESSAGE = (
+    "此文件是逐镜机器报告，不是 motion-coverage 审片覆盖表；"
+    "请将报告保留为独立文件，用 build_motion_coverage.py <audit.json> <motion-coverage.json> "
+    "--grammar <实际运动语法> 生成待审覆盖表，再完成真实检查与用户审片。"
+)
+
+
 def nonempty_text(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
@@ -83,6 +98,8 @@ def validate_full_motion_audit(
         audit = json.loads(audit_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return ["完整预览逐镜运动审计文件无法解析"]
+    if "sha256" in reference and sha256(audit_path) != str(reference.get("sha256", "")):
+        errors.append("完整预览逐镜运动审计文件 SHA-256 已变化")
     expected_audit_schema = "1.1" if data.get("schema_version") == "1.4" else "1.0"
     if not isinstance(audit, dict) or audit.get("schema_version") != expected_audit_schema:
         errors.append(f"完整预览逐镜运动审计 schema_version 必须为 {expected_audit_schema}")
@@ -177,6 +194,10 @@ def validate(path: Path) -> list[str]:
         return [f"动态样片覆盖表无法解析：{exc}"]
 
     errors: list[str] = []
+    if not isinstance(data, dict):
+        return ["motion-coverage.json 根节点必须为对象"]
+    if is_motion_audit(data):
+        return [RAW_AUDIT_MESSAGE]
     schema_version = data.get("schema_version")
     if schema_version not in {"1.0", "1.1", "1.2", "1.3", "1.4"}:
         errors.append("schema_version 必须为 1.0、1.1、1.2、1.3 或 1.4")

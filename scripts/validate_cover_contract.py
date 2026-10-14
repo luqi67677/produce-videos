@@ -11,6 +11,7 @@ from typing import Any
 
 
 VALID_SUBJECT_TYPES = {"product", "person", "character", "interface", "evidence", "typography"}
+VALID_CONTENT_MODES = {"general", "skill-promotion"}
 
 
 def nonempty(value: Any) -> bool:
@@ -41,8 +42,14 @@ def validate(path: Path) -> list[str]:
         return ["封面契约必须为 JSON 对象"]
 
     errors: list[str] = []
-    if data.get("schema_version") != "1.0":
-        errors.append("封面契约 schema_version 必须为 1.0")
+    schema_version = data.get("schema_version")
+    if schema_version not in ("1.0", "1.1"):
+        errors.append("封面契约 schema_version 必须为 1.0 或 1.1")
+    # 旧契约没有内容模式，保留原先的 Skill 推广约束。
+    content_mode = data.get("content_mode", "skill-promotion" if schema_version == "1.0" else None)
+    if not isinstance(content_mode, str) or content_mode not in VALID_CONTENT_MODES:
+        errors.append("content_mode 必须明确为 general 或 skill-promotion")
+    skill_promotion = content_mode == "skill-promotion"
     format_data = data.get("format")
     if not isinstance(format_data, dict) or (
         format_data.get("width"), format_data.get("height"), format_data.get("aspect_ratio")
@@ -57,27 +64,36 @@ def validate(path: Path) -> list[str]:
             if main_title.get(field) is not True:
                 errors.append(f"main_title.{field} 尚未通过")
     subtitle = data.get("subtitle")
-    if not isinstance(subtitle, dict) or not nonempty(subtitle.get("text")):
+    subtitle_present = isinstance(subtitle, dict) and nonempty(subtitle.get("text"))
+    if skill_promotion and not subtitle_present:
         errors.append("封面缺少与主标题分层的副标题")
-    else:
-        if subtitle.get("skill_differentiator_present") is not True:
+    elif not skill_promotion and subtitle is not None and (
+        not isinstance(subtitle, dict) or not isinstance(subtitle.get("text", ""), str)
+    ):
+        errors.append("subtitle 必须为含文字的对象，通用封面可省略")
+    if subtitle_present:
+        if skill_promotion and subtitle.get("skill_differentiator_present") is not True:
             errors.append("副标题没有说明 Skill 的差异化能力")
         if subtitle.get("duplicates_main_title") is not False:
             errors.append("副标题重复主标题，没有形成信息分工")
 
-    skill_name = data.get("skill_name")
-    if not isinstance(skill_name, dict) or not nonempty(skill_name.get("text")):
-        errors.append("封面缺少可识别的 Skill 名称")
-    else:
-        for field in ("prominent", "original_case_preserved"):
-            if skill_name.get(field) is not True:
-                errors.append(f"skill_name.{field} 尚未通过")
+    if skill_promotion:
+        skill_name = data.get("skill_name")
+        if not isinstance(skill_name, dict) or not nonempty(skill_name.get("text")):
+            errors.append("封面缺少可识别的 Skill 名称")
+        else:
+            for field in ("prominent", "original_case_preserved"):
+                if skill_name.get(field) is not True:
+                    errors.append(f"skill_name.{field} 尚未通过")
 
     hierarchy = data.get("text_hierarchy_review")
     if not isinstance(hierarchy, dict):
         errors.append("封面缺少 text_hierarchy_review")
     else:
-        for field in ("main_title_dominant", "subtitle_distinct", "orphan_line_free", "thumbnail_readable"):
+        hierarchy_fields = ["main_title_dominant", "orphan_line_free", "thumbnail_readable"]
+        if skill_promotion or subtitle_present:
+            hierarchy_fields.append("subtitle_distinct")
+        for field in hierarchy_fields:
             if hierarchy.get(field) is not True:
                 errors.append(f"text_hierarchy_review.{field} 尚未通过")
 
@@ -129,7 +145,7 @@ def main() -> int:
         for error in errors:
             print(f"FAIL {error}")
         return 1
-    print("PASS 独立封面通过：主副标题、Skill 名称、主视觉动作、主题与缩略图均已确认")
+    print("PASS 独立封面通过：内容模式、标题层级、主视觉、主题与缩略图均已确认")
     return 0
 
 
