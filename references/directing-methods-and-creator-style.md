@@ -4,17 +4,24 @@
 
 ## 借鉴矩阵
 
-下列结论来自官方规则、源码和可播放示例的对照，核验日期为 2026-10-14。OpenMontage 仅核验说明与源码，未观看其演示。Star 数只帮助寻找项目，不能代替画面质量、许可证和免费路线的判断。这些规则为独立整理，未复制配方代码或演示素材。
+下列结论按官方规则、源码或可播放示例分别记录，核验日期为 2026-10-14。OpenChatCut 与 OpenMontage 本轮实际读取规则和许可文件，未观看其演示，也未安装或运行其引擎。Star 数只帮助寻找项目，不能代替画面质量、许可证和免费路线的判断。这些规则为独立整理，未复制配方代码或演示素材。
 
 | 来源 | 值得学的做法 | 在本 Skill 中落在哪里 | 不直接照搬什么 |
 | --- | --- | --- | --- |
 | [HyperFrames](https://github.com/heygen-com/hyperframes) | 把素材、时间、运动与音频放到同一条可重放时间线上；从实际渲染回看 | 继续以 EDL 和真实音频为时间源；每条镜头计划明确素材、动作和结果 | 不因示例有视频生成或数字人服务就默认调用；不把持续运动当作观看质量 |
 | [video-shotcraft](https://github.com/Vincentwei1021/video-shotcraft) | 按注意力任务选镜头：筛选焦点、推进细节、揭示结果 | 每个镜头先写观众看见哪个变化，再选推近、遮挡揭示、焦点切换等动作 | 不复制演示的品牌、配色、装饰数据和所有炫技效果；不把急推镜用于每一段 |
 | [brag](https://github.com/latent-spaces/brag) | 先安排叙事节拍和镜头之间的交接，再施工；做短样检查实际节奏 | 语义切点、相邻镜头连续性、先做代表性连续片段 | 不让大字与终端占据所有题材；不把短广告的频繁强调套到数分钟知识讲解 |
-| [OpenMontage](https://github.com/calesthio/OpenMontage) | 检查连续同构图、文字过载、无职责的运动；给 B-roll 写覆盖的口播 | 素材写 covers；同构布局提醒；检查具体对象是否被文字卡替代 | 不把其付费生成案例说成免费本地效果；不导入整套依赖来替代已有可用工程 |
+| [OpenChatCut](https://github.com/0xsline/OpenChatCut) | explainer-video 绑定段落、素材、目标与风险；storyboard-shot-breakdown 从实际画面解释切换；verification 区分结构与实际合成帧 | 保留已定口播和声音，先做代表段，审查实际输出 | 不照搬工具链；仓库及内置规则有不同许可说明，不复制文件或代码 |
+| [OpenMontage](https://github.com/calesthio/OpenMontage) | explainer/edit-director 绑定实际配音时间；documentary-montage 要求具体镜头和有理由的切点 | 为 covers 选择主对象、动作与环境，先修素材和停留，再加转场 | 纪录片路线可由音乐驱动，不替换已锁定旁白；示意图仍可解释机制，不推导全片必须用照片或禁用图解 |
 | [Remotion captions](https://github.com/remotion-dev/skills/blob/main/skills/remotion-captions/display-captions.md) | 把转写时间与字幕展示分组分开，集中控制字幕布局 | 保留原文和实测时间，按中文语义合并，安全区居中，最多两行 | 不默认逐词弹跳或照英语空格断句；不沿用不适合中文手机阅读的小字号 |
 
 免费实施可用已有图片、录屏、原音轨、Canvas/HTML 与 FFmpeg 本地合成。没有必要为学习一种导演方法更换渲染器。第三方项目和依赖分别受其许可证约束；本页不授予其代码或素材的使用许可。
+
+### 规则来源与许可范围
+
+- OpenChatCut 的 [explainer-video](https://github.com/0xsline/OpenChatCut/blob/main/src/agent/skills/explainer-video/SKILL.md) Workflow、[storyboard-shot-breakdown](https://github.com/0xsline/OpenChatCut/blob/main/src/agent/skills/storyboard-shot-breakdown/SKILL.md) Core Philosophy/Workflow，以及 [verification](https://github.com/0xsline/OpenChatCut/blob/main/src/agent/skills/verification/SKILL.md) 分层检查，支持上述方法。根 [LICENSE](https://github.com/0xsline/OpenChatCut/blob/main/LICENSE) 为 AGPL-3.0；内置规则还须看 [NOTICE](https://github.com/0xsline/OpenChatCut/blob/main/src/agent/skills/NOTICE.md) 的上游 GPL-3.0-only 说明。
+- OpenMontage 的 [explainer/edit-director](https://github.com/calesthio/OpenMontage/blob/main/skills/pipelines/explainer/edit-director.md) 实际音频与资产绑定、[documentary-montage/scene-director](https://github.com/calesthio/OpenMontage/blob/main/skills/pipelines/documentary-montage/scene-director.md) 具体镜头描述、[documentary-montage/edit-director](https://github.com/calesthio/OpenMontage/blob/main/skills/pipelines/documentary-montage/edit-director.md) 节奏与切点，是本次转述范围；根 [LICENSE](https://github.com/calesthio/OpenMontage/blob/main/LICENSE) 为 AGPL-3.0。
+- 实际读取哪些文件、观看哪些片段、是否运行引擎分别留证；README、搜索摘要和宣传截图不算看过成片。公开可访问不等于开放许可。记录素材出处、作者、许可或引用依据、用途与处理限制；未确认许可不得标为可任意复用。本 Skill 仅独立转述方法，未引入这些规则文件、代码或演示素材。
 
 ## 风格先于效果库
 
@@ -32,15 +39,25 @@
 
 ## 先选真实对象与素材，再排镜头
 
+逐句先写观众看见的具体动作与结果，再选载体。按原话的职责区分识别人或事件、建立场景、展示操作、解释机制与给出判断；职责改变才改变画面。抽象关系不自动转成三框箭头。代购、门票、钥匙等类比先检查物件与行为一一对应，并列出可能误读；代购应区分接收需求、向上游购买或请求、交付结果，不能把下单画成拿出预存答案。实拍敲键盘只证明输入动作，不能证明付款、API 调用或任务完成。
+
 逐段填写 `visual-direction-plan.json`：`subject` 是观众看的具体对象；`material` 是真实素材或明确标注的示意；`action` 是当前旁白触发的动作；`result` 是动作后观众看懂的变化；`covers` 是本镜头解释的原话。
 
 人物新闻优先相关人物或事件出处；交易优先钱、商品、价签、票据、交付；操作优先真实界面；关系复杂时才补机制图。概念道具可以用本地代码绘制，但不能做成似真的官方账单、经营数字或事件证据。
 
 用户要求真实画面为主时，先锁定可播放的实拍、相关照片或实际页面，再确定构图。真实媒体应承担主画面，可满幅或按主体大面积裁切；不能先套白底版式再把照片缩成小贴片。线描箱子、票据、钥匙依然是示意图，把流程框换成这些道具不算落实真实画面。新闻照片要注明必要的年代，通用实拍只能说明场景，不能充当特定公司的经营证据。
 
+人物照片先确认真实身份、出处、拍摄年代与事件关系，再检查原图及裁切后的有效像素、清晰度、表情和视线。显示尺寸按有效像素与实际预览决定；小头像只作短暂身份提示，不放大全屏或用锐化声称恢复了细节。人名识别不等于事件证明，相关新闻人物照不用于暗示其参与未证实违法行为。按构图与同一语义锚点融入画面，不以孤立头像贴在无关背景上替代选材。
+
 素材缺失要记录待选或待拍，不自动退回矢量道具并宣称方向已完成。机制图仅在需要解释关系时出现；文字与箭头辅助具体细节。配色主题约束新增图形与文字，不要求擦除照片色彩、真实空间和自然光影。摄影镜头按取景安排主体，无需强套幻灯片布局。
 
 一镜一个注意中心。画面内的标题、字幕、背景只承担辅助职责。照片推进应露出更具体的目标；没有新信息的整页来回缩放不算一次镜头变化。
+
+### 实景与机制连续交接
+
+实景负责身份、场景或证据，机制图负责关系；按当前口播职责切换，不规定全片比例，也不把每镜做成全屏照片。需要从素材转入机制时，先定位其可辨细节，再让同一素材连续缩入机制中的对应对象，保持位置、朝向或动作承接；新增标注与连接只解释原话，随后可回到真实结果。仅在观众有阅读需要时缩小素材，不能缩到无法辨认后继续声称它是证据。
+
+检查切点前、中、后三帧与连续带声片段：素材没有突然替换成另一对象，没有叠影或接缝，机制没有提前显示下一句结论。机械轮换同构照片卡与用装饰遮掩断裂均需返工。
 
 ## 镜头怎么连
 
@@ -55,6 +72,12 @@
 
 相邻镜头逐一记录 `from`、`to`、`type`、`anchor`、`reason`、`duration_seconds`、`audio`。常见转场可先试 0.15—0.5 秒；没有动作需要时硬切为 0 秒。不为转场改动旁白时间。字幕在独立屏幕坐标层保持稳定，不跟着推镜、旋转或飞出。
 
+### 字幕坐标与播放器映射
+
+在制作记录中写清设计画布、实际编码画布与字幕安全区；坐标、字号和行宽从设计到编码统一换算一次。已烧录字幕随视频整体缩放，播放器不得再次对这层文字单独换算。独立字幕叠层使用实际视频显示矩形；等比 contain 时 `s=min(播放器宽/视频宽, 播放器高/视频高)`，结合上下或左右留边得到坐标，不能按整个播放器外框定位；裁切显示另记裁切偏移。不得同时输出两层相同字幕。
+
+先检查实际编码帧，再看播放器中的可播放视频。平台安全区是保守预设，桌面预览不能证明手机字号、平台控件或上传后显示已通过；有近期真机或平台播放证据才记录对应验收，缺少时保留待实测。
+
 ## 验收：看连续三镜
 
 先做能代表新方法的连续样片，包括原配音、真实素材、字幕及声效，不能只给三张漂亮截图。至少检查：
@@ -66,4 +89,4 @@
 - 字幕是否完整、居中、稳定？缩小到实际预览尺寸还能否阅读？
 - 是否沿用本账号确认的识别？是否误把参考项目的终端、主题色或角色直接搬来？
 
-运行 `scripts/validate_visual_direction.py <计划.json>` 检查时间连续、必要字段、素材路径与逐镜桥接覆盖。它会提醒同构布局和需要人工检查的长镜头，不凭空判断画面吸引力。先查切点前、中、后三帧，再看连续三镜；改动一个切点时只复核受影响的相邻镜头。最终仍须查看实际视频；技术通过、样片好看和用户确认是三个不同状态。
+运行 `scripts/validate_visual_direction.py <计划.json>` 检查时间连续、必要字段、素材路径与逐镜桥接覆盖。它会提醒同构布局和需要人工检查的长镜头，不凭空判断画面吸引力。先查切点前、中、后三帧，再看连续三镜；核对逐句职责、动作结果、类比误读、人物有效像素和字幕坐标，不能仅凭素材已出现判定画面完成。改动一个切点时只复核受影响的相邻镜头。最终仍须查看实际视频；技术通过、样片好看和用户确认是三个不同状态。
