@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "character_profile_path": "character-profile.json",
+  "character_profile_sha256": "",
+  "master_script_path": "master-script.json",
+  "master_script_sha256": "",
+  "audio_contract_path": "narration-contract.json",
+  "audio_contract_sha256": "",
+  "mode": "static-presenter",
+  "status": "planning",
+  "approval": {
+    "approved": false,
+    "approval_message": "",
+    "approved_at": ""
+  },
+  "segments": [
+    {
+      "segment_id": "s01",
+      "visible": false,
+      "cue_text": "",
+      "exit_cue_text": "",
+      "start_seconds": null,
+      "end_seconds": null,
+      "role": "",
+      "why": "",
+      "focus_handoff": "",
+      "asset_id": "",
+      "framing": "",
+      "placement": null,
+      "layer_motion": "none",
+      "reuse_reason": "",
+      "action": null,
+      "action_signature": null,
+      "physical_action": false,
+      "lip_sync": false,
+      "mouth_audio_sync": false,
+      "action_status": "not-applicable-static-presenter"
+    }
+  ],
+  "body_motion": "fixed",
+  "animated_regions": [],
+  "mouth_driver": null,
+  "performance_style": null,
+  "mouth_behavior": "non-speaking",
+  "lip_sync": false,
+  "mouth_audio_sync": false
+}

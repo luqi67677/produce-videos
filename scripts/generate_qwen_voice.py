@@ -27,6 +27,31 @@ DEFAULT_REPETITION_PENALTY = 1.08
 DEFAULT_MAX_TOKENS = 1024
 
 
+def resolve_generation_settings(
+    args: argparse.Namespace,
+    reference_generator: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """按命令参数、授权参考配置、通用默认的顺序确定生成参数。"""
+    defaults = {
+        "temperature": DEFAULT_TEMPERATURE,
+        "top_k": DEFAULT_TOP_K,
+        "top_p": DEFAULT_TOP_P,
+        "repetition_penalty": DEFAULT_REPETITION_PENALTY,
+        "max_tokens": DEFAULT_MAX_TOKENS,
+    }
+    generator = reference_generator or {}
+    settings = {}
+    for name, default in defaults.items():
+        cli_value = getattr(args, name, None)
+        reference_value = generator.get(name)
+        settings[name] = (
+            cli_value if cli_value is not None
+            else reference_value if reference_value is not None
+            else default
+        )
+    return settings
+
+
 def file_sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -175,8 +200,13 @@ def update_contract(
             "channels": manifest["channels"],
             "audio_format": "wav",
             "language": language,
+            "generation_settings": dict(manifest["generation_settings"]),
         }
     )
+    if manifest.get("reference_config_sha256"):
+        updated["reference_config_sha256"] = manifest["reference_config_sha256"]
+    else:
+        updated.pop("reference_config_sha256", None)
     by_scene = {item["scene_id"]: item for item in manifest["segments"]}
     updated["segments"] = [
         {
@@ -275,9 +305,11 @@ def main() -> int:
             parser.error("单段讲稿过长，请使用 --segments-file 按场景拆分后再生成")
         segments = [{"scene_id": "full", "tts_text": text}]
 
+    reference_generator: dict[str, Any] = {}
     reference_audio: Path | None = None
     reference_text: str | None = None
     reference_sha256: str | None = None
+    reference_config_sha256: str | None = None
     voice_brief_path: Path | None = None
     voice_brief_sha256: str | None = None
     try:
@@ -285,6 +317,10 @@ def main() -> int:
             if source != "user-reference":
                 parser.error("只有 user-reference 旁白契约可以使用 --reference-config")
             config = load_json(args.reference_config, "参考音频配置")
+            reference_config_sha256 = file_sha256(args.reference_config)
+            reference_generator = config.get("generator", {})
+            if not isinstance(reference_generator, dict):
+                parser.error("参考音频配置的 generator 必须为 JSON 对象")
             authorization = str(config.get("authorization_record", "")).strip()
             if not authorization:
                 parser.error("参考音频配置缺少 authorization_record")
@@ -354,11 +390,12 @@ def main() -> int:
     elif not reference_audio and not instruction:
         parser.error("请提供用户确认的声音描述，再使用 --instruction 生成旁白")
 
-    temperature = args.temperature if args.temperature is not None else DEFAULT_TEMPERATURE
-    top_k = args.top_k if args.top_k is not None else DEFAULT_TOP_K
-    top_p = args.top_p if args.top_p is not None else DEFAULT_TOP_P
-    repetition_penalty = args.repetition_penalty if args.repetition_penalty is not None else DEFAULT_REPETITION_PENALTY
-    max_tokens = args.max_tokens if args.max_tokens is not None else DEFAULT_MAX_TOKENS
+    generation_settings = resolve_generation_settings(args, reference_generator)
+    temperature = generation_settings["temperature"]
+    top_k = generation_settings["top_k"]
+    top_p = generation_settings["top_p"]
+    repetition_penalty = generation_settings["repetition_penalty"]
+    max_tokens = generation_settings["max_tokens"]
     manifest_output = args.manifest_output or args.output.with_name(f"{args.output.stem}.manifest.json")
     if manifest_output.exists():
         parser.error(f"manifest 已存在，为避免覆盖请换版本路径：{manifest_output}")
@@ -424,10 +461,13 @@ def main() -> int:
             "sample_rate": audio_info["sample_rate"],
             "channels": audio_info["channels"],
             "audio_format": "wav",
+            "generation_settings": dict(generation_settings),
             "segments": manifest_segments,
         }
         if reference_sha256:
             manifest["reference_audio_sha256"] = reference_sha256
+        if reference_config_sha256:
+            manifest["reference_config_sha256"] = reference_config_sha256
         if voice_brief_path and voice_brief_sha256:
             manifest["voice_brief_path"] = str(voice_brief_path)
             manifest["voice_brief_sha256"] = voice_brief_sha256

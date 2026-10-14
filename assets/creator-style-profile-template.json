@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "profile_id": "replace-with-profile-id",
+  "scope": "project-only",
+  "authorization": {"user_quote": "", "cross_project_approved": false},
+  "identity": {"theme_ref": "video-style-theme.json", "voice_ref": "voice-selection.json", "presenter": "follow-current-user-choice"},
+  "active_rules": [],
+  "experimental_rules": [],
+  "retired_rules": [],
+  "source_examples": [],
+  "validation": {"technical": "pending", "continuous_sample": "pending", "user_style_approval": "pending"}
+}

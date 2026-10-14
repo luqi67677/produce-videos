@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sys
 import tempfile
 import unittest
@@ -11,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-from package_workbuddy import build_package, split_frontmatter  # noqa: E402
+from package_workbuddy import build_package, read_version, split_frontmatter  # noqa: E402
 
 
 class AgentCompatibilityTests(unittest.TestCase):
@@ -56,9 +57,17 @@ class AgentCompatibilityTests(unittest.TestCase):
             self.assertEqual(content.count(command), 1)
         self.assertIn("只执行与当前 Agent 对应的一条", content)
 
-    def test_skill_declares_v250_and_fine_shot_contract(self) -> None:
+    def test_skill_declares_consistent_version_and_fine_shot_contract(self) -> None:
         content = (ROOT / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("V2.5.0", content)
+        _, body = split_frontmatter(content)
+        version = read_version(body)
+        self.assertRegex(body, rf"(?m)^# .+ V{re.escape(version)}$")
+        agent = (ROOT / "agents/openai.yaml").read_text(encoding="utf-8")
+        self.assertIn(f"已安装 V{version}｜", agent)
+        changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        first_release = re.search(r"(?m)^## .*?V(\d+\.\d+\.\d+)", changelog)
+        self.assertIsNotNone(first_release)
+        self.assertEqual(first_release.group(1), version)
         self.assertIn("每个 B-roll 必须填写 `covers`", content)
         self.assertIn("edit-decision-list.json", content)
         self.assertIn("story-contract.json", content)

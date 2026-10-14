@@ -7,6 +7,9 @@ import argparse
 import hashlib
 import json
 import re
+import math
+import shutil
+import subprocess
 import unicodedata
 from pathlib import Path
 from typing import Any
@@ -78,12 +81,351 @@ def normalize_spoken_text(value: Any) -> str:
     )
 
 
+def is_static_presenter(profile: dict[str, Any]) -> bool:
+    presentation = profile.get("presentation")
+    return isinstance(presentation, dict) and presentation.get("mode") == "static-presenter"
+
+
+def is_fixed_presenter(profile: dict[str, Any]) -> bool:
+    presentation = profile.get("presentation")
+    return isinstance(presentation, dict) and presentation.get("mode") in ("static-presenter", "audio-driven-presenter")
+
+
+def is_subtle_presenter(profile: dict[str, Any]) -> bool:
+    presentation = profile.get("presentation")
+    return isinstance(presentation, dict) and presentation.get("performance_style") == "subtle-presenter"
+
+
+def validate_presentation_mode(profile: dict[str, Any], label: str) -> list[str]:
+    presentation = profile.get("presentation")
+    if not isinstance(presentation, dict):
+        return []  # 兼容未声明 presentation 的旧人物档案。
+    mode = presentation.get("mode")
+    errors: list[str] = []
+    if mode is not None and mode not in ("generated-performance", "static-presenter", "audio-driven-presenter"):
+        errors.append(f"{label}.presentation.mode 无效")
+    if is_subtle_presenter(profile) and mode != "generated-performance":
+        errors.append(f"{label} 的 subtle-presenter 必须采用 generated-performance")
+    return errors
+
+
+def validate_presenter_motion(
+    profile_path: Path,
+    profile: dict[str, Any],
+    project_root: Path,
+    narration_contract_path: Path | None = None,
+    label: str = "presenter",
+) -> list[str]:
+    errors: list[str] = []
+    presentation = profile.get("presentation", {})
+    subtle = is_subtle_presenter(profile)
+    if subtle:
+        errors.extend(validate_presentation_mode(profile, label))
+        if presentation.get("body_motion") != "subtle":
+            errors.append(f"{label}.presentation.body_motion 必须为 subtle")
+        regions = text_list(presentation.get("animated_regions"))
+        if regions is None or len(regions) != len(set(regions)) or not set(regions).issubset({"head", "hands", "eyes"}) or not set(regions).intersection({"head", "hands"}):
+            errors.append(f"{label}.presentation.animated_regions 必须含实际 head 或 hands 动作，不能只动口眼")
+        if presentation.get("mouth_behavior") != "non-speaking" or presentation.get("mouth_driver") is not None:
+            errors.append(f"{label} 的轻微表演必须 mouth_behavior=non-speaking、mouth_driver=null")
+        allowed_regions = set(regions or []).intersection({"head", "hands", "eyes"})
+    else:
+        if presentation.get("body_motion") != "fixed":
+            errors.append(f"{label}.presentation.body_motion 必须为 fixed")
+        regions = text_list(presentation.get("animated_regions"))
+        if regions is None or len(regions) != 2 or set(regions) != {"mouth", "eyes"}:
+            errors.append(f"{label}.presentation.animated_regions 必须且只能为 mouth、eyes")
+        allowed_regions = {"mouth", "eyes"}
+    driver = presentation.get("mouth_driver")
+    if not subtle and driver not in ("amplitude", "phoneme"):
+        errors.append(f"{label}.presentation.mouth_driver 必须为 amplitude 或 phoneme")
+    if not nonempty_text(presentation.get("animation_authorization")):
+        action_kind = "轻微角色动作" if subtle else "动嘴与眨眼"
+        errors.append(f"{label}.presentation.animation_authorization 必须记录用户授权{action_kind}的原话")
+    motion = presentation.get("motion_review")
+    if not isinstance(motion, dict):
+        return errors + [f"{label}.presentation.motion_review 必须记录真实动态样段审查，制作授权不能代替审片"]
+    if motion.get("mouth_driver") != driver:
+        errors.append(f"{label}.motion_review.mouth_driver 与实际驱动模式不一致")
+    if subtle:
+        required_reviews = ("reviewed", "subtle_motion_verified", "mouth_not_speaking_verified", "identity_preserved_verified", "anatomy_safe_verified")
+        if motion.get("status") == "sample-not-created":
+            for field in required_reviews + ("lip_sync_verified", "mouth_audio_sync_verified"):
+                if motion.get(field) is not False:
+                    errors.append(f"{label}.motion_review.{field} 必须为 false，未制作动作短样不得伪填已审")
+            return errors + [f"{label}.motion_review 新动作短样待制作：当前仅保存配置与导演安排，不能锁定或通过渲染门"]
+        for field in ("lip_sync_verified", "mouth_audio_sync_verified"):
+            if motion.get(field) is not False:
+                errors.append(f"{label}.motion_review.{field} 必须为 false，轻微表演的嘴不说话")
+    else:
+        required_reviews = ("reviewed", "body_fixed_verified", "mouth_audio_sync_verified", "blink_verified", "identity_preserved_verified")
+    for field in required_reviews:
+        if motion.get(field) is not True:
+            errors.append(f"{label}.motion_review.{field} 尚未通过真实样段审查")
+    if not subtle and driver in ("amplitude", "phoneme") and motion.get("lip_sync_verified") is not (driver == "phoneme"):
+        errors.append(f"{label}.motion_review.lip_sync_verified 必须与 mouth_driver 一致；音量开合不得称为音素同步")
+
+    bindings: dict[str, Path | None] = {}
+    for field in ("sample", "audio", "character_asset"):
+        target = resolve_path(profile_path, motion.get(f"{field}_path"))
+        bindings[field] = target
+        expected = str(motion.get(f"{field}_sha256", "")).strip()
+        if target is None or not target.is_file() or target.stat().st_size == 0:
+            errors.append(f"{label}.motion_review.{field}_path 不存在、为空或不可读取")
+        elif not SHA256_PATTERN.fullmatch(expected) or file_sha256(target).casefold() != expected.casefold():
+            errors.append(f"{label}.motion_review.{field}_sha256 与实际文件不一致")
+        if target is not None and project_root not in target.parents:
+            errors.append(f"{label}.motion_review.{field}_path 必须位于当前视频项目内")
+    references = profile.get("reference_assets")
+    anchor_bindings = {
+        (resolve_path(profile_path, item.get("path")), str(item.get("sha256", "")).strip().casefold())
+        for item in references if isinstance(item, dict) and item.get("role") == "identity-anchor"
+    } if isinstance(references, list) else set()
+    if (bindings["character_asset"], str(motion.get("character_asset_sha256", "")).strip().casefold()) not in anchor_bindings:
+        errors.append(f"{label}.motion_review.character_asset 必须绑定已批准 identity-anchor 的原图及哈希")
+
+    source_refs = motion.get("source_refs")
+    source_regions: set[str] = set()
+    if not isinstance(source_refs, list) or not source_refs:
+        source_kind = "实际头部或手势动作素材" if subtle else "嘴部与眼部局部素材"
+        errors.append(f"{label}.motion_review.source_refs 必须绑定{source_kind}")
+    else:
+        for index, source in enumerate(source_refs):
+            source_label = f"{label}.motion_review.source_refs[{index}]"
+            if not isinstance(source, dict):
+                errors.append(f"{source_label} 必须为对象")
+                continue
+            region = source.get("region")
+            if not isinstance(region, str) or region not in allowed_regions:
+                errors.append(f"{source_label}.region 与实际 animated_regions 不一致")
+            else:
+                source_regions.add(region)
+            target = resolve_path(profile_path, source.get("path"))
+            expected = str(source.get("sha256", "")).strip()
+            if target is None or not target.is_file() or target.stat().st_size == 0:
+                errors.append(f"{source_label}.path 不存在、为空或不可读取")
+            elif not SHA256_PATTERN.fullmatch(expected) or file_sha256(target).casefold() != expected.casefold():
+                errors.append(f"{source_label}.sha256 与实际局部素材不一致")
+            if target is not None and project_root not in target.parents:
+                errors.append(f"{source_label}.path 必须位于当前视频项目内")
+            if subtle and region in ("head", "hands") and (target == bindings["character_asset"] or expected.casefold() == str(motion.get("character_asset_sha256", "")).strip().casefold()):
+                errors.append(f"{source_label} 不能用静态身份原图本身代替新头部或手势动作素材")
+        if source_regions != allowed_regions:
+            errors.append(f"{label}.motion_review.source_refs 必须覆盖实际 animated_regions")
+    if subtle:
+        def source_bindings(value: Any) -> set[tuple[Any, Any, str]]:
+            return {(item.get("region"), resolve_path(profile_path, item.get("path")), str(item.get("sha256", "")).strip().casefold()) for item in value if isinstance(item, dict) and isinstance(item.get("region"), str)} if isinstance(value, list) else set()
+        if not source_bindings(source_refs) or source_bindings(source_refs) != source_bindings(presentation.get("source_refs")):
+            errors.append(f"{label}.motion_review.source_refs 必须与当前 presentation.source_refs 的实际素材及哈希一致")
+
+    contract_path = narration_contract_path or project_root / "narration-contract.json"
+    try:
+        narration = json.loads(contract_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(f"{label}.motion_review 无法读取正式旁白契约：{exc}")
+        narration = {}
+    if not isinstance(narration, dict):
+        narration = {}
+    official_audio = resolve_path(contract_path, narration.get("audio_path"))
+    official_sha = str(narration.get("audio_sha256", "")).strip().casefold()
+    if bindings["audio"] != official_audio or str(motion.get("audio_sha256", "")).strip().casefold() != official_sha or not SHA256_PATTERN.fullmatch(official_sha):
+        errors.append(f"{label}.motion_review.audio 必须绑定正式 narration-contract 的整轨音频路径和哈希")
+    duration = narration.get("duration_seconds")
+    start = motion.get("audio_start_seconds")
+    end = motion.get("audio_end_seconds")
+    numeric = lambda value: isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+    actual_audio_duration: float | None = None
+    if official_audio is None or not official_audio.is_file() or official_audio.stat().st_size == 0:
+        errors.append(f"{label}.motion_review 正式整轨音频不存在、为空或不可读取")
+    else:
+        probe = shutil.which("ffprobe")
+        if probe is None:
+            errors.append(f"{label}.motion_review 无法检查正式整轨音频：未找到 ffprobe")
+        else:
+            try:
+                result = subprocess.run([probe, "-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_type,duration:format=duration", "-of", "json", str(official_audio)], capture_output=True, text=True, timeout=15, check=True)
+                audio_data = json.loads(result.stdout)
+                audio_streams = [item for item in audio_data.get("streams", []) if isinstance(item, dict) and item.get("codec_type") == "audio"]
+                if not audio_streams:
+                    errors.append(f"{label}.motion_review 正式整轨文件必须含真实音频声轨")
+                else:
+                    # 声轨时长优先，避免长视频掩盖其中只有一小段音频。
+                    stream_duration = audio_streams[0].get("duration")
+                    try:
+                        measured_duration = float(stream_duration)
+                    except (TypeError, ValueError):
+                        measured_duration = float(audio_data.get("format", {}).get("duration", 0))
+                    if not math.isfinite(measured_duration) or measured_duration <= 0:
+                        errors.append(f"{label}.motion_review 正式整轨声轨没有有效真实时长")
+                    else:
+                        actual_audio_duration = measured_duration
+                        if not numeric(duration) or abs(actual_audio_duration - float(duration)) > 0.25:
+                            errors.append(f"{label}.motion_review 正式整轨真实时长与 narration-contract.duration_seconds 不一致")
+            except (OSError, subprocess.SubprocessError, ValueError, TypeError) as exc:
+                errors.append(f"{label}.motion_review 正式整轨文件无法确认为真实音频：{exc}")
+    valid_window = numeric(duration) and float(duration) > 0 and numeric(start) and numeric(end) and actual_audio_duration is not None and 0 <= float(start) < float(end) <= min(float(duration), actual_audio_duration)
+    if not valid_window:
+        errors.append(f"{label}.motion_review.audio_start_seconds/audio_end_seconds 必须严格位于正式整轨的真实音频时长范围内")
+
+    sample = bindings["sample"]
+    if sample is not None and sample.is_file() and sample.stat().st_size > 0:
+        probe = shutil.which("ffprobe")
+        if probe is None:
+            errors.append(f"{label}.motion_review 无法检查真实样段：未找到 ffprobe")
+        else:
+            try:
+                result = subprocess.run([probe, "-v", "error", "-show_entries", "stream=codec_type:format=duration", "-of", "json", str(sample)], capture_output=True, text=True, timeout=15, check=True)
+                sample_data = json.loads(result.stdout)
+                stream_types = {item.get("codec_type") for item in sample_data.get("streams", []) if isinstance(item, dict)}
+                if not {"video", "audio"}.issubset(stream_types):
+                    errors.append(f"{label}.motion_review.sample 必须是真实含声音的视频样段")
+                sample_duration = float(sample_data.get("format", {}).get("duration", 0))
+                if not sample_duration > 0 or (valid_window and abs(sample_duration - (float(end) - float(start))) > 0.25):
+                    errors.append(f"{label}.motion_review.sample 时长与正式音频截取范围不一致")
+            except (OSError, subprocess.SubprocessError, ValueError, TypeError) as exc:
+                errors.append(f"{label}.motion_review.sample 无法确认为真实视频样段：{exc}")
+    return errors
+
+
+def validate_static_presenter_profile(profile_path: Path, profile: dict[str, Any], project_root: Path, label: str) -> list[str]:
+    errors: list[str] = []
+    presentation = profile.get("presentation", {})
+    not_applicable = presentation.get("review_not_applicable")
+    if not isinstance(not_applicable, dict):
+        errors.append(f"{label}.presentation.review_not_applicable 必须写明动作复核不适用原因")
+        not_applicable = {}
+    continuity = profile.get("continuity")
+    if not isinstance(continuity, dict):
+        continuity = {}
+    for field in ("representative_actions_reviewed", "action_silhouette_duplicates_checked"):
+        if not nonempty_text(not_applicable.get(field)):
+            errors.append(f"{label}.presentation.review_not_applicable 缺少 {field} 原因")
+        if continuity.get(field) is not False:
+            errors.append(f"{label}.continuity.{field} 必须为 false，固定站姿人物不得伪填身体动作已审")
+    if continuity.get("identity_anchor_reviewed") is not True:
+        errors.append(f"{label}.continuity.identity_anchor_reviewed 尚未通过")
+    approval = profile.get("approval")
+    if not isinstance(approval, dict) or approval.get("approved") is not True:
+        errors.append(f"{label} 的静态原图尚未获得用户身份锁定确认")
+    elif any(not nonempty_text(approval.get(field)) for field in ("approval_message", "approved_at")):
+        errors.append(f"{label} 缺少静态原图的用户确认原文或时间")
+    if not nonempty_text(profile.get("authorization")):
+        errors.append(f"{label} 缺少人物授权说明")
+    references = profile.get("reference_assets")
+    anchors = [item for item in references if isinstance(item, dict) and item.get("role") == "identity-anchor"] if isinstance(references, list) else []
+    if not anchors:
+        errors.append(f"{label} 的静态讲解角色必须复用已批准原图为 identity-anchor")
+    for index, anchor in enumerate(anchors):
+        anchor_label = f"{label}.identity-anchor[{index}]"
+        target = resolve_path(profile_path, anchor.get("path"))
+        if target is None or not target.is_file():
+            errors.append(f"{anchor_label} 指向的原图不存在或不可读取")
+        else:
+            expected = str(anchor.get("sha256", "")).strip()
+            if not SHA256_PATTERN.fullmatch(expected) or file_sha256(target).casefold() != expected.casefold():
+                errors.append(f"{anchor_label} SHA-256 与实际原图不一致")
+        if target is not None and project_root not in target.parents:
+            errors.append(f"{anchor_label} 必须整理到当前视频项目内")
+        if not nonempty_text(anchor.get("authorization")):
+            errors.append(f"{anchor_label} 缺少素材授权")
+    return errors
+
+
+def validate_static_presenter_review(
+    contract_path: Path,
+    review: dict[str, Any],
+    label: str,
+    character_ids: list[str],
+    profiles: dict[str, tuple[Path, dict[str, Any]]],
+    narration_segment_id: str,
+    seen_assets: dict[tuple[str, Path], list[tuple[str, str, str]]],
+    actual_assets: Any = None,
+) -> list[str]:
+    errors: list[str] = []
+    asset_path = resolve_path(contract_path, review.get("asset_path"))
+    if asset_path is None or not asset_path.is_file():
+        errors.append(f"{label}.asset_path 必须指向已批准原图")
+    asset_id = str(review.get("asset_id", "")).strip()
+    if not nonempty_text(review.get("asset_id")):
+        errors.append(f"{label}.asset_id 必须绑定当前镜头实际使用的人物素材")
+    if len(character_ids) != 1:
+        errors.append(f"{label} 的固定讲解人物须按单个人物分别填写素材复核")
+    explanatory_role = str(review.get("explanatory_role", "")).strip()
+    if not nonempty_text(review.get("explanatory_role")):
+        errors.append(f"{label} 缺少人物在当前语义中的 explanatory_role")
+    for field in ("action", "action_signature", "action_evidence"):
+        if review.get(field) not in (None, ""):
+            errors.append(f"{label}.{field} 不得填写，固定讲解模式不能沿用身体动作或真实讲话声明")
+    if review.get("physical_action") is not False:
+        errors.append(f"{label}.physical_action 必须为 false，人物身体保持固定")
+    character_assets = [item for item in actual_assets if isinstance(item, dict) and item.get("role") == "character"] if isinstance(actual_assets, list) else []
+    declared_ids = [str(item.get("asset_id", "")).strip() for item in character_assets]
+    if not character_assets:
+        errors.append(f"{label} 必须在当前 scene/shot.assets 中声明 role=character 的实际素材")
+    if len(set(declared_ids)) != len(declared_ids):
+        errors.append(f"{label} 的实际人物素材 asset_id 不得重复")
+    for item in character_assets:
+        if item.get("character_id") not in character_ids:
+            errors.append(f"{label} 的实际人物素材包含未在本镜声明的 character_id")
+    for character_id in character_ids:
+        profile_path, profile = profiles[character_id]
+        presentation = profile.get("presentation", {})
+        audio_presenter = presentation.get("mode") == "audio-driven-presenter"
+        if audio_presenter:
+            driver = presentation.get("mouth_driver")
+            if review.get("mouth_driver") != driver:
+                errors.append(f"{label}.mouth_driver 与人物档案不一致")
+            if review.get("mouth_audio_sync") is not True:
+                errors.append(f"{label}.mouth_audio_sync 必须为 true，嘴部随配音语音活动开合")
+            if driver not in ("amplitude", "phoneme") or review.get("lip_sync") is not (driver == "phoneme"):
+                errors.append(f"{label}.lip_sync 必须与 mouth_driver 一致；amplitude 必须为 false")
+        else:
+            if review.get("lip_sync") is not False:
+                errors.append(f"{label}.lip_sync 必须为 false，静态原图不能声明口型同步")
+            if review.get("mouth_audio_sync") not in (None, False):
+                errors.append(f"{label}.mouth_audio_sync 静态模式只能为 false 或省略")
+        references = profile.get("reference_assets")
+        anchors = {
+            resolve_path(profile_path, item.get("path")): str(item.get("sha256", "")).strip().casefold()
+            for item in references if isinstance(item, dict) and item.get("role") == "identity-anchor"
+        } if isinstance(references, list) else {}
+        matching_assets = [item for item in character_assets if item.get("character_id") == character_id]
+        if len(matching_assets) != 1 or matching_assets[0].get("asset_id") != asset_id:
+            errors.append(f"{label}.asset_id 必须唯一匹配当前镜头 {character_id} 的实际人物素材")
+        else:
+            actual = matching_assets[0]
+            actual_path = resolve_path(contract_path, actual.get("path"))
+            expected = str(actual.get("sha256", "")).strip().casefold()
+            if actual_path != asset_path:
+                errors.append(f"{label}.asset_path 与当前镜头实际人物素材的 path 不一致")
+            if actual_path is None or not actual_path.is_file() or not SHA256_PATTERN.fullmatch(expected) or file_sha256(actual_path).casefold() != expected:
+                errors.append(f"{label} 的实际人物素材 sha256 与文件不一致")
+            elif anchors.get(actual_path) != expected:
+                errors.append(f"{label} 的实际人物素材必须绑定已批准 identity-anchor 的路径与哈希")
+        if asset_path is None or asset_path not in anchors:
+            errors.append(f"{label}.asset_path 未绑定 {character_id} 的已批准 identity-anchor")
+            continue
+        key = (character_id, asset_path)
+        previous_uses = seen_assets.get(key, [])
+        if previous_uses and not nonempty_text(review.get("reuse_reason")):
+            errors.append(f"{label} 重复使用原图必须填写 reuse_reason")
+        for previous_label, previous_role, previous_segment in previous_uses:
+            if normalize_spoken_text(previous_role) == normalize_spoken_text(explanatory_role):
+                relay = bool(narration_segment_id) and narration_segment_id == previous_segment and review.get("reuse_approved") is True
+                if not relay:
+                    errors.append(f"{label} 与 {previous_label} 重复原图和讲解职责，须有新语义职责或经审查的同段接力")
+                    break
+        seen_assets.setdefault(key, []).append((label, explanatory_role, narration_segment_id))
+    return errors
+
+
 def validate_fine_shots(
     contract_path: Path,
     shots: Any,
     expected_segments: dict[str, dict[str, Any]],
     contract_duration: float | None,
     character_ids: set[str],
+    character_profiles: dict[str, tuple[Path, dict[str, Any]]] | None = None,
 ) -> list[str]:
     errors: list[str] = []
     if not isinstance(shots, list) or not shots:
@@ -95,6 +437,8 @@ def validate_fine_shots(
     excerpts_by_segment: dict[str, list[str]] = {}
     used_segment_ids: set[str] = set()
     seen_action_signatures: dict[str, str] = {}
+    seen_static_assets: dict[tuple[str, Path], list[tuple[str, str, str]]] = {}
+    character_profiles = character_profiles or {}
 
     for index, shot in enumerate(shots):
         label = f"shots[{index}]"
@@ -233,14 +577,27 @@ def validate_fine_shots(
             if not isinstance(character_review, dict):
                 errors.append(f"{label} 缺少 character_review")
             else:
-                for field in ("action", "action_signature"):
-                    if not nonempty_text(character_review.get(field)):
-                        errors.append(f"{label}.character_review 缺少 {field}")
+                static_ids = [character_id for character_id in shot_character_ids if character_id in character_profiles and is_fixed_presenter(character_profiles[character_id][1])]
+                if static_ids:
+                    if len(static_ids) != len(shot_character_ids):
+                        errors.append(f"{label} 的固定讲解角色和生成动作角色必须分别填写复核镜头")
+                    errors.extend(validate_static_presenter_review(
+                        contract_path, character_review, f"{label}.character_review", static_ids,
+                        character_profiles, segment_id, seen_static_assets, shot.get("assets"),
+                    ))
+                else:
+                    for field in ("action", "action_signature"):
+                        if not nonempty_text(character_review.get(field)):
+                            errors.append(f"{label}.character_review 缺少 {field}")
+                if any(character_id in character_profiles and is_subtle_presenter(character_profiles[character_id][1]) for character_id in shot_character_ids):
+                    for field, expected in (("physical_action", True), ("lip_sync", False), ("mouth_audio_sync", False)):
+                        if character_review.get(field) is not expected:
+                            errors.append(f"{label}.character_review.{field} 必须为 {expected}，轻微表演的嘴不说话")
                 for field in ("pose_matches_visual_duty", "styling_matches_context", "identity_verified", "anatomy_safe"):
                     if character_review.get(field) is not True:
                         errors.append(f"{label}.character_review.{field} 尚未通过")
                 signature = str(character_review.get("action_signature", "")).strip()
-                if signature:
+                if signature and not static_ids:
                     previous_shot = seen_action_signatures.get(signature)
                     if previous_shot is not None:
                         approved = character_review.get("reuse_approved") is True
@@ -427,6 +784,7 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
     if schema_version not in VALID_SHOT_READINESS_SCHEMAS:
         errors.append("schema_version 未受支持；禁止用未知版本跳过镜头门禁")
     character_ids: set[str] = set()
+    character_profiles: dict[str, tuple[Path, dict[str, Any]]] = {}
     if schema_version in FOUNDATION_SCHEMAS:
         _, binding_errors = validate_artifact_binding(path, data.get("story_binding"), "story_binding")
         errors.extend(binding_errors)
@@ -537,6 +895,18 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
                 profile_data = json.loads(profile_path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 profile_data = {}
+            if not isinstance(profile_data, dict):
+                errors.append(f"{label} 的人物档案必须为对象")
+                profile_data = {}
+            character_profiles[character_id] = (profile_path, profile_data)
+            errors.extend(validate_presentation_mode(profile_data, label))
+            if is_subtle_presenter(profile_data):
+                errors.extend(validate_presenter_motion(profile_path, profile_data, path.parent.resolve(), narration_contract_path, label))
+            static_presenter = is_fixed_presenter(profile_data)
+            if static_presenter:
+                errors.extend(validate_static_presenter_profile(profile_path, profile_data, path.parent.resolve(), label))
+                if profile_data.get("presentation", {}).get("mode") == "audio-driven-presenter":
+                    errors.extend(validate_presenter_motion(profile_path, profile_data, path.parent.resolve(), narration_contract_path, label))
             if profile_data.get("character_id") != character_id or profile_data.get("status") != "locked":
                 errors.append(f"{label} 的人物 ID 不一致或尚未锁定")
             if schema_version in FINE_SHOT_SCHEMAS:
@@ -551,12 +921,13 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
                 if not isinstance(continuity, dict):
                     errors.append(f"{label} 缺少人物 continuity")
                 else:
-                    for field in (
+                    required_reviews = ("identity_anchor_reviewed", "wardrobe_context_reviewed") if static_presenter else (
                         "identity_anchor_reviewed",
                         "wardrobe_context_reviewed",
                         "representative_actions_reviewed",
                         "action_silhouette_duplicates_checked",
-                    ):
+                    )
+                    for field in required_reviews:
                         if continuity.get(field) is not True:
                             errors.append(f"{label}.continuity.{field} 尚未通过")
         if data.get("human_presence") in {"supplied-character", "generated-scene-illustration"} and not character_ids:
@@ -635,6 +1006,7 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
     used_segment_ids: set[str] = set()
     seen_visual_signatures: dict[str, tuple[str, str]] = {}
     seen_action_signatures: dict[str, tuple[str, str]] = {}
+    seen_static_scene_assets: dict[tuple[str, Path], list[tuple[str, str, str]]] = {}
     scene_records: dict[str, dict[str, Any]] = {}
 
     for index, scene in enumerate(scenes):
@@ -936,9 +1308,17 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
         elif blank_hold > 0.5:
             errors.append(f"{label} 存在 {blank_hold} 秒无职责空白")
 
+        scene_ids_for_mode = text_list(scene.get("character_ids")) or []
+        static_scene_ids = [character_id for character_id in scene_ids_for_mode if character_id in character_profiles and is_fixed_presenter(character_profiles[character_id][1])]
         interaction = scene.get("subject_interaction")
         if not isinstance(interaction, dict):
             errors.append(f"{label}.subject_interaction 必须为对象")
+        elif static_scene_ids:
+            if interaction.get("required") is not False:
+                errors.append(f"{label} 的固定讲解人物不能声明真实主体交互，subject_interaction.required 必须为 false")
+            for field in ("action", "action_signature", "action_evidence"):
+                if interaction.get(field) not in (None, ""):
+                    errors.append(f"{label}.subject_interaction.{field} 固定讲解模式不得填写旧身体动作声明")
         elif interaction.get("required") is True:
             if data.get("human_presence") == "none":
                 errors.append(f"{label} 没有人物或角色，不能要求主体交互")
@@ -976,6 +1356,17 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
                             errors.append(f"{label}.character_continuity_review.{field} 尚未通过")
                     if continuity_review.get("unexplained_changes") is not False:
                         errors.append(f"{label} 的人物存在未解释的换脸、换衣或画风变化")
+                    if any(character_id in character_profiles and is_subtle_presenter(character_profiles[character_id][1]) for character_id in scene_character_ids):
+                        for field, expected in (("physical_action", True), ("lip_sync", False), ("mouth_audio_sync", False)):
+                            if continuity_review.get(field) is not expected:
+                                errors.append(f"{label}.character_continuity_review.{field} 必须为 {expected}，轻微表演的嘴不说话")
+                    if static_scene_ids:
+                        if len(static_scene_ids) != len(scene_character_ids):
+                            errors.append(f"{label} 的固定讲解角色和生成动作角色必须分别填写复核镜头")
+                        errors.extend(validate_static_presenter_review(
+                            path, continuity_review, f"{label}.character_continuity_review", static_scene_ids,
+                            character_profiles, segment_ids[0].strip() if segment_ids and len(segment_ids) == 1 else "", seen_static_scene_assets, scene.get("assets"),
+                        ))
             if scene.get("platform_safe") is not True:
                 errors.append(f"{label} 尚未通过平台 UI 遮挡安全检查")
 
@@ -993,7 +1384,7 @@ def validate(path: Path, narration_contract_path: Path | None = None) -> list[st
                     errors.append(f"{label} 用箭头表达没有或排除，应改用否定符号")
 
     if schema_version in FINE_SHOT_SCHEMAS:
-        errors.extend(validate_fine_shots(path, data.get("shots"), expected_segments, contract_duration, character_ids))
+        errors.extend(validate_fine_shots(path, data.get("shots"), expected_segments, contract_duration, character_ids, character_profiles))
 
     if narration_contract_path is not None:
         missing_segment_ids = set(expected_segments) - used_segment_ids

@@ -10,3 +10,7 @@
 - Produce Videos 对这些上游资源的本地新增仅包括视频场景选择、3:4 竖屏适配、干净度限制、平台安全区与成片质量门，不声称拥有上游模板或布局的原创权。
 
 模型、运行时和模板的许可证、使用范围及版本以各自上游页面和随附许可证为准。发布者不得把模型权重、访问令牌或用户素材复制进本 Skill。
+
+- IP 讲解导演规则参考 [62656456/ai-film-skills 的 ai-storyboard-director](https://github.com/62656456/ai-film-skills/tree/main/skills/ai-storyboard-director) 的观看顺序、人物调度与取景方法。上游许可证为 [Apache-2.0](https://github.com/62656456/ai-film-skills/blob/main/LICENSE)，许可证副本见 `references/director-source-LICENSE`。本 Skill 的 `ip-presenter-directing.md` 为 2026-10-14 针对静态讲解人和现有项目流程重新组织的规则，未包含上游运行包或执行依赖。
+
+- V2.6.5 的镜头与风格方法独立整理自 HyperFrames、video-shotcraft、brag、OpenMontage 和 Remotion captions 的公开规则及示例；逐项来源链接与取舍见 `references/directing-methods-and-creator-style.md`。此次未打包上述项目的代码、媒体或配方，不改变各上游及其依赖的许可证。

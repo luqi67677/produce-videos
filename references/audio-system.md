@@ -22,7 +22,7 @@
 
 用户希望使用自己的参考音色时另走 `user-reference`：必须提供参考音频、逐字文本和授权说明，并把参考音频与最终旁白分开记录。
 
-Skill 不携带任何预设声音、试听音频或默认音色。没有成品口播、可用 TTS API 或已准备好的 Qwen 模型时，不能继续生成旁白，也不能静默调用未说明的云端服务。
+Skill 包不携带私人参考声音。用户已授权长期复用的本机默认声音保存在包外；开工先按 `local-voice-defaults.md` 读取并校验，成功后直接沿用，不重复选声。没有成品口播、可用 TTS API 或已准备好的本地模型时，不能继续生成旁白，也不能静默调用未说明的云端服务。
 
 ## 从已有视频提取口播
 
@@ -103,7 +103,7 @@ python3 scripts/discover_audio_models.py \
 
 ## 开工时收集声音方向，生成试听时不再重复问
 
-用户选择 TTS 时，第一次开工信息包就要收集以下声音方向。TTS API 或 VoiceDesign 模型通过预检后直接复用，不再重复询问；只有用户主动改变要求或原始回答确有缺项时才补问：
+用户已批准本机默认声音或已指定参考音色时，沿用参考并记录授权，不重新询问以下维度。只有用户要设计尚未确认的新声音时，第一次开工信息包才收集以下声音方向。TTS API 或 VoiceDesign 模型通过预检后直接复用，不再重复询问；只有用户主动改变要求或原始回答确有缺项时才补问：
 
 - 性别呈现：男声、女声、儿童声、中性或不限；
 - 年龄感：儿童、少年、青年、成年、成熟或不限；
@@ -139,7 +139,26 @@ python3 scripts/validate_voice_selection.py \
 
 ## 使用 Qwen 生成正式旁白
 
-模型准备好后，要求用户确认声音描述，再运行：
+已授权本机默认或当次指定参考音色，直接复用已有批准。先读取 `local-voice-defaults.md` 的预检结果；旁白契约使用 `voice_source=user-reference`，模型必须为兼容的 Base。命令中的路径、模型 ID 和地址都取自当前已批准配置及实际模型预检：
+
+```bash
+python3 scripts/generate_qwen_voice.py \
+  --runtime-python <model-preflight.json 中的 python_executable> \
+  --model-path <local-voice-default.json 中的 model_path> \
+  --reference-config <local-voice-default.json 中的 reference_config> \
+  --model-id <local-voice-default.json 中的 model_id> \
+  --model-url <local-voice-default.json 中的 model_url> \
+  --segments-file <项目目录>/narration-contract.json \
+  --output <项目目录>/audio/narration_v1.wav \
+  --manifest-output <项目目录>/audio/narration_v1.manifest.json \
+  --voice-selection <项目目录>/voice-selection.json \
+  --language Chinese \
+  --contract-output <项目目录>/narration-contract.json
+```
+
+生成参数继承参考配置；用户明确要求本次调整的 CLI 参数优先，实际生效值和参考配置 SHA-256 同步记录到 manifest 与契约。本次调整不自动改长期配置。已有默认不重问声音描述、不生成新试听。
+
+下面 VoiceDesign 示例只适用于设计新声音：模型就绪且声音描述或试听已经获用户确认后运行：
 
 ```bash
 python3 scripts/generate_qwen_voice.py \
@@ -160,7 +179,7 @@ python3 scripts/generate_qwen_voice.py \
 ## 其他 TTS 和自己的声音
 
 - 用户已经录好完整口播：`voice_source` 使用 `external`，记录文件来源、SHA-256、实际时长、采样率和声道。
-- 用户希望用自己的音色由模型生成：要求参考音频、对应逐字文本和授权说明，`voice_source` 使用 `user-reference`；缺少任一项就停止，并另外记录最终旁白文件。
+- 用户希望用自己的音色由模型生成：记录参考音频、对应逐字文本和授权说明，`voice_source` 使用 `user-reference`；已授权私有默认配置具备这三项时自动复用，不再向用户索取；缺少任一项只报告具体缺口，并另外记录最终旁白文件。
 - 用户已有 TTS API：`voice_source` 使用 `other-tts`，记录供应方、模型标识、地址、运行时、API 预检、已批准声音选择和实际生成文件；没有明确可用入口时不能假设存在。
 
 已有音频或其他 TTS 生成文件使用 `scripts/register_audio_artifact.py` 登记。该脚本只读取和记录音频，不替用户选择模型，也不调用未说明的云服务：
@@ -181,7 +200,7 @@ python3 scripts/register_audio_artifact.py \
 
 每个项目建立 `narration-contract.json`，至少记录：
 
-- `voice_profile`：音频来源标签；Qwen 使用 `qwen-voice-design`，这不是预设声音；草稿为空；
+- `voice_profile`：音频来源标签；VoiceDesign 使用 `qwen-voice-design`，Base 参考音色保留用户配置中的 profile ID；草稿为空；
 - `voice_source`：`open-source-model`、`other-tts`、`user-reference` 或 `external`；不得使用已删除的 `design-profile`；
 - `provider`、`runtime`：TTS 供应方和执行运行时；
 - Qwen 开源模型的 `voice_instruction`、`model_id`、`model_url`、`model_path`；
@@ -215,6 +234,8 @@ python3 scripts/register_audio_artifact.py \
 只保留与真实画面事件对应的短声效，例如异常出现、对象入场、信号对齐、位置锁定和结论收束。没有可见事件时不加装饰声，不能用声效掩盖镜头缺少信息变化。
 
 ## 字幕与交付响度
+
+展示字幕按完整意思组织；识别时间保留，显示层可合并。默认在下方平台安全区内居中，最多两行，不把依附前后的短词单独闪现。中文尺寸、阅读时长与完整性检查见 `visual-storytelling-and-captions.md`。
 
 - 只保留一个最终字幕渲染层。
 - 综合响度目标约 -16.5 LUFS，可接受范围 -19 至 -14 LUFS；真峰值不高于 -1.0 dBFS。

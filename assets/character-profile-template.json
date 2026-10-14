@@ -28,7 +28,13 @@
   ],
   "continuity": {
     "same_identity_across_rolls": true,
-    "applies_to": ["a-roll", "b-roll", "hybrid", "graphic-led", "cover"],
+    "applies_to": [
+      "a-roll",
+      "b-roll",
+      "hybrid",
+      "graphic-led",
+      "cover"
+    ],
     "identity_anchor_reviewed": false,
     "wardrobe_context_reviewed": false,
     "representative_actions_reviewed": false,
@@ -38,5 +44,36 @@
     "approved": false,
     "approval_message": "",
     "approved_at": ""
+  },
+  "presentation": {
+    "mode": "static-presenter",
+    "role": "",
+    "asset_reuse_policy": "",
+    "allowed_layer_operations": [
+      "crop",
+      "scale-uniform",
+      "fade-in",
+      "fade-out"
+    ],
+    "forbidden_body_operations": [
+      "mouth-animation",
+      "eye-animation",
+      "body-animation",
+      "layer-shake",
+      "lip-sync"
+    ],
+    "review_not_applicable": {
+      "representative_actions_reviewed": "静态讲解人复用批准原图，无身体表演。",
+      "action_silhouette_duplicates_checked": "静态原图按讲解职责复用，不生成身体动作。"
+    },
+    "body_motion": "fixed",
+    "animated_regions": [],
+    "mouth_driver": null,
+    "animation_authorization": "",
+    "source_refs": [],
+    "performance_style": null,
+    "mouth_behavior": "non-speaking",
+    "lip_sync": false,
+    "mouth_audio_sync": false
   }
 }
