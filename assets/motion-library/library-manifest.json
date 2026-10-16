@@ -1,0 +1,317 @@
+{
+  "schema_version": "1.0",
+  "version": "1.0.0",
+  "name": "produce-videos 本地动效预设",
+  "api": {
+    "module": "motion-presets.mjs",
+    "factory": "createMotionPreset",
+    "seek": "seek(ms) 或 seekFrame(frame, fps)，时间由主 EDL 提供",
+    "coordinates": "归一化画面坐标；分层图解的绘图区宽高比必须等于 aspect 参数，支持 3:4、16:9 等画幅"
+  },
+  "engineVersions": {
+    "animejs": "4.5.0",
+    "three": "0.186.1",
+    "threeRevision": "186"
+  },
+  "engines": [
+    {
+      "id": "animejs",
+      "version": "4.5.0",
+      "source_url": "https://github.com/juliangarnier/anime",
+      "license": "MIT",
+      "license_path": "vendor/animejs/LICENSE.md",
+      "entry": "vendor/animejs/anime.esm.js"
+    },
+    {
+      "id": "three",
+      "version": "0.186.1",
+      "source_url": "https://github.com/mrdoob/three.js",
+      "license": "MIT",
+      "license_path": "vendor/three/LICENSE",
+      "entry": "vendor/three/three.core.js"
+    }
+  ],
+  "verification": {
+    "command": "node scripts/verify_motion_library.mjs",
+    "scope": "验证数值、端点与乱序取帧；不等同于用户成片、浏览器视觉或听感验收。"
+  },
+  "effects": [
+    {
+      "id": "title-reveal",
+      "name": "标题显现",
+      "engine": "animejs",
+      "version": "4.5.0",
+      "purpose": "新章节或核心结论进入时，短距离上移并显现。",
+      "default_duration_ms": 650,
+      "parameters": {
+        "offsetY": {
+          "type": "number",
+          "default": 0.06,
+          "min": 0,
+          "max": 0.15,
+          "description": "起始纵向偏移，占画面高度的比例。"
+        },
+        "startScale": {
+          "type": "number",
+          "default": 0.98,
+          "min": 0.9,
+          "max": 1,
+          "description": "起始缩放。"
+        }
+      },
+      "limits": [
+        "只控制整体字块，不拆汉字、不改原文。",
+        "字号、换行和安全区由排版层核验；不保证长标题自动适配。"
+      ],
+      "implementation": {
+        "path": "motion-presets.mjs",
+        "entrypoint": "createMotionPreset:title-reveal"
+      }
+    },
+    {
+      "id": "stagger-reveal",
+      "name": "逐项显现",
+      "engine": "animejs",
+      "version": "4.5.0",
+      "purpose": "按讲解顺序展示清单、成员或处理步骤。",
+      "default_duration_ms": 1200,
+      "parameters": {
+        "count": {
+          "type": "integer",
+          "default": 4,
+          "min": 1,
+          "max": 8,
+          "description": "元素数。"
+        },
+        "offsetY": {
+          "type": "number",
+          "default": 0.06,
+          "min": 0,
+          "max": 0.15,
+          "description": "起始纵向偏移。"
+        },
+        "staggerFraction": {
+          "type": "number",
+          "default": 0.4,
+          "min": 0,
+          "max": 0.8,
+          "description": "首项与末项的启动间隔占总时长的比例。"
+        }
+      },
+      "limits": [
+        "元素顺序由导演计划给定。",
+        "只控制可见性和位移；不表示任务依赖已完成。"
+      ],
+      "implementation": {
+        "path": "motion-presets.mjs",
+        "entrypoint": "createMotionPreset:stagger-reveal"
+      }
+    },
+    {
+      "id": "path-progress",
+      "name": "路径推进",
+      "engine": "animejs",
+      "version": "4.5.0",
+      "purpose": "沿折线路径呈现数据或任务的流动方向。",
+      "default_duration_ms": 1000,
+      "parameters": {
+        "startX": {
+          "type": "number",
+          "default": 0.12,
+          "min": 0.05,
+          "max": 0.3,
+          "description": "路径起点横坐标。"
+        },
+        "endX": {
+          "type": "number",
+          "default": 0.88,
+          "min": 0.7,
+          "max": 0.95,
+          "description": "路径终点横坐标。"
+        }
+      },
+      "limits": [
+        "输出归一化路径、路径比例和当前位置，须由画面绘制。",
+        "同一段推进不自动代表授权、同步或完成。"
+      ],
+      "implementation": {
+        "path": "motion-presets.mjs",
+        "entrypoint": "createMotionPreset:path-progress"
+      }
+    },
+    {
+      "id": "task-transfer",
+      "name": "任务传递",
+      "engine": "animejs",
+      "version": "4.5.0",
+      "purpose": "把同一个任务标记从发送者移动到接收者。",
+      "default_duration_ms": 1000,
+      "parameters": {
+        "arcHeight": {
+          "type": "number",
+          "default": 0.14,
+          "min": 0,
+          "max": 0.25,
+          "description": "弧线最大抬升。"
+        }
+      },
+      "limits": [
+        "只表达一个标记的转移，接收关系需配节点名称。",
+        "控制权移交与子任务派发必须使用不同文案和状态。"
+      ],
+      "implementation": {
+        "path": "motion-presets.mjs",
+        "entrypoint": "createMotionPreset:task-transfer"
+      }
+    },
+    {
+      "id": "camera-focus",
+      "name": "镜头聚焦",
+      "engine": "animejs",
+      "version": "4.5.0",
+      "purpose": "轻推近并平移到当前讲解对象，保留连续镜头。",
+      "default_duration_ms": 1600,
+      "parameters": {
+        "zoom": {
+          "type": "number",
+          "default": 1.1,
+          "min": 1,
+          "max": 1.25,
+          "description": "结束缩放。"
+        },
+        "panX": {
+          "type": "number",
+          "default": -0.015,
+          "min": -0.1,
+          "max": 0.1,
+          "description": "结束横向平移。"
+        },
+        "panY": {
+          "type": "number",
+          "default": 0,
+          "min": -0.1,
+          "max": 0.1,
+          "description": "结束纵向平移。"
+        }
+      },
+      "limits": [
+        "以画面中心缩放，输出的是数值变换。",
+        "不能自动识别人脸或补齐画外内容；使用者须核验主体安全区。"
+      ],
+      "implementation": {
+        "path": "motion-presets.mjs",
+        "entrypoint": "createMotionPreset:camera-focus"
+      }
+    },
+    {
+      "id": "crossfade",
+      "name": "叠化转场",
+      "engine": "animejs",
+      "version": "4.5.0",
+      "purpose": "在几何位置固定的两个图层之间柔和交接。",
+      "default_duration_ms": 450,
+      "parameters": {},
+      "limits": [
+        "输出互补权重，合成器须按权重混合两幅完整画面。",
+        "不能修复不同人物位置或构图造成的视觉跳动；应先对齐构图。"
+      ],
+      "implementation": {
+        "path": "motion-presets.mjs",
+        "entrypoint": "createMotionPreset:crossfade"
+      }
+    },
+    {
+      "id": "background-pulse",
+      "name": "背景轻呼吸",
+      "engine": "animejs",
+      "version": "4.5.0",
+      "purpose": "背景强调区缓慢明暗一次，辅助当前信息显现。",
+      "default_duration_ms": 2400,
+      "parameters": {
+        "minOpacity": {
+          "type": "number",
+          "default": 0.04,
+          "min": 0,
+          "max": 0.12,
+          "description": "最低不透明度。"
+        },
+        "maxOpacity": {
+          "type": "number",
+          "default": 0.1,
+          "min": 0.01,
+          "max": 0.2,
+          "description": "最高不透明度。"
+        },
+        "maxScale": {
+          "type": "number",
+          "default": 1.025,
+          "min": 1,
+          "max": 1.05,
+          "description": "最大缩放。"
+        }
+      },
+      "limits": [
+        "只执行一次呼吸，不自动循环。",
+        "避免闪烁、抢字幕、遮挡人物；无表达需要时用静态背景。"
+      ],
+      "implementation": {
+        "path": "motion-presets.mjs",
+        "entrypoint": "createMotionPreset:background-pulse"
+      }
+    },
+    {
+      "id": "layers-explode",
+      "name": "分层立体展开",
+      "engine": "animejs+three",
+      "version": "4.5.0+0.186.1",
+      "purpose": "把叠在一起的结构层拉开，解释层与层之间的关系。",
+      "default_duration_ms": 1500,
+      "parameters": {
+        "count": {
+          "type": "integer",
+          "default": 3,
+          "min": 2,
+          "max": 6,
+          "description": "结构层数。"
+        },
+        "gap": {
+          "type": "number",
+          "default": 1.05,
+          "min": 0.8,
+          "max": 1.4,
+          "description": "展开后的纵向层间距，世界坐标单位。"
+        },
+        "tiltX": {
+          "type": "number",
+          "default": 0.3,
+          "min": 0.15,
+          "max": 0.5,
+          "description": "水平轴倾角，弧度。"
+        },
+        "tiltY": {
+          "type": "number",
+          "default": -0.28,
+          "min": -0.5,
+          "max": -0.12,
+          "description": "纵轴倾角，弧度。"
+        },
+        "aspect": {
+          "type": "number",
+          "default": 1.6,
+          "min": 0.5,
+          "max": 2.4,
+          "description": "目标画幅宽高比；3:4 为 0.75，16:9 为 16/9。"
+        }
+      },
+      "limits": [
+        "Three.js 相机和矩阵生成二维投影，可交给 Canvas 或 SVG 绘制；绘图区宽高比必须等于 aspect。",
+        "属于分层图解，不是完整 WebGL 产品建模、光照、材质或交互系统。",
+        "层的语义由文案负责，不能把概念分层宣称为实际存储架构。"
+      ],
+      "implementation": {
+        "path": "motion-presets.mjs",
+        "entrypoint": "createMotionPreset:layers-explode"
+      }
+    }
+  ]
+}

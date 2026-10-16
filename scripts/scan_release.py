@@ -30,6 +30,13 @@ BINARY_SUFFIXES = {
     ".zip", ".docx", ".pptx", ".xlsx",
 }
 
+# Three.js 原版注释说明本地 URL 协议。仅此固定上游文件允许该通用协议字符串；
+# 个人路径和密钥规则仍逐项扫描，任何改动都会使这条例外失效。
+UPSTREAM_PROTOCOL_NOTE = {
+    "assets/motion-library/vendor/three/three.core.js":
+        "9edde002b066a9a05676a6127f67735b62baf399bdea529f2f7e31657da769e6",
+}
+
 
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -97,6 +104,8 @@ def scan(root: Path, banned: tuple[str, ...], release_root: bool) -> list[str]:
         lowered = content.casefold()
         for term in banned:
             if term.casefold() in lowered:
+                if term == "file:" + "//" and UPSTREAM_PROTOCOL_NOTE.get(relative) == sha256(path):
+                    continue
                 errors.append(f"文本包含禁止标识 {term}：{relative}")
         for pattern in SECRET_PATTERNS:
             if pattern.search(content):

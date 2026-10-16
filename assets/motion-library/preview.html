@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>本地动效库 · 手动取帧预览</title>
+  <style>
+    :root{color-scheme:light;--ink:#17251f;--muted:#5b6b60;--line:#d9e0d6;--accent:#dce85d}
+    *{box-sizing:border-box}body{margin:0;background:#f4f6ef;color:var(--ink);font:16px/1.6 system-ui,-apple-system,"PingFang SC",sans-serif}
+    main{max-width:1400px;margin:auto;padding:40px 28px 80px}h1{font-size:clamp(26px,4vw,42px);line-height:1.2;margin:8px 0 18px}h2{font-size:22px;line-height:1.3;margin:0}.eyebrow{font-size:12px;letter-spacing:.12em;color:var(--muted)}.intro{max-width:900px;color:var(--muted)}
+    .controls{position:sticky;top:0;z-index:10;padding:16px 20px;background:#f9fbf5f5;border:1px solid var(--line);border-radius:16px;margin:28px 0;backdrop-filter:blur(8px)}
+    .row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}input[type=range]{accent-color:#566d27;flex:1;min-width:180px}output{font-variant-numeric:tabular-nums;min-width:4em;font-weight:700}button{cursor:pointer;border:1px solid #cbd5c5;background:white;border-radius:8px;padding:6px 13px;font:inherit;color:inherit}button:hover,button:focus-visible{background:var(--accent)}.hint{font-size:13px;color:var(--muted);margin:10px 0 0}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.card{background:white;border:1px solid var(--line);border-radius:18px;overflow:hidden}.head{padding:22px 22px 14px}.meta{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:12px;margin-bottom:8px}.purpose{margin:10px 0 0;color:var(--muted);font-size:14px;min-height:2.8em}canvas{display:block;width:100%;aspect-ratio:1.6;background:#edf2e8;border-block:1px solid var(--line)}.foot{padding:14px 22px 20px;color:var(--muted);font-size:13px}.time{font-variant-numeric:tabular-nums;color:#253e2a;font-weight:600}.limits{margin:10px 0 0;padding-left:18px}.limits li{margin:4px 0}details{margin-top:12px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace}#error{color:#a52121;background:#fff2ee;padding:18px;border-radius:12px;display:none}@media(max-width:750px){main{padding:28px 16px}.grid{grid-template-columns:1fr}.controls{padding:12px}.purpose{min-height:0}}
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">PRODUCE-VIDEOS · 本地实现验证</div>
+  <h1>8 个动效，按同一个进度取帧</h1>
+  <p class="intro">拖动进度，查看每个效果在该时刻的状态。画面直接使用本地预设的计算结果；没有自动播放、鼠标跟随、滚动触发或随机内容。此页测试库能力，不是用户成片。</p>
+  <p class="intro">分层效果使用 Three.js 的相机和矩阵计算二维投影，再用 Canvas 绘制。它是立体结构图解，不是完整的 WebGL 产品建模工具。最终画面、节奏和声音仍须逐镜审查。</p>
+  <section class="controls" aria-label="手动时间控制">
+    <div class="row"><label for="progress">全局进度</label><input id="progress" type="range" min="0" max="1000" value="0" step="1"><output id="value" for="progress">0%</output></div>
+    <div class="row" style="margin-top:10px"><button data-progress="0">起点</button><button data-progress="250">25%</button><button data-progress="500">中点</button><button data-progress="750">75%</button><button data-progress="1000">终点</button></div>
+    <p class="hint">可按“终点 → 起点 → 中点 → 起点”检查回跳。每张卡片按自己的时长取样；生产时必须接入主 EDL 的镜头帧，不新增时间轴。</p>
+  </section>
+  <p id="error" role="alert"></p>
+  <section id="grid" class="grid" aria-label="动效预设"></section>
+</main>
+<script type="module">
+const errorBox = document.querySelector('#error');
+const W = 640, H = 400;
+const colors = {ink:'#17251f', muted:'#6a7b68', line:'#a6b79c', accent:'#dce85d', light:'#f6f8ef', green:'#71955d', blue:'#8ba7c0'};
+function rounded(ctx,x,y,w,h,r=14,fill=colors.light,stroke=null){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke()}}
+function text(ctx,value,x,y,size=24,color=colors.ink,align='center',weight=500){ctx.fillStyle=color;ctx.font=`${weight} ${size}px system-ui,"PingFang SC",sans-serif`;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(value,x,y)}
+function node(ctx,label,x,y,width=142){rounded(ctx,x-width/2,y-35,width,70,12,'#fff',colors.line);text(ctx,label,x,y,22)}
+function line(ctx,points,color=colors.line,width=3){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x*W,p.y*H):ctx.moveTo(p.x*W,p.y*H));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke()}
+function pathPart(points,progress){const lengths=points.slice(1).map((p,i)=>Math.hypot(p.x-points[i].x,p.y-points[i].y));let distance=lengths.reduce((a,b)=>a+b,0)*progress;const part=[points[0]];for(let i=0;i<lengths.length;i++){if(distance>=lengths[i]){part.push(points[i+1]);distance-=lengths[i]}else{const t=distance/lengths[i];part.push({x:points[i].x+(points[i+1].x-points[i].x)*t,y:points[i].y+(points[i+1].y-points[i].y)*t});break}}return part}
+function base(ctx){ctx.clearRect(0,0,W,H);ctx.fillStyle='#edf2e8';ctx.fillRect(0,0,W,H)}
+function pictureScene(ctx,mode){
+  ctx.fillStyle='#edf2e8';ctx.fillRect(0,0,W,H);rounded(ctx,88,88,464,254,18,'#fff',colors.line);
+  ctx.save();ctx.beginPath();ctx.roundRect(104,104,432,222,10);ctx.clip();
+  ctx.fillStyle=mode?'#c5d6e5':'#efe4be';ctx.fillRect(104,104,432,222);
+  ctx.fillStyle=mode?'#f7f4dc':'#e3a856';ctx.beginPath();ctx.arc(440,158,mode?23:30,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=mode?'#8ca9ba':'#b5c38b';ctx.beginPath();ctx.moveTo(104,260);ctx.lineTo(220,155);ctx.lineTo(345,285);ctx.lineTo(435,205);ctx.lineTo(536,290);ctx.lineTo(536,326);ctx.lineTo(104,326);ctx.closePath();ctx.fill();
+  ctx.fillStyle=mode?'#58788e':'#7d9562';ctx.beginPath();ctx.moveTo(104,304);ctx.quadraticCurveTo(280,220,536,300);ctx.lineTo(536,326);ctx.lineTo(104,326);ctx.closePath();ctx.fill();ctx.restore();
+}
+function render(ctx,id,s){
+  base(ctx);
+  if(id==='title-reveal'){
+    text(ctx,'章节 03',320,100,18,colors.muted);ctx.save();ctx.translate(320,210+s.y*H);ctx.scale(s.scale,s.scale);ctx.globalAlpha=s.opacity;text(ctx,'看清当前步骤',0,0,44,colors.ink,'center',700);rounded(ctx,-74,45,148,6,3,colors.accent);ctx.restore();
+  }else if(id==='stagger-reveal'){
+    const labels=['读取任务','分配工作','返回结果','核对交付'];s.items.forEach((item,i)=>{const y=70+i*80;ctx.save();ctx.globalAlpha=item.opacity;ctx.translate(0,item.y*H);rounded(ctx,90,y-26,460,58,12,'#fff',colors.line);rounded(ctx,108,y-12,30,30,8,colors.accent);text(ctx,String(i+1),123,y+3,17);text(ctx,labels[i]||`第 ${i+1} 项`,160,y+3,23,colors.ink,'left');ctx.restore()});
+  }else if(id==='path-progress'){
+    line(ctx,s.path,'#cad4c3',5);line(ctx,pathPart(s.path,s.pathProgress),colors.green,7);ctx.fillStyle=colors.ink;ctx.beginPath();ctx.arc(s.position.x*W,s.position.y*H,10,0,Math.PI*2);ctx.fill();text(ctx,'任务',s.path[0].x*W,320,20);text(ctx,'处理者',s.path.at(-1).x*W,80,20);text(ctx,`${Math.round(s.pathProgress*100)}%`,320,350,20,colors.muted);
+  }else if(id==='task-transfer'){
+    ctx.setLineDash([6,8]);line(ctx,[{x:.16,y:.54},{x:.84,y:.54}],'#aebda5',2);ctx.setLineDash([]);node(ctx,'编导',.16*W,300,150);node(ctx,'资料员',.84*W,300,150);rounded(ctx,s.x*W-45,s.y*H-29,90,58,12,colors.accent,colors.ink);text(ctx,'任务',s.x*W,s.y*H,20);text(ctx,'同一个任务，交给另一位处理',320,75,23);
+  }else if(id==='camera-focus'){
+    ctx.save();ctx.translate(W*s.anchorX+s.x*W,H*s.anchorY+s.y*H);ctx.scale(s.scale,s.scale);ctx.translate(-W*s.anchorX,-H*s.anchorY);rounded(ctx,64,60,512,280,18,'#fff',colors.line);for(let i=0;i<3;i++){rounded(ctx,88,84+i*78,135,58,12,'#e8eddf');text(ctx,['任务','资料','记录'][i],155,113+i*78,20,colors.muted)}rounded(ctx,250,100,300,190,16,'#e6edb7');text(ctx,'当前对象',400,175,32,colors.ink,'center',700);text(ctx,'轻推近，保持位置连续',400,222,18,colors.muted);ctx.restore();
+  }else if(id==='crossfade'){
+    ctx.clearRect(0,0,W,H);const a=document.createElement('canvas'),b=document.createElement('canvas');a.width=b.width=W;a.height=b.height=H;pictureScene(a.getContext('2d'),0);pictureScene(b.getContext('2d'),1);ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=s.outgoing;ctx.drawImage(a,0,0);ctx.globalAlpha=s.incoming;ctx.drawImage(b,0,0);ctx.restore();text(ctx,'同一构图，画面平稳交接',320,45,23,colors.ink,'center',650);
+  }else if(id==='background-pulse'){
+    ctx.save();ctx.translate(320,200);ctx.scale(s.scale,s.scale);ctx.globalAlpha=s.opacity;ctx.fillStyle='#507519';ctx.beginPath();ctx.ellipse(0,0,260,160,0,0,Math.PI*2);ctx.fill();ctx.restore();rounded(ctx,145,130,350,140,18,'#fff',colors.line);text(ctx,'主信息保持清楚',320,185,30,colors.ink,'center',700);text(ctx,'背景只轻轻强调一次',320,229,20,colors.muted);
+  }else if(id==='layers-explode'){
+    const fills=['#dce6ef','#dce85d','#b6cda6','#d7cab5','#e6d5df','#c9dbe2'];const labels=['资料层','任务层','结果层'];for(const index of s.drawOrder){const layer=s.layers[index];ctx.beginPath();layer.polygon.forEach((p,i)=>i?ctx.lineTo(p.x*W,p.y*H):ctx.moveTo(p.x*W,p.y*H));ctx.closePath();ctx.fillStyle=fills[index%fills.length];ctx.fill();ctx.strokeStyle='#63765f';ctx.lineWidth=2;ctx.stroke();}for(const layer of s.layers){ctx.save();ctx.globalAlpha=layer.labelOpacity;text(ctx,labels[layer.index]||`第 ${layer.index+1} 层`,layer.center.x*W,layer.center.y*H,22,colors.ink,'center',650);ctx.restore()}text(ctx,'概念分层示意 · 按实际关系命名',320,378,15,colors.muted);
+  }
+}
+
+try {
+  const [{createMotionPreset},manifest] = await Promise.all([import('./motion-presets.mjs'),fetch('./library-manifest.json').then(response=>{if(!response.ok)throw new Error(`manifest HTTP ${response.status}`);return response.json()})]);
+  const cards=manifest.effects.map(effect=>{
+    const article=document.createElement('article');article.className='card';
+    const head=document.createElement('div');head.className='head';
+    const meta=document.createElement('div');meta.className='meta';const id=document.createElement('span');id.textContent=effect.id;const engine=document.createElement('span');engine.textContent=`${effect.engine} ${effect.version}`;meta.append(id,engine);
+    const title=document.createElement('h2');title.textContent=effect.name;const purpose=document.createElement('p');purpose.className='purpose';purpose.textContent=effect.purpose;head.append(meta,title,purpose);
+    const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;canvas.setAttribute('aria-label',effect.name+' 当前时间的画面');
+    const foot=document.createElement('div');foot.className='foot';const time=document.createElement('div');time.className='time';const list=document.createElement('ul');list.className='limits';effect.limits.forEach(value=>{const li=document.createElement('li');li.textContent=value;list.append(li)});
+    const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='查看默认参数';const pre=document.createElement('pre');pre.textContent=JSON.stringify(effect.parameters,null,2);details.append(summary,pre);foot.append(time,list,details);article.append(head,canvas,foot);document.querySelector('#grid').append(article);
+    return {effect,preset:createMotionPreset(effect.id),ctx:canvas.getContext('2d'),time};
+  });
+  function update(){const fraction=Number(document.querySelector('#progress').value)/1000;document.querySelector('#value').textContent=`${(fraction*100).toFixed(1)}%`;for(const card of cards){const sample=card.preset.seek(card.preset.durationMs*fraction);render(card.ctx,card.effect.id,sample);card.time.textContent=`${Math.round(sample.timeMs)} / ${card.preset.durationMs} 毫秒 · 手动暂停取帧`;}}
+  document.querySelector('#progress').addEventListener('input',update);document.querySelectorAll('[data-progress]').forEach(button=>button.addEventListener('click',()=>{document.querySelector('#progress').value=button.dataset.progress;update()}));
+  window.addEventListener('pagehide',()=>cards.forEach(card=>card.preset.dispose()),{once:true});update();
+}catch(error){errorBox.style.display='block';errorBox.textContent=`本地动效加载失败：${error.message}。请通过本地 HTTP 服务打开此页，并保留 vendor 目录。`;}
+</script>
+</body>
+</html>

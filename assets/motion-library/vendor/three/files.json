@@ -1,0 +1,14 @@
+[
+  {
+    "upstream_path": "LICENSE",
+    "path": "LICENSE",
+    "sha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc",
+    "bytes": 1081
+  },
+  {
+    "upstream_path": "build/three.core.js",
+    "path": "three.core.js",
+    "sha256": "9edde002b066a9a05676a6127f67735b62baf399bdea529f2f7e31657da769e6",
+    "bytes": 1458113
+  }
+]

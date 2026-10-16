@@ -15,6 +15,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify bundled motion presets
+        run: node scripts/verify_motion_library.mjs
       - name: Unit tests
         run: python3 -m unittest discover -s tests -v
       - name: Validate 34 visual themes

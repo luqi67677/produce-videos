@@ -1,0 +1,11 @@
+{
+  "name": "animejs",
+  "version": "4.5.0",
+  "license": "MIT",
+  "source_url": {
+    "url": "git+https://github.com/juliangarnier/anime.git",
+    "type": "git"
+  },
+  "distribution_url": "https://registry.npmjs.org/animejs/-/animejs-4.5.0.tgz",
+  "integrity": "sha512-NQimYX+lz8WaXonGS9zVVoviCIAjONeJayxacUditaivYLqyXgGjFKjuyl0aUUhFKm5MriX9ty1TGovNzoJQWA=="
+}

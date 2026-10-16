@@ -19,6 +19,32 @@ def listed(values: list) -> str:
     return "；".join(cell(value) for value in values) or "无"
 
 
+def resource_lines(direction: dict, catalog: list) -> list[str]:
+    background, music = direction["background"], direction["music"]
+    mode = {"static": "静止", "animated": "已有动效"}[background["mode"]]
+    intensity = {"none": "无", "subtle": "轻微", "moderate": "中等"}[background["intensity"]]
+    lines = ["### 背景与现有动效", "", f"- 背景：{mode}；{cell(background['description'])}",
+             f"- 采用理由：{cell(background['reason'])}", f"- 强度：{intensity}",
+             f"- 跨镜衔接：{cell(background['continuity'])}", f"- 背景实例：{listed(background['effect_instance_ids'])}", ""]
+    available = {item["effect_id"]: item for item in catalog}
+    if not direction["effects"]:
+        lines += ["本镜不添加程序动效。", ""]
+    for effect in direction["effects"]:
+        source = available[effect["effect_id"]]
+        target = {"background": "背景", "camera": "镜头", "foreground": "前景", "transition": "转场"}[effect["target"]]
+        lines += [f"**{cell(effect['instance_id'])} · {target}**", "",
+                  f"- 用途：{cell(effect['purpose'])}",
+                  f"- 已有实现：{cell(effect['effect_id'])}；{cell(source['library'])} {cell(source['version'])}；许可 {cell(source['license'])}",
+                  f"- 开始 / 停止：{cell(effect['start_trigger'])} / {cell(effect['stop_trigger'])}", ""]
+    lines += ["### 配乐安排", "", f"- 配乐：{'不使用' if music['mode'] == 'none' else '已选本地音频'}", f"- 理由：{cell(music['reason'])}"]
+    if music["mode"] == "track":
+        lines += [f"- 素材请求：{cell(music['request_id'])}", f"- 开始 / 停止：{cell(music['start_trigger'])} / {cell(music['stop_trigger'])}",
+                  f"- 音量：{music['gain_db']:g} dB；淡入 / 淡出：{music['fade_in_ms']:g} / {music['fade_out_ms']:g} 毫秒",
+                  f"- 旁白避让：{cell(music['ducking'])}",
+                  f"- 连接上一镜 / 延续下一镜：{'是' if music['continuity']['from_previous'] else '否'} / {'是' if music['continuity']['to_next'] else '否'}"]
+    return lines + [""]
+
+
 def render_board(project: Path, require_ready: bool = False) -> str:
     project = Path(project).expanduser().resolve()
     errors = validate(project, require_ready)
@@ -76,7 +102,10 @@ def render_board(project: Path, require_ready: bool = False) -> str:
                   f"- 可见动作：{cell(direction['states']['action'])}",
                   f"- 结果状态：{cell(direction['states']['after'])}",
                   f"- 字幕方案：{cell(direction['subtitle_plan'])}",
-                  f"- 音乐方案：{cell(direction['music_plan'])}", "", "### 素材需求", ""]
+                  f"- 音乐方案：{cell(direction['music_plan'])}", ""]
+        if plan["schema_version"] == "1.1":
+            lines += resource_lines(direction, plan["effect_catalog"])
+        lines += ["### 素材需求", ""]
         requests = direction["assets_needed"]
         if not requests:
             lines += ["无外部素材需求；按本镜已声明的画面与元素实现。"]
@@ -104,10 +133,18 @@ def render_board(project: Path, require_ready: bool = False) -> str:
                           f"- 动作后：{cell(event['after'])}",
                           f"- 先决事件：{listed(event['depends_on'])}",
                           f"- 声音：{mode}。{cell(sound['reason'])}"]
+                if plan["schema_version"] == "1.1":
+                    if event.get("kind", "effect") == "source-action":
+                        lines += [f"- 事件类型：源素材已有动作；素材请求 {cell(event['source_request_id'])}"]
+                    else:
+                        lines += [f"- 程序效果实例：{listed(event['effect_instance_ids'])}"]
                 if sound["mode"] != "none":
                     lines += [f"- 声音开始：{cell(sound['start_trigger'])}",
                               f"- 声音停止：{cell(sound['stop_trigger'])}",
                               f"- 声音素材请求：{cell(sound['request_id'])}"]
+                    if plan["schema_version"] == "1.1":
+                        continuity = sound.get("continuity", {})
+                        lines += [f"- 声音连接上一镜 / 延续下一镜：{'是' if continuity.get('from_previous') else '否'} / {'是' if continuity.get('to_next') else '否'}"]
                 lines += [f"- 事件编号：{cell(event['event_id'])}", ""]
         if ready:
             lines += ["", "### EDL 实测事件（本镜相对帧，结束帧不包含在区间内）", "",
@@ -123,13 +160,42 @@ def render_board(project: Path, require_ready: bool = False) -> str:
                           f"- 画面帧范围：{event['start_frame']}–{event['end_frame']}",
                           f"- 声音帧范围：{sound_range}",
                           f"- 声音增益 / 淡入淡出：{settings}", ""]
+                if plan["schema_version"] == "1.1" and sound:
+                    lines += [f"- 声音素材：{cell(sound['asset_id'])}；音频源起点：{sound['source_start_frame']} 帧", ""]
+            if plan["schema_version"] == "1.1":
+                clip = clips[shot["shot_id"]]
+                for cue in clip["effect_cues"]:
+                    lines += [f"- 已有动效 {cell(cue['instance_id'])}：本镜 {cue['start_frame']}–{cue['end_frame']} 帧"]
+                cue = clip.get("music_cue")
+                if cue:
+                    lines += [f"- 配乐 {cell(cue['asset_id'])}：本镜 {cue['start_frame']}–{cue['end_frame']} 帧；音频源起点 {cue['source_start_frame']} 帧"]
+                for event in clip["semantic_events"]:
+                    source_action = event.get("source_action")
+                    if source_action:
+                        lines += [f"- 源动作 {cell(event['event_id'])}：{cell(source_action['asset_id'])} 源片段 {source_action['source_start_frame']}–{source_action['source_end_frame']} 帧；审阅证据 {cell(source_action['evidence_path'])}"]
     lines += ["", "## 追溯信息", "",
               "此表由 shot-readiness.json 导出；修改源契约后重新导出。", "",
               f"- 原稿：{cell(plan['script_binding']['path'])}",
               f"- 原稿 SHA-256：{cell(plan['script_binding']['sha256'])}"]
     if ready:
         lines += ["- 实测时间来源：edit-decision-list.json；本表不建立第二条时间线。"]
-    lines += ["", "本表和校验结果只证明计划与时间引用一致；成片画面、因果表达和声音是否合适仍需实际审片。", ""]
+    if plan["schema_version"] == "1.1":
+        selected_effect_ids = {effect["effect_id"] for shot in shots for effect in shot["direction"]["effects"]}
+        for effect in plan["effect_catalog"]:
+            if effect["effect_id"] not in selected_effect_ids:
+                continue
+            implementation, evidence = effect["implementation"], effect["availability"]
+            lines += ["", f"### 已选实现：{cell(effect['effect_id'])}", "",
+                      f"- 来源：{cell(effect.get('source_url') or '本地已有实现')}",
+                      f"- 库 / 版本 / 许可：{cell(effect['library'])} / {cell(effect['version'])} / {cell(effect['license'])}",
+                      f"- 文件 / 入口：{cell(implementation['path'])} / {cell(implementation['entrypoint'])}",
+                      f"- 实现 SHA-256：{cell(implementation['sha256'])}",
+                      f"- 可用证据：{cell(evidence['evidence_path'])}",
+                      f"- 证据 SHA-256：{cell(evidence['evidence_sha256'])}"]
+        for shot in shots:
+            for effect in shot["direction"]["effects"]:
+                lines += [f"- {cell(shot['shot_id'])} / {cell(effect['instance_id'])} 参数：{cell(json.dumps(effect['parameters'], ensure_ascii=False))}"]
+    lines += ["", "本表和校验结果只证明计划、资源证据与时间引用一致；成片画面、因果表达和声音是否合适仍需实际审片。静态规划通过不代表满足整片动态质量要求。", ""]
     return "\n".join(lines)
 
 

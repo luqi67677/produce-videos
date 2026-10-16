@@ -1,0 +1,20 @@
+[
+  {
+    "upstream_path": "dist/bundles/anime.esm.js",
+    "path": "anime.esm.js",
+    "sha256": "a88ebfb5bd290f25215692edce71a74c0fc37bdb9e0ff70bd17135c5c3ef33b6",
+    "bytes": 408414
+  },
+  {
+    "upstream_path": "dist/bundles/anime.esm.min.js",
+    "path": "anime.esm.min.js",
+    "sha256": "a19015a1a92d52025a2fb6703b6d67eadd1cc2aeaf880770e96e04cf6aa07be1",
+    "bytes": 118678
+  },
+  {
+    "upstream_path": "LICENSE.md",
+    "path": "LICENSE.md",
+    "sha256": "3f3e835a9952cfc2a6ca836fb95b3257c981f24fa3ef51249055acb09931897b",
+    "bytes": 1075
+  }
+]

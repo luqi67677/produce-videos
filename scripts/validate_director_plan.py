@@ -37,7 +37,10 @@ def text(value: Any) -> bool:
 def number(value: Any) -> float | None:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
-    return float(value) if math.isfinite(value) else None
+    try:
+        return float(value) if math.isfinite(value) else None
+    except OverflowError:
+        return None
 
 
 def compact(value: str) -> str:
@@ -248,7 +251,14 @@ def frame_range(obj: dict, max_frames: float, label: str, errors: list[str]) -> 
     return start, end
 
 
-def validate_edl(project: Path, shots: list, errors: list[str]) -> None:
+def reject_resource_fields(obj: dict, names: tuple[str, ...], label: str, errors: list[str]) -> None:
+    """旧合同继续可读，但不能携带新资源字段以跳过 1.1 检查。"""
+    for name in names:
+        if name in obj:
+            errors.append(f"{label}.{name} 是 director_plan 1.1 专属字段，不能声明为 1.0")
+
+
+def validate_edl(project: Path, shots: list, errors: list[str], resource_contract: bool = True) -> None:
     edl, load_errors = load_object(project / "edit-decision-list.json", "实测 EDL")
     errors.extend(load_errors)
     if edl is None:
@@ -274,6 +284,8 @@ def validate_edl(project: Path, shots: list, errors: list[str]) -> None:
             errors.append(f"EDL 第 {index + 1} 镜必须为对象")
             continue
         label = f"EDL[{index}]"
+        if not resource_contract:
+            reject_resource_fields(clip, ("effect_cues", "music_cue"), label, errors)
         if "scene_id" in clip and clip["scene_id"] != shot.get("shot_id"):
             errors.append(f"{label}.scene_id 与 shot_id 不一致")
         if clip.get("narration_excerpt") != shot.get("narration_excerpt"):
@@ -303,6 +315,10 @@ def validate_edl(project: Path, shots: list, errors: list[str]) -> None:
                 continue
             eid = event.get("event_id")
             event_label = f"{label}.{eid}"
+            if not resource_contract:
+                reject_resource_fields(event, ("source_action",), event_label, errors)
+                if isinstance(event.get("sound"), dict):
+                    reject_resource_fields(event["sound"], ("asset_id", "source_start_frame"), event_label + ".sound", errors)
             interval = frame_range(event, duration * fps, event_label, errors)
             dependencies = plan_event.get("depends_on")
             if interval is not None and isinstance(dependencies, list):
@@ -390,8 +406,11 @@ def validate(project: Path, require_ready: bool = False) -> list[str]:
         return ["director_plan 必须为对象"]
     if data.get("schema_version") != "2.6":
         errors.append("director_plan 扩展要求 shot-readiness schema_version 为 2.6")
-    if plan.get("schema_version") != "1.0":
+    if plan.get("schema_version") not in ("1.0", "1.1"):
         errors.append("director_plan.schema_version 不受支持")
+    legacy_contract = plan.get("schema_version") == "1.0"
+    if legacy_contract:
+        reject_resource_fields(plan, ("effect_catalog",), "director_plan", errors)
     stage = plan.get("stage")
     if stage not in ("planning", "ready"):
         errors.append("director_plan.stage 必须为 planning 或 ready")
@@ -416,10 +435,26 @@ def validate(project: Path, require_ready: bool = False) -> list[str]:
                 errors.append(f"shot_id 重复：{sid}")
             shot_ids.add(sid)
         validate_direction(shot, f"shots[{index}]", event_ids, errors)
+        direction = shot.get("direction")
+        if legacy_contract and isinstance(direction, dict):
+            label = f"shots[{index}].direction"
+            reject_resource_fields(direction, ("effects", "background", "music"), label, errors)
+            events = direction.get("events")
+            if isinstance(events, list):
+                for event_index, event in enumerate(events):
+                    if not isinstance(event, dict):
+                        continue
+                    event_label = f"{label}.events[{event_index}]"
+                    reject_resource_fields(event, ("kind", "effect_instance_ids", "source_request_id"), event_label, errors)
+                    if isinstance(event.get("sound"), dict):
+                        reject_resource_fields(event["sound"], ("continuity",), event_label + ".sound", errors)
     validate_script(project, plan, shots, errors)
+    if plan.get("schema_version") == "1.1":
+        from director_plan_resources import validate_resources
+        errors.extend(validate_resources(project, data, validate_rights))
     if stage == "ready":
         validate_ready_assets(project, shots, errors)
-        validate_edl(project, shots, errors)
+        validate_edl(project, shots, errors, resource_contract=not legacy_contract)
     return errors
 
 

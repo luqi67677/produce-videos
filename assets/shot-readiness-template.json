@@ -67,183 +67,7 @@
       "approved_at": ""
     }
   },
-  "scenes": [
-    {
-      "scene_id": "s01",
-      "duration_seconds": 3.0,
-      "narration": "",
-      "narration_segment_ids": [
-        "s01"
-      ],
-      "narrative_function": "",
-      "continuity": {
-        "entering_state": "",
-        "leaving_state": "",
-        "anchor": "",
-        "advances_story": false,
-        "returns_to_main_axis": true
-      },
-      "roll": {
-        "type": "a-roll",
-        "narrative_role": "",
-        "covers": "",
-        "entry_reason": "主叙事起点",
-        "return_strategy": "not-required"
-      },
-      "visual_source_strategy": {
-        "selected": "user-provided",
-        "source_order_considered": [
-          "user-provided",
-          "official",
-          "licensed-stock",
-          "verified-keyframe",
-          "generated-still",
-          "code-motion",
-          "text-only"
-        ],
-        "gap_reason": "",
-        "generated_still_approved": false,
-        "video_model_used": false
-      },
-      "transition": {
-        "type": "none",
-        "previous_end_state": "not-required",
-        "next_start_state": "",
-        "continuity_anchor": "",
-        "reason": "首镜头"
-      },
-      "audience_text": [],
-      "internal_notes": [],
-      "semantic_role": "",
-      "information_contribution": "",
-      "visual_signature": "",
-      "visual_evidence": {
-        "narration_claim": "",
-        "on_screen_evidence": "",
-        "verified": false
-      },
-      "redundant": false,
-      "max_unchanged_seconds": 3.0,
-      "long_hold_reason": "",
-      "primary_asset_ids": [
-        "asset-001"
-      ],
-      "assets": [
-        {
-          "asset_id": "asset-001",
-          "source_type": "real",
-          "media_type": "video",
-          "path": "",
-          "purpose": "",
-          "authorization": "",
-          "source_window": {
-            "in_seconds": 0,
-            "out_seconds": 3,
-            "action_evidence": ""
-          }
-        }
-      ],
-      "composition_source": "storyboard",
-      "storyboard_frame_path": "",
-      "storyboard_state_ids": [
-        "start",
-        "change",
-        "end"
-      ],
-      "layout_preset": {
-        "id": "opening/offset-marquee",
-        "adaptation": "portrait-reflow",
-        "selection_reason": ""
-      },
-      "composition_budget": {
-        "focal_points": 1,
-        "support_groups": 2,
-        "decorative_groups": 0,
-        "accent_colors": 1,
-        "material_systems": 1,
-        "occupied_area_ratio": 0.62,
-        "largest_empty_area_ratio": 0.28,
-        "density_exception_reason": "",
-        "intentional_whitespace_reason": ""
-      },
-      "layout_review": {
-        "reviewed_frame_path": "",
-        "alignment_verified": false,
-        "text_overflow_free": false,
-        "orphan_graphics_free": false,
-        "connections_verified": false,
-        "intentional_whitespace": false,
-        "single_focal_point": false,
-        "balanced_density": false,
-        "clean_edges": false,
-        "single_material_system": false,
-        "dirty_overlays_free": false,
-        "crop_remnants_free": false,
-        "pause_frames_finished": false
-      },
-      "decorative_outer_frame": false,
-      "decorative_outer_frame_reason": "",
-      "focus_target": {
-        "required": false,
-        "label": "none",
-        "marker": "none",
-        "cue_text": "",
-        "start_seconds": 0,
-        "end_seconds": 0,
-        "area_ratio": 0,
-        "target_verified": true
-      },
-      "fallback_visual": {
-        "mode": "none",
-        "path": "",
-        "reason": ""
-      },
-      "privacy_review": {
-        "checked_target_ids": [],
-        "visible_target_ids": [],
-        "handled_target_ids": [],
-        "recording_indicators_checked": false,
-        "non_target_content_clear": false
-      },
-      "background_token": "background",
-      "motion_grammar": "sequential-list",
-      "motion_steps": [
-        {
-          "cue_text": "",
-          "action": "",
-          "persists": true
-        }
-      ],
-      "start_state": "",
-      "change_state": "",
-      "end_state": "",
-      "exit_state": "",
-      "semantic_symbols": [],
-      "visual_coverage_to_end": true,
-      "blank_hold_seconds": 0,
-      "subject_interaction": {
-        "required": false,
-        "target": "",
-        "action": "",
-        "action_signature": "",
-        "anatomy_safe": true,
-        "edge_safe": true
-      },
-      "character_ids": [],
-      "character_continuity_review": {
-        "identity_verified": true,
-        "style_consistent": true,
-        "unexplained_changes": false
-      },
-      "platform_safe": false,
-      "subtitle_safe": true,
-      "watermark_safe": true,
-      "full_frame_motion": false,
-      "full_frame_motion_reason": "",
-      "reuse_advances_state": false,
-      "reuse_reason": ""
-    }
-  ],
+  "scenes": [],
   "shots": [
     {
       "shot_id": "c01-s01",
@@ -273,7 +97,7 @@
         "claim_type": "none",
         "evidence_mode": "not-applicable",
         "evidence_asset_paths": [],
-        "complete_context_visible": true
+        "complete_context_visible": false
       },
       "layout_review": {
         "alignment_verified": false,
@@ -298,7 +122,7 @@
         "estimated_duration_seconds": 3,
         "visual_form": "",
         "composition": "",
-        "camera": "",
+        "camera": "固定构图；未采用程序运镜",
         "continuity_anchor": "",
         "states": {
           "before": "",
@@ -318,30 +142,27 @@
             "selected_asset_ids": []
           }
         ],
-        "events": [
-          {
-            "event_id": "c01-s01-e01",
-            "cue_text": "",
-            "action": "",
-            "before": "",
-            "after": "",
-            "depends_on": [],
-            "sound": {
-              "mode": "none",
-              "reason": "此处以口播和画面解释为主，不加音效",
-              "request_id": "",
-              "start_trigger": "",
-              "stop_trigger": ""
-            }
-          }
-        ],
+        "events": [],
         "subtitle_plan": "",
-        "music_plan": ""
+        "music_plan": "无配乐",
+        "effects": [],
+        "background": {
+          "mode": "static",
+          "description": "",
+          "reason": "未选用背景动效，保留稳定阅读参照",
+          "effect_instance_ids": [],
+          "intensity": "none",
+          "continuity": ""
+        },
+        "music": {
+          "mode": "none",
+          "reason": "未选用本地配乐；保留无配乐方案"
+        }
       }
     }
   ],
   "director_plan": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "stage": "planning",
     "audience": "",
     "viewer_outcome": "",
@@ -350,6 +171,7 @@
       "path": "master-script.json",
       "sha256": ""
     },
-    "timing_basis": "estimated"
+    "timing_basis": "estimated",
+    "effect_catalog": []
   }
 }

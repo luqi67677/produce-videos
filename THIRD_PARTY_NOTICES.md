@@ -18,3 +18,5 @@
 - V2.6.9 的立体机制示意方法参考 [wheresryan22/anatomy](https://github.com/wheresryan22/anatomy) 的 MIT 许可文档，固定来源与采用范围见 [spatial-mechanism-explainers.md](references/spatial-mechanism-explainers.md)。本次独立整理方法，未复制上游代码、模板或媒体，未集成其运行时。
 
 - V2.7.0 将已有导演、HyperFrames 运动与声音方法整理为逐镜规划和素材核验流程；本次未打包第三方媒体、音效、模型或运行时。素材平台链接及许可核验边界见 [source-material-research.md](references/source-material-research.md)，导演流程与来源见 [director-workflow.md](references/director-workflow.md)。模板与校验脚本由本项目实现，不继承素材平台的内容授权。
+
+- V2.8.0 内置 [Anime.js 4.5.0](https://www.npmjs.com/package/animejs/v/4.5.0) 的官方 ESM 文件，MIT 许可见 `assets/motion-library/vendor/animejs/LICENSE.md`；内置 [Three.js 0.186.1](https://www.npmjs.com/package/three/v/0.186.1) 的官方 core 模块，MIT 许可见 `assets/motion-library/vendor/three/LICENSE`。下载来源、发行包完整性和摘取文件哈希分别保存在各目录 `upstream-package.json` 与 `files.json`。原始上游文件未经改写；8 项逐帧接入预设由本项目编写。未打包 React Bits、GSAP、音效、音乐或私人素材。React Bits 的许可边界和其他候选见 [motion-library-selection.md](references/motion-library-selection.md)。
