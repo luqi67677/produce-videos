@@ -12,7 +12,7 @@ from typing import Any
 
 
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$", re.IGNORECASE)
-VALID_SOURCE_TYPES = {"user-provided", "official", "licensed", "existing-project"}
+VALID_SOURCE_TYPES = {"user-provided", "official", "licensed", "existing-project", "generated", "self-created"}
 VALID_PRIVACY_TREATMENTS = {"none", "crop", "opaque-mask", "exclude"}
 
 
@@ -92,7 +92,7 @@ def validate(path: Path, require_ready: bool = False) -> list[str]:
             errors.append(f"{label} 缺少唯一 asset_id")
         asset_ids.add(asset_id)
         if item.get("source_type") not in VALID_SOURCE_TYPES:
-            errors.append(f"{label}.source_type 必须为 user-provided、official、licensed 或 existing-project")
+            errors.append(f"{label}.source_type 必须为 user-provided、official、licensed、existing-project、generated 或 self-created")
         for field in ("source", "authorization", "intended_use"):
             if not nonempty_text(item.get(field)):
                 errors.append(f"{label} 缺少 {field}")

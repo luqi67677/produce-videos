@@ -40,10 +40,12 @@ def snap(edl: dict[str, Any], beat_grid: dict[str, Any], words: list[dict[str, A
         start = float(clip.get("timeline_start_seconds", 0))
         duration = float(clip.get("duration_seconds", 0))
         boundaries.append(start + duration)
-    original_end = boundaries[-1]
+    original_boundaries = boundaries.copy()
     changes: list[dict[str, Any]] = []
     for index in range(1, len(boundaries) - 1):
-        if clips[index - 1].get("cut_locked") is True:
+        if (clips[index - 1].get("cut_locked") is True
+                or clips[index - 1].get("semantic_events")
+                or clips[index].get("semantic_events")):
             continue
         original = boundaries[index]
         candidates = sorted(numeric_beats, key=lambda value: abs(value - original))
@@ -52,17 +54,23 @@ def snap(edl: dict[str, Any], beat_grid: dict[str, Any], words: list[dict[str, A
             continue
         if chosen - boundaries[index - 1] < min_duration or boundaries[index + 1] - chosen < min_duration:
             continue
+        if abs(chosen - original) < 1e-9:
+            continue
         boundaries[index] = chosen
-        changes.append({"after_clip": clips[index - 1].get("clip_id", ""), "from": round(original, 3), "to": round(chosen, 3), "shift_ms": round((chosen - original) * 1000)})
-    boundaries[-1] = original_end
+        clips[index - 1]["semantic_boundary_verified"] = False
+        clips[index]["semantic_boundary_verified"] = False
+        changes.append({"after_clip": clips[index - 1].get("clip_id", ""), "from": original, "to": chosen, "shift_ms": round((chosen - original) * 1000)})
     for index, clip in enumerate(clips):
-        clip["timeline_start_seconds"] = round(boundaries[index], 3)
-        clip["duration_seconds"] = round(boundaries[index + 1] - boundaries[index], 3)
+        # 只更新真实移动影响的镜头，保留受保护切点和原始时间精度。
+        if boundaries[index] != original_boundaries[index]:
+            clip["timeline_start_seconds"] = boundaries[index]
+        if boundaries[index] != original_boundaries[index] or boundaries[index + 1] != original_boundaries[index + 1]:
+            clip["duration_seconds"] = boundaries[index + 1] - boundaries[index]
     transitions = output.get("transitions")
     if isinstance(transitions, list):
         for index, transition in enumerate(transitions[: len(clips) - 1]):
-            if isinstance(transition, dict):
-                transition["at_seconds"] = round(boundaries[index + 1], 3)
+            if isinstance(transition, dict) and boundaries[index + 1] != original_boundaries[index + 1]:
+                transition["at_seconds"] = boundaries[index + 1]
     output["beat_quantization"] = {
         "beat_grid_method": beat_grid.get("method", ""),
         "beat_grid_confidence": beat_grid.get("confidence", ""),

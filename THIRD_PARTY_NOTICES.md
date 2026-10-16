@@ -16,3 +16,5 @@
 - V2.6.5 的镜头与风格方法独立整理自 HyperFrames、video-shotcraft、brag、OpenMontage 和 Remotion captions 的公开规则及示例；逐项来源链接与取舍见 `references/directing-methods-and-creator-style.md`。此次未打包上述项目的代码、媒体或配方，不改变各上游及其依赖的许可证。
 
 - V2.6.9 的立体机制示意方法参考 [wheresryan22/anatomy](https://github.com/wheresryan22/anatomy) 的 MIT 许可文档，固定来源与采用范围见 [spatial-mechanism-explainers.md](references/spatial-mechanism-explainers.md)。本次独立整理方法，未复制上游代码、模板或媒体，未集成其运行时。
+
+- V2.7.0 将已有导演、HyperFrames 运动与声音方法整理为逐镜规划和素材核验流程；本次未打包第三方媒体、音效、模型或运行时。素材平台链接及许可核验边界见 [source-material-research.md](references/source-material-research.md)，导演流程与来源见 [director-workflow.md](references/director-workflow.md)。模板与校验脚本由本项目实现，不继承素材平台的内容授权。

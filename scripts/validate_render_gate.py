@@ -22,6 +22,7 @@ from validate_source_assets import validate as validate_source_assets
 from validate_style_options import validate as validate_style_options
 from validate_theme_catalog import validate as validate_theme_catalog
 from validate_timeline_sync import validate as validate_timeline_sync
+from validate_director_plan import validate as validate_director_plan
 from validate_video_theme import validate as validate_video_theme
 from validate_creative_foundation import validate_project as validate_creative_foundation
 
@@ -165,6 +166,9 @@ def main() -> int:
         return 1
     errors: list[str] = []
     shot_data = load_object(project / "shot-readiness.json")
+    if "director_plan" in shot_data:
+        for error in validate_director_plan(project, require_ready=True):
+            errors.append(f"director-plan: {error}")
     script_files = [project / "master-script.json"]
     if shot_data.get("schema_version") in {"2.5", "2.6"}:
         script_files.append(project / "story-contract.json")

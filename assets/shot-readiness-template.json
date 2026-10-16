@@ -72,7 +72,9 @@
       "scene_id": "s01",
       "duration_seconds": 3.0,
       "narration": "",
-      "narration_segment_ids": ["s01"],
+      "narration_segment_ids": [
+        "s01"
+      ],
       "narrative_function": "",
       "continuity": {
         "entering_state": "",
@@ -90,7 +92,15 @@
       },
       "visual_source_strategy": {
         "selected": "user-provided",
-        "source_order_considered": ["user-provided", "official", "verified-keyframe", "generated-still", "code-motion", "text-only"],
+        "source_order_considered": [
+          "user-provided",
+          "official",
+          "licensed-stock",
+          "verified-keyframe",
+          "generated-still",
+          "code-motion",
+          "text-only"
+        ],
         "gap_reason": "",
         "generated_still_approved": false,
         "video_model_used": false
@@ -115,7 +125,9 @@
       "redundant": false,
       "max_unchanged_seconds": 3.0,
       "long_hold_reason": "",
-      "primary_asset_ids": ["asset-001"],
+      "primary_asset_ids": [
+        "asset-001"
+      ],
       "assets": [
         {
           "asset_id": "asset-001",
@@ -133,7 +145,11 @@
       ],
       "composition_source": "storyboard",
       "storyboard_frame_path": "",
-      "storyboard_state_ids": ["start", "change", "end"],
+      "storyboard_state_ids": [
+        "start",
+        "change",
+        "end"
+      ],
       "layout_preset": {
         "id": "opening/offset-marquee",
         "adaptation": "portrait-reflow",
@@ -232,9 +248,9 @@
     {
       "shot_id": "c01-s01",
       "narration_segment_id": "s01",
-      "timeline_start_seconds": 0,
-      "timeline_end_seconds": 3,
-      "duration_seconds": 3,
+      "timeline_start_seconds": null,
+      "timeline_end_seconds": null,
+      "duration_seconds": null,
       "narration_excerpt": "",
       "visual_duty": "",
       "roll_type": "graphic-led",
@@ -276,7 +292,64 @@
         "anatomy_safe": false,
         "reuse_approved": false,
         "reuse_reason": ""
+      },
+      "direction": {
+        "audience_takeaway": "",
+        "estimated_duration_seconds": 3,
+        "visual_form": "",
+        "composition": "",
+        "camera": "",
+        "continuity_anchor": "",
+        "states": {
+          "before": "",
+          "action": "",
+          "after": ""
+        },
+        "transition_reason": "",
+        "assets_needed": [
+          {
+            "request_id": "visual-001",
+            "role": "",
+            "description": "",
+            "preferred_source": "",
+            "search_queries": [],
+            "acceptance_criteria": [],
+            "fallback": "",
+            "selected_asset_ids": []
+          }
+        ],
+        "events": [
+          {
+            "event_id": "c01-s01-e01",
+            "cue_text": "",
+            "action": "",
+            "before": "",
+            "after": "",
+            "depends_on": [],
+            "sound": {
+              "mode": "none",
+              "reason": "此处以口播和画面解释为主，不加音效",
+              "request_id": "",
+              "start_trigger": "",
+              "stop_trigger": ""
+            }
+          }
+        ],
+        "subtitle_plan": "",
+        "music_plan": ""
       }
     }
-  ]
+  ],
+  "director_plan": {
+    "schema_version": "1.0",
+    "stage": "planning",
+    "audience": "",
+    "viewer_outcome": "",
+    "throughline": "",
+    "script_binding": {
+      "path": "master-script.json",
+      "sha256": ""
+    },
+    "timing_basis": "estimated"
+  }
 }

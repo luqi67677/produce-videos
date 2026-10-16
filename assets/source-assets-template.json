@@ -16,6 +16,22 @@
         "contains_personal_information": false,
         "targets": [],
         "treatment": "none"
+      },
+      "rights": {
+        "status": "pending",
+        "basis": "user-authorization",
+        "license_name": "",
+        "source_url": "",
+        "license_url": "",
+        "evidence_path": "",
+        "evidence_sha256": "",
+        "allowed_use": "",
+        "restrictions_review": "",
+        "attribution": {
+          "required": false,
+          "text": "",
+          "placement": ""
+        }
       }
     }
   ],

@@ -25,7 +25,8 @@
       "covers": "",
       "narration_excerpt": "",
       "semantic_boundary_verified": false,
-      "cut_locked": false
+      "cut_locked": false,
+      "semantic_events": []
     }
   ],
   "transitions": [

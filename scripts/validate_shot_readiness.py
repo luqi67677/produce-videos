@@ -29,8 +29,9 @@ VALID_PRIVACY_TREATMENTS = {"crop", "opaque-mask"}
 VALID_REVISION_MODES = {"initial", "revision"}
 VALID_PREVIEW_KINDS = {"native-frame", "contact-sheet", "motion-sample"}
 VALID_ROLL_TYPES = {"a-roll", "b-roll", "hybrid", "graphic-led"}
-VALID_VISUAL_SOURCES = {"user-provided", "official", "verified-keyframe", "generated-still", "code-motion", "text-only"}
-VISUAL_SOURCE_ORDER = ["user-provided", "official", "verified-keyframe", "generated-still", "code-motion", "text-only"]
+VALID_VISUAL_SOURCES = {"licensed-stock", "user-provided", "official", "verified-keyframe", "generated-still", "code-motion", "text-only"}
+LEGACY_VISUAL_SOURCE_ORDER = ["user-provided", "official", "verified-keyframe", "generated-still", "code-motion", "text-only"]
+VISUAL_SOURCE_ORDER = LEGACY_VISUAL_SOURCE_ORDER[:2] + ["licensed-stock"] + LEGACY_VISUAL_SOURCE_ORDER[2:]
 VALID_TRANSITIONS = {"none", "hard-cut", "match-cut", "insert-cut", "graphic-bridge"}
 VALID_LAYOUT_ADAPTATIONS = {"native-landscape", "portrait-reflow", "custom-verified"}
 VALID_MEMORY_MODES = {"disabled", "project-only", "workspace-opt-in"}
@@ -636,8 +637,8 @@ def validate_scene_design(scene: dict[str, Any], label: str, schema_version: str
     if not isinstance(strategy, dict) or strategy.get("selected") not in VALID_VISUAL_SOURCES:
         errors.append(f"{label}.visual_source_strategy.selected 无效")
     else:
-        if strategy.get("source_order_considered") != VISUAL_SOURCE_ORDER:
-            errors.append(f"{label} 必须按真实、官方、关键帧、静态补图、代码动画、纯文字顺序考虑素材")
+        if strategy.get("source_order_considered") not in (VISUAL_SOURCE_ORDER, LEGACY_VISUAL_SOURCE_ORDER):
+            errors.append(f"{label} 必须按来源检查清单考虑素材，新项目加入已核验许可的素材库")
         if strategy.get("video_model_used") is not False:
             errors.append(f"{label} 禁止由本 Skill 调用视频生成模型")
         if strategy.get("selected") in {"generated-still", "code-motion", "text-only"} and not nonempty_text(strategy.get("gap_reason")):
