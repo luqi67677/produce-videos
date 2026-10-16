@@ -14,3 +14,5 @@
 - IP 讲解导演规则参考 [62656456/ai-film-skills 的 ai-storyboard-director](https://github.com/62656456/ai-film-skills/tree/main/skills/ai-storyboard-director) 的观看顺序、人物调度与取景方法。上游许可证为 [Apache-2.0](https://github.com/62656456/ai-film-skills/blob/main/LICENSE)，许可证副本见 `references/director-source-LICENSE`。本 Skill 的 `ip-presenter-directing.md` 为 2026-10-14 针对静态讲解人和现有项目流程重新组织的规则，未包含上游运行包或执行依赖。
 
 - V2.6.5 的镜头与风格方法独立整理自 HyperFrames、video-shotcraft、brag、OpenMontage 和 Remotion captions 的公开规则及示例；逐项来源链接与取舍见 `references/directing-methods-and-creator-style.md`。此次未打包上述项目的代码、媒体或配方，不改变各上游及其依赖的许可证。
+
+- V2.6.9 的立体机制示意方法参考 [wheresryan22/anatomy](https://github.com/wheresryan22/anatomy) 的 MIT 许可文档，固定来源与采用范围见 [spatial-mechanism-explainers.md](references/spatial-mechanism-explainers.md)。本次独立整理方法，未复制上游代码、模板或媒体，未集成其运行时。

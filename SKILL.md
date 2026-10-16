@@ -3,11 +3,11 @@ name: produce-videos
 description: 把讲稿、文档、截图、图片、PPT 或录屏制作成 16:9 横屏或 3:4 竖屏动态视频和独立封面。建立真实 0—2 秒叙事、平台安全区、项目级创作记忆和人物一致性，按风险合并确认包，同时保留口播、素材、声音、分镜、动态证明和成片质量门；可复用本地 TTS，缺失时经授权准备 Qwen3-TTS。适用于完整制作、续作和定点修改；只要求脚本、分镜或审查时不擅自渲染。
 ---
 
-# 2026-10-15 视频生成与编辑 V2.6.8
+# 2026-10-16 视频生成与编辑 V2.6.9
 
 创建日期：2026-09-03
 
-版本：V2.6.8
+版本：V2.6.9
 
 ## 运行环境与兼容边界
 
@@ -129,6 +129,8 @@ description: 把讲稿、文档、截图、图片、PPT 或录屏制作成 16:9 
 
 ### 4. 成片蓝图包
 
+需要用空间层次解释共享、隔离、交接或产品内部结构时，按需读取 `references/spatial-mechanism-explainers.md`。先明确概念与物件的对应，再用同一事件驱动动作、标签和状态；它是现有流程中的可选表达方法，不自动改变批准风格或启动渲染。
+
 按需读取 `references/layout-system.md`、`references/roll-and-transition-system.md`、`references/editing-system.md`、`references/director-workflow.md` 和 `references/implementation.md`。
 
 - 先把每段标记为 `a-roll`、`b-roll`、`hybrid` 或 `graphic-led`。A-roll 锁定正在听谁、看什么主线；B-roll 必须填写 `covers`、切入理由和返回策略，不能用无关插画或通用 AI 画面填空。
@@ -221,6 +223,7 @@ python3 scripts/scan_release.py
 - 导演与分镜：`references/director-workflow.md`
 - 外部方法取舍、账号风格档案与连续镜头设计：`references/directing-methods-and-creator-style.md`
 - IP 讲解人、旁白配轻微角色动作、出场安排与图解接力：`references/ip-presenter-directing.md`
+- 立体关系、共享记忆与状态、产品结构示意：`references/spatial-mechanism-explainers.md`
 - 动画语法：`references/motion-system.md`
 - 版式与安全区：`references/layout-system.md`
 - 视觉干净度与构图预算：`references/visual-cleanliness-system.md`
