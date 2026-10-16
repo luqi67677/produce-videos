@@ -1,6 +1,6 @@
 # Produce Videos：视频生成与编辑 Skill
 
-当前版本：**V2.8.0**。
+当前版本：**V2.8.1**。
 
 [![Validate Skill](https://github.com/luqi67677/produce-videos/actions/workflows/validate.yml/badge.svg)](https://github.com/luqi67677/produce-videos/actions/workflows/validate.yml)
 [![Latest release](https://img.shields.io/github/v/release/luqi67677/produce-videos?label=release)](https://github.com/luqi67677/produce-videos/releases/latest)
@@ -81,7 +81,7 @@ V2.8.0 把背景、运镜、主体动效、转场和附加声音绑定到已有�
 
 ## 内置动效怎样进入分镜
 
-V2.8.0 内置 Anime.js 4.5.0 与 Three.js 0.186.1，提供 8 项预设：文字出场、分批出场、路径推进、任务传递、镜头聚焦、交叉淡化、背景呼吸、立体分层展开。库的用途、许可和接入边界见 [动效库准备与选择](references/motion-library-selection.md)。
+V2.8.0 内置 Anime.js 4.5.0 与 Three.js 0.186.1，提供 8 项预设：文字出场、分批出场、路径推进、任务传递、镜头聚焦、交叉淡化、背景呼吸、立体分层展开。这 8 项是候选库，按内容和分镜挑选，不要求全部使用，也不整片套同一效果。V2.8.1 将选择与删减原则统一在 [按内容分配效果](references/motion-system.md#按内容分配效果)。库的用途、许可和接入边界见 [动效库准备与选择](references/motion-library-selection.md)。
 
 使用顺序是**资源准备 → 实际验证 → 入目录 → 分镜选用**。在 Skill 目录执行：
 
