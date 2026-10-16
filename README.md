@@ -1,6 +1,6 @@
 # Produce Videos：视频生成与编辑 Skill
 
-当前版本：**V2.8.1**。
+当前版本：**V2.9.2**。
 
 [![Validate Skill](https://github.com/luqi67677/produce-videos/actions/workflows/validate.yml/badge.svg)](https://github.com/luqi67677/produce-videos/actions/workflows/validate.yml)
 [![Latest release](https://img.shields.io/github/v/release/luqi67677/produce-videos?label=release)](https://github.com/luqi67677/produce-videos/releases/latest)
@@ -21,6 +21,14 @@ An open-source video-production workflow for local AI agents, from scripts and s
 </p>
 
 <p align="center"><sub>点击图片查看三个公开成片案例：软件讲解、开源工具介绍、长流程科普。</sub></p>
+
+## 剪辑工作台实验入口
+
+需要直接编辑时，可以从第一版分镜画面稿打开 Hyperframes Studio，在同一工程看片、改文字与字幕样式、调整画面和音量。用户可在时间轴直接切开和删除主画面片段及声音片段，无须逐次交给 AI；AI 也可接续修改指定对象。没有配音也能预览，修改中间画面不必每次导出完整 MP4。
+
+V2.9.2 提供中文工作台、图层中文显示名称与包外本地品牌配置；界面可使用自己的名称和文字标志，保留上游授权说明。它提供原生工程启动与文件改动检测，验证版本为 Hyperframes 0.8.164。配套 pv-sync-cut-1 补丁提供全轨同步剪切：同一时间区间的画面、字幕和声音一起裁切，后续内容一起前移；可切换仅删所选模式。每次同步剪切只保存一条撤销。AI 接续前读取用户最新保存的文件。自动 EDL 同步、词级字幕持久化适配及镜头缓存尚未实现；最终导出可能仍需整片编码。已有工程不自动迁移，原有质量门继续生效。
+
+[工作台流程](references/editing-workbench.md) · [接入命令与限制](references/workbench-adapter.md)
 
 ## 它是做什么的
 
